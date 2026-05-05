@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Bridge Mitchell"/>
+<meta name="theme-color" content="#111111"/>
+<title>Bridge Mitchell</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{
+    --bg:#111;--bg2:#1a1a1a;--bg3:#222;
+    --text:#f5f5f5;--text2:#999;
+    --border:#333;
+    --blue:#60a5fa;--green:#4ade80;
+    --chip-bg:#1d4ed8;--chip-text:#bfdbfe;
+  }
+  @media(prefers-color-scheme:light){
+    :root{
+      --bg:#f8f8f7;--bg2:#fff;--bg3:#efefed;
+      --text:#111;--text2:#666;
+      --border:#ddd;
+      --chip-bg:#dbeafe;--chip-text:#1e3a8a;
+    }
+  }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+    background:var(--bg);color:var(--text);
+    min-height:100dvh;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .wrap{max-width:480px;margin:0 auto;padding:1.5rem 1rem}
+  .screen{display:none}.screen.active{display:block}
+
+  /* Header */
+  .header{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem}
+  .header-icon{width:40px;height:40px;border-radius:10px;background:#1d4ed8;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .header h1{font-size:20px;font-weight:600;color:var(--text)}
+  .header p{font-size:13px;color:var(--text2)}
+
+  /* Fields */
+  .field{margin-bottom:1.1rem}
+  .field label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:500}
+  .seg{display:flex;gap:8px}
+  .seg-btn{
+    flex:1;padding:11px 8px;border-radius:10px;font-size:14px;cursor:pointer;
+    border:1.5px solid var(--border);background:transparent;color:var(--text2);
+    transition:all 0.15s;font-family:inherit;
+  }
+  .seg-btn:active{transform:scale(0.97)}
+  input[type=number]{
+    width:100%;padding:11px 14px;border-radius:10px;
+    border:1.5px solid var(--border);background:var(--bg2);
+    color:var(--text);font-size:16px;font-family:inherit;
+    -webkit-appearance:none;
+  }
+  input[type=number]:focus{outline:none;border-color:var(--blue)}
+  .err{font-size:12px;color:#f87171;margin-top:5px;display:none}
+  .info-box{font-size:12px;color:var(--text2);margin-top:6px;padding:7px 11px;background:var(--bg3);border-radius:8px}
+
+  .btn-go{
+    width:100%;margin-top:1.4rem;padding:14px;border:none;border-radius:12px;
+    background:var(--text);color:var(--bg);font-size:16px;font-weight:600;
+    cursor:pointer;font-family:inherit;transition:opacity 0.15s;
+  }
+  .btn-go:active{opacity:0.8}
+
+  /* Jeu */
+  .prog{height:3px;background:var(--border);border-radius:2px;margin-bottom:1.5rem;overflow:hidden}
+  .prog-fill{height:100%;background:var(--blue);border-radius:2px;transition:width 0.4s}
+
+  .big-card{
+    background:var(--bg2);border-radius:16px;
+    padding:1.75rem 1rem;text-align:center;margin-bottom:1rem;
+    border:1px solid var(--border);
+  }
+  .big-label{font-size:11px;color:var(--text2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px}
+  .big-num{font-size:64px;font-weight:700;color:var(--text);line-height:1}
+  .big-sub{font-size:14px;color:var(--text2);margin-top:6px}
+  .badge{display:inline-block;margin-top:10px;font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px}
+  .badge-saut{background:#fef3c7;color:#92400e}
+  .badge-guerid{background:#d1fae5;color:#065f46}
+
+  .meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:1rem}
+  .meta-cell{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center}
+  .meta-label{font-size:11px;color:var(--text2);margin-bottom:4px}
+  .meta-val{font-size:15px;font-weight:600;color:var(--text)}
+
+  .boards-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:1.25rem}
+  .boards-label{font-size:11px;color:var(--text2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{background:var(--chip-bg);color:var(--chip-text);border-radius:999px;padding:8px 18px;font-size:16px;font-weight:600}
+
+  .nav{display:flex;gap:8px}
+  .nav-btn{
+    flex:1;padding:13px;border:1.5px solid var(--border);border-radius:12px;
+    background:transparent;color:var(--text);font-size:15px;font-weight:500;
+    cursor:pointer;font-family:inherit;transition:all 0.15s;
+  }
+  .nav-btn:active{transform:scale(0.97)}
+  .nav-btn:disabled{opacity:0.2;cursor:default}
+  .nav-btn.fwd{background:var(--text);color:var(--bg);border-color:transparent}
+  .reset{
+    display:block;width:100%;margin-top:1rem;padding:8px;
+    border:none;background:none;color:var(--text2);font-size:13px;
+    cursor:pointer;text-decoration:underline;font-family:inherit;
+  }
+  .section-title{font-size:17px;font-weight:600;color:var(--text);margin-bottom:1.2rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- CONFIG -->
+<div class="screen active" id="s-config">
+  <div class="header">
+    <div class="header-icon">♠</div>
+    <div>
+      <h1>Bridge Mitchell</h1>
+      <p>Gestion de tournoi</p>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Mouvement</label>
+    <div class="seg">
+      <button class="seg-btn" id="btn-mitchell" onclick="setMode('mitchell')">Mitchell</button>
+      <button class="seg-btn" id="btn-guerid" onclick="setMode('guerid')">Guéridon</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Votre sens</label>
+    <div class="seg">
+      <button class="seg-btn" id="btn-ns" onclick="setSens('NS')">Nord / Sud</button>
+      <button class="seg-btn" id="btn-eo" onclick="setSens('EO')">Est / Ouest</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Votre table de départ</label>
+    <input type="number" id="f-table" min="1" value="1" step="1"/>
+    <p class="err" id="e-table">Entre 1 et le nombre de tables</p>
+  </div>
+
+  <div class="field">
+    <label>Nombre de tables</label>
+    <input type="number" id="f-tables" min="2" value="8" step="1" oninput="updateInfo()"/>
+    <p class="err" id="e-tables">Minimum 2 tables</p>
+    <p class="info-box" id="info-box"></p>
+  </div>
+
+  <div class="field">
+    <label>Nombre de tours</label>
+    <input type="number" id="f-tours" min="1" value="7" step="1"/>
+    <p class="err" id="e-tours">Minimum 1 tour</p>
+  </div>
+
+  <div class="field">
+    <label>Donnes par tour</label>
+    <input type="number" id="f-dpt" min="1" value="4" step="1"/>
+    <p class="err" id="e-dpt">Minimum 1 donne par tour</p>
+  </div>
+
+  <button class="btn-go" onclick="start()">Commencer le tournoi</button>
+</div>
+
+<!-- JEU -->
+<div class="screen" id="s-jeu">
+  <div class="prog"><div class="prog-fill" id="prog"></div></div>
+
+  <div class="big-card">
+    <p class="big-label">Tour</p>
+    <p class="big-num" id="d-tour">1</p>
+    <p class="big-sub" id="d-tour-sub">sur 7</p>
+    <span class="badge badge-saut" id="d-saut" style="display:none">Tour du saut</span>
+    <span class="badge badge-guerid" id="d-guerid" style="display:none">Tables miroir</span>
+  </div>
+
+  <div class="meta">
+    <div class="meta-cell"><p class="meta-label">Mouvement</p><p class="meta-val" id="d-mode">—</p></div>
+    <div class="meta-cell"><p class="meta-label">Table</p><p class="meta-val" id="d-table">—</p></div>
+    <div class="meta-cell"><p class="meta-label">Sens</p><p class="meta-val" id="d-sens">—</p></div>
+  </div>
+
+  <div class="boards-card">
+    <p class="boards-label">Donnes à jouer</p>
+    <div class="chips" id="d-donnes"></div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn" id="btn-prev" onclick="go(-1)">← Précédent</button>
+    <button class="nav-btn fwd" id="btn-next" onclick="go(1)">Suivant →</button>
+  </div>
+  <button class="reset" onclick="reset()">Recommencer</button>
+</div>
+
+</div>
+
+<script>
+let mode='mitchell', sens='NS', cfg={}, tourActuel=0, sim=[];
+
+const OFF   = {background:'transparent',color:'var(--text2)',border:'1.5px solid var(--border)',fontWeight:'400'};
+const BLUE  = {background:'#60a5fa',color:'#000',border:'1.5px solid #60a5fa',fontWeight:'700'};
+const GREEN = {background:'#4ade80',color:'#000',border:'1.5px solid #4ade80',fontWeight:'700'};
+
+function applyStyle(el,s){ Object.assign(el.style,s); }
+
+function setMode(m){
+  mode=m;
+  applyStyle(document.getElementById('btn-mitchell'),m==='mitchell'?BLUE:OFF);
+  applyStyle(document.getElementById('btn-guerid'),  m==='guerid'  ?BLUE:OFF);
+  updateInfo();
+}
+
+function setSens(s){
+  sens=s;
+  applyStyle(document.getElementById('btn-ns'),s==='NS'?GREEN:OFF);
+  applyStyle(document.getElementById('btn-eo'),s==='EO'?GREEN:OFF);
+}
+
+function updateInfo(){
+  const N=parseInt(document.getElementById('f-tables').value)||0;
+  const el=document.getElementById('info-box');
+  if(mode==='guerid') el.textContent='Guéridon : préduplication obligatoire';
+  else if(N>=2) el.textContent=N%2===0?'Mitchell avec saut (nombre pair de tables)':'Mitchell simple (nombre impair de tables)';
+  else el.textContent='';
+}
+
+function int(id){ return parseInt(document.getElementById(id).value)||0; }
+function err(id,v){ document.getElementById(id).style.display=v?'block':'none'; }
+
+function tToSlot(t,N){
+  if(t===1||t===N) return 0;
+  if(t<=N/2) return t-1;
+  return t;
+}
+
+function buildSim(T,N,R,mode,sens){
+  const withSaut=mode==='mitchell'&&N%2===0;
+  const isGuerid=mode==='guerid';
+  const sautApres=withSaut?N/2-1:-1;
+  let blocs=Array.from({length:N},(_,i)=>i);
+  let eoPos=T-1, eoTable=T;
+  const tours=[];
+  for(let t=0;t<R;t++){
+    let tableAffichee,blocIdx,estSaut=false;
+    if(isGuerid){
+      const tRef=sens==='NS'?T:eoTable;
+      const slot=tToSlot(tRef,N);
+      blocIdx=blocs[slot];
+      tableAffichee=(tRef===1||tRef===N)?'1 & '+N:String(tRef);
+    } else {
+      if(sens==='NS'){
+        blocIdx=blocs[T-1];
+        tableAffichee=String(T);
+      } else {
+        blocIdx=blocs[eoPos];
+        tableAffichee=String(eoPos+1);
+        estSaut=withSaut&&t===sautApres+1;
+      }
+    }
+    tours.push({blocIdx,tableAffichee,estSaut});
+    const nd=Array(N);
+    if(isGuerid){ for(let i=0;i<N;i++) nd[i]=blocs[(i+1)%N]; }
+    else{ nd[N-1]=blocs[0]; for(let i=0;i<N-1;i++) nd[i]=blocs[i+1]; }
+    blocs=nd;
+    if(isGuerid) eoTable=(eoTable%N)+1;
+    else{ const pas=withSaut&&t===sautApres?2:1; eoPos=(eoPos+pas)%N; }
+  }
+  return tours;
+}
+
+function start(){
+  const T=int('f-table'),N=int('f-tables'),R=int('f-tours'),D=int('f-dpt');
+  let ok=true;
+  if(N<2){err('e-tables',1);ok=false;}else err('e-tables',0);
+  if(R<1){err('e-tours',1);ok=false;}else err('e-tours',0);
+  if(D<1){err('e-dpt',1);ok=false;}else err('e-dpt',0);
+  if(T<1||T>N){err('e-table',1);ok=false;}else err('e-table',0);
+  if(!ok)return;
+  cfg={T,N,R,D,sens,mode};
+  sim=buildSim(T,N,R,mode,sens);
+  tourActuel=0;
+  document.getElementById('s-config').classList.remove('active');
+  document.getElementById('s-jeu').classList.add('active');
+  render();
+}
+
+function render(){
+  const t=tourActuel,n=t+1;
+  const {R,D,sens:s,mode:m,N}=cfg;
+  const etat=sim[t];
+  const first=etat.blocIdx*D+1;
+  const donnes=Array.from({length:D},(_,i)=>first+i);
+  document.getElementById('d-tour').textContent=n;
+  document.getElementById('d-tour-sub').textContent='sur '+R;
+  document.getElementById('d-table').textContent=etat.tableAffichee;
+  document.getElementById('d-sens').textContent=s==='NS'?'N / S':'E / O';
+  document.getElementById('d-mode').textContent=m==='guerid'?'Guéridon':N%2===0?'Saut':'Simple';
+  document.getElementById('d-saut').style.display=(s==='EO'&&etat.estSaut)?'inline-block':'none';
+  document.getElementById('d-guerid').style.display=(m==='guerid'&&etat.tableAffichee.includes('&'))?'inline-block':'none';
+  const container=document.getElementById('d-donnes');
+  container.innerHTML='';
+  donnes.forEach(d=>{
+    const c=document.createElement('span');
+    c.className='chip';
+    c.textContent='N°'+d;
+    container.appendChild(c);
+  });
+  document.getElementById('btn-prev').disabled=t===0;
+  document.getElementById('btn-next').disabled=t===R-1;
+  document.getElementById('prog').style.width=Math.round(n/R*100)+'%';
+}
+
+function go(d){ tourActuel=Math.max(0,Math.min(cfg.R-1,tourActuel+d)); render(); }
+
+function reset(){
+  document.getElementById('s-jeu').classList.remove('active');
+  document.getElementById('s-config').classList.add('active');
+}
+
+// Service Worker pour mode hors ligne
+if('serviceWorker' in navigator){
+  const swCode=`
+self.addEventListener('install',e=>self.skipWaiting());
+self.addEventListener('activate',e=>e.waitUntil(clients.claim()));
+self.addEventListener('fetch',e=>{
+  e.respondWith(caches.open('bridge-v1').then(cache=>
+    cache.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+      cache.put(e.request,res.clone());return res;
+    }))
+  ));
+});`;
+  const blob=new Blob([swCode],{type:'application/javascript'});
+  const url=URL.createObjectURL(blob);
+  navigator.serviceWorker.register(url);
+}
+
+setMode('mitchell');
+setSens('NS');
+updateInfo();
+</script>
+</body>
+</html>
