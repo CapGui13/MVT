@@ -104,7 +104,7 @@
   </div>
   <div class="field">
     <label>Nombre de paires</label>
-    <input type="number" id="f-paires" min="6" max="36" value="16" step="1" oninput="updateOptions()" onfocus="this.select()"/>
+    <input type="number" id="f-paires" min="6" max="36" value="" step="1" oninput="updateOptions()" onfocus="this.select()"/>
     <p class="err" id="e-paires">Entre 6 et 36 paires</p>
   </div>
   <p class="section-title">Mouvements possibles</p>
@@ -215,16 +215,18 @@ const DB=[
   [14,7,'simple',6,4,false],
   [15,8,'saut',7,4,false],[15,8,'guerid',8,3,true],
   [16,8,'saut',6,4,false],[16,8,'saut',7,4,false],[16,8,'guerid',8,3,false],
-  [17,9,'simple',7,4,false],[17,9,'simple',9,3,true],
-  [18,9,'simple',7,4,false],[18,9,'simple',8,3,false],
+  [17,9,'simple',7,4,false],[17,9,'simple',9,3,true],  // 36 ou 27 en circ
+  [18,9,'simple',8,3,false],[18,9,'simple',7,4,false],  // 8x3 avant, 27 ou 36 en circ
   [19,10,'saut',9,3,false],[19,10,'guerid',10,3,true],
-  [20,10,'saut',8,3,false],[20,10,'saut',9,3,false],[20,10,'guerid',10,3,false],
+  [20,10,'saut',8,3,false],[20,10,'saut',9,3,false],[20,10,'guerid',10,3,true],  // guéridon déficient
   [21,11,'simple',9,3,false],[21,11,'simple',10,3,false],
   [22,11,'simple',8,3,false],[22,11,'simple',9,3,false],[22,11,'simple',10,3,false],
   [23,12,'saut',9,3,false],[23,12,'saut',10,3,false],[23,12,'guerid',12,2,true],
   [24,12,'saut',9,3,false],[24,12,'saut',10,3,false],[24,12,'saut',11,3,false],[24,12,'guerid',12,2,false],
-  [25,13,'simple',13,2,false],[25,13,'simple',8,3,false],[25,13,'simple',9,3,false],
-  [26,13,'simple',12,2,false],[26,13,'simple',8,3,false],[26,13,'simple',9,3,false],
+  [25,13,'simple',8,3,false],[25,13,'simple',9,3,false],   // 39 en circ, recommandé
+  [25,13,'simple',13,2,true],                               // 26 en circ, déficient
+  [26,13,'simple',12,2,false],[26,13,'simple',13,2,false],  // 26 en circ
+  [26,13,'simple',8,3,false],[26,13,'simple',9,3,false],    // 39 en circ
   [27,14,'saut',13,2,false],[27,14,'guerid',14,2,true],
   [28,14,'saut',12,2,false],[28,14,'saut',13,2,false],[28,14,'guerid',14,2,false],
   [29,15,'simple',13,2,false],
@@ -310,16 +312,18 @@ function parseDonnes(){
 }
 function showScreen(to,from){document.getElementById(from).classList.remove('active');document.getElementById(to).classList.add('active');}
 
-// Groupe les entrées DB par mouvement pour un nb de paires donné
+// Groupe les entrées DB par mouvement+dpt pour un nb de paires donné
+// (mouvement+dpt = clé unique car donnes en circ = tables × dpt)
 function getGrouped(p, dbSource){
   const rows=dbSource.filter(r=>r[0]===p);
   const groups={};
   rows.forEach(row=>{
     const isHowell=dbSource===DB_HOWELL;
     const [,t,m,r,d,dc,def]=isHowell?row:[...row.slice(0,5),row[1]*row[4],row[5]];
-    if(!groups[m]) groups[m]={mouvement:m,tables:t,options:[],deficient:true};
-    groups[m].options.push({tours:r,dpt:d,donnesCirc:dc,deficient:def});
-    if(!def) groups[m].deficient=false;
+    const key=m+'_'+d; // grouper par mouvement ET dpt
+    if(!groups[key]) groups[key]={mouvement:m,tables:t,options:[],deficient:true};
+    groups[key].options.push({tours:r,dpt:d,donnesCirc:dc,deficient:def});
+    if(!def) groups[key].deficient=false;
   });
   return Object.values(groups);
 }
