@@ -70,13 +70,13 @@
   .boards-label{font-size:10px;color:var(--text2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px}
   .chips{display:flex;flex-direction:column;gap:6px}
   .chip{background:var(--chip-bg);color:var(--chip-text);border-radius:10px;padding:9px 14px;font-size:17px;font-weight:700;text-align:center}
-  .chip-rich{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;display:flex;gap:10px;align-items:flex-start}
+  .chip-rich{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;display:flex;gap:10px;align-items:center}
   .chip-num{font-size:18px;font-weight:700;color:var(--chip-text);background:var(--chip-bg);border-radius:8px;padding:4px 10px;flex-shrink:0;min-width:44px;text-align:center;line-height:1.4}
   .chip-info{flex:1;display:flex;flex-direction:column;gap:2px}
   .chip-scores{display:flex;gap:12px}
   .chip-score-item{font-size:13px;font-weight:600;color:var(--text)}
   .chip-score-label{font-size:10px;color:var(--text2);margin-right:3px}
-  .chip-note{font-size:12px;color:var(--text2);font-style:italic;margin-top:2px}
+  .chip-note{font-size:12px;color:var(--text2);font-style:italic;visibility:hidden}
   /* Écran donnes */
   .donnes-textarea{width:100%;height:140px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;font-family:inherit;resize:none;line-height:1.4}
   .donnes-textarea:focus{outline:none;border-color:var(--blue)}
@@ -440,14 +440,18 @@ function render(){
     if(info){
       const div=document.createElement('div');
       div.className='chip-rich';
-      const hasScores=info.ns||info.eo;
-      const scoresHtml=hasScores?`
-        <div class="chip-scores">
-          ${info.ns?`<span class="chip-score-item"><span class="chip-score-label">NS</span>${info.ns}</span>`:''}
-          ${info.eo?`<span class="chip-score-item"><span class="chip-score-label">EO</span>${info.eo}</span>`:''}
-        </div>`:'';
-      const noteHtml=info.note?`<div class="chip-note">${info.note}</div>`:'';
-      div.innerHTML=`<div class="chip-num">${d}</div><div class="chip-info">${scoresHtml}${noteHtml}</div>`;
+      const nsVis=info.ns?'visible':'hidden';
+      const eoVis=info.eo?'visible':'hidden';
+      const noteVis=info.note?'visible':'hidden';
+      div.innerHTML=`
+        <div class="chip-num">${d}</div>
+        <div class="chip-info">
+          <div class="chip-scores">
+            <span class="chip-score-item" style="visibility:${nsVis}"><span class="chip-score-label">NS</span>${info.ns||'—'}</span>
+            <span class="chip-score-item" style="visibility:${eoVis}"><span class="chip-score-label">EO</span>${info.eo||'—'}</span>
+          </div>
+          <div class="chip-note" style="visibility:${noteVis}">${info.note||'—'}</div>
+        </div>`;
       container.appendChild(div);
     } else {
       const c=document.createElement('span');
