@@ -473,8 +473,23 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'})));
 }
 
+// Charger donnes.json depuis le même repo GitHub Pages
+async function loadDonnesFromServer(){
+  try {
+    const base=window.location.href.replace(/\/[^/]*$/, '/');
+    const res=await fetch(base+'donnes.json?t='+Date.now());
+    if(!res.ok) return;
+    const data=await res.json();
+    donnesData=data;
+    console.log('Donnes chargées depuis donnes.json : '+Object.keys(data).length+' donnes');
+  } catch(e){
+    console.log('Pas de donnes.json trouvé, mode sans infos.');
+  }
+}
+
 setSens('NS');
 updateOptions();
+loadDonnesFromServer();
 </script>
 </body>
 </html>
