@@ -43,6 +43,8 @@
   .badge-simple{background:#dbeafe;color:#1e3a8a}
   .badge-saut-opt{background:#fef3c7;color:#92400e}
   .badge-guerid-opt{background:#d1fae5;color:#065f46}
+  .badge-howell{background:#f3e8ff;color:#6b21a8}
+  .section-sep{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;padding:4px 2px 2px}
   .no-options{font-size:13px;color:var(--text2);padding:12px;background:var(--bg3);border-radius:10px;text-align:center}
 
   /* Sélection tours */
@@ -102,8 +104,8 @@
   </div>
   <div class="field">
     <label>Nombre de paires</label>
-    <input type="number" id="f-paires" min="11" max="36" value="16" step="1" oninput="updateOptions()" onfocus="this.select()"/>
-    <p class="err" id="e-paires">Entre 11 et 36 paires</p>
+    <input type="number" id="f-paires" min="6" max="36" value="16" step="1" oninput="updateOptions()" onfocus="this.select()"/>
+    <p class="err" id="e-paires">Entre 6 et 36 paires</p>
   </div>
   <p class="section-title">Mouvements possibles</p>
   <p class="section-sub" id="options-sub"></p>
@@ -204,7 +206,8 @@
 let mode='mitchell', sens='NS', cfg={}, tourActuel=0, sim=[];
 let donnesData={}; // {numDonne: {ns, eo, note}}
 
-// DB : [paires, tables, mouvement, positions_jouees, dpt, deficient]
+// DB Mitchell : [paires, tables, mouvement, positions_jouees, dpt, deficient]
+// donnes en circulation = tables × dpt
 const DB=[
   [11,6,'guerid',6,4,true],
   [12,6,'guerid',6,4,false],
@@ -234,9 +237,40 @@ const DB=[
   [36,18,'saut',12,2,false],[36,18,'saut',13,2,false],
 ];
 
-const MOUV_LABEL={simple:'Mitchell simple',saut:'Mitchell avec saut',guerid:'Guéridon'};
-const MOUV_BADGE={simple:'badge-simple',saut:'badge-saut-opt',guerid:'badge-guerid-opt'};
-const MOUV_SHORT={simple:'Simple',saut:'Saut',guerid:'Guéridon'};
+// DB Howell : [paires, tables, mouvement, positions_jouees, dpt, donnesCirc, deficient]
+const DB_HOWELL=[
+  [6, 3,'suedois', 5,5,25,false],
+  [6, 3,'brazza',  5,5,25,false],
+  [7, 4,'heredia', 6,4,28,false],
+  [7, 4,'classique',6,4,28,false],[7,4,'classique',7,4,28,false],
+  [8, 4,'heredia', 6,4,32,false],
+  [8, 4,'classique',6,4,28,false],[8,4,'classique',7,4,28,false],
+  [9, 5,'heredia', 8,3,27,false],
+  [9, 5,'classique',8,3,27,false],[9,5,'classique',9,3,27,false],
+  [10,5,'heredia', 8,3,30,false],
+  [10,5,'classique',8,3,27,false],[10,5,'classique',9,3,27,false],
+  [11,6,'heredia', 8,3,30,false],
+  [11,6,'classique',8,3,33,false],[11,6,'classique',9,3,33,false],
+  [12,6,'heredia', 8,3,30,false],
+  [12,6,'classique',8,3,33,false],[12,6,'classique',9,3,33,false],
+  [13,7,'classique',12,2,26,false],[13,7,'classique',13,2,26,false],
+  [14,7,'classique',12,2,26,false],[14,7,'classique',13,2,26,false],
+  [15,8,'classique',12,2,30,false],[15,8,'classique',13,2,30,false],
+  [16,8,'classique',12,2,30,false],[16,8,'classique',13,2,30,false],
+];
+
+const MOUV_LABEL={
+  simple:'Mitchell simple',saut:'Mitchell avec saut',guerid:'Guéridon',
+  suedois:'Suédois',brazza:'Brazza',heredia:'Howell Hérédia',classique:'Howell Classique'
+};
+const MOUV_BADGE={
+  simple:'badge-simple',saut:'badge-saut-opt',guerid:'badge-guerid-opt',
+  suedois:'badge-howell',brazza:'badge-howell',heredia:'badge-howell',classique:'badge-howell'
+};
+const MOUV_SHORT={
+  simple:'Simple',saut:'Saut',guerid:'Guéridon',
+  suedois:'Suédois',brazza:'Brazza',heredia:'Hérédia',classique:'Classique'
+};
 
 const OFF  ={background:'transparent',color:'var(--text2)',border:'1.5px solid var(--border)',fontWeight:'400'};
 const BLUE ={background:'#60a5fa',color:'#000',border:'1.5px solid #60a5fa',fontWeight:'700'};
@@ -277,15 +311,38 @@ function parseDonnes(){
 function showScreen(to,from){document.getElementById(from).classList.remove('active');document.getElementById(to).classList.add('active');}
 
 // Groupe les entrées DB par mouvement pour un nb de paires donné
-function getGrouped(p){
-  const rows=DB.filter(r=>r[0]===p);
+function getGrouped(p, dbSource){
+  const rows=dbSource.filter(r=>r[0]===p);
   const groups={};
-  rows.forEach(([,t,m,r,d,def])=>{
+  rows.forEach(row=>{
+    const isHowell=dbSource===DB_HOWELL;
+    const [,t,m,r,d,dc,def]=isHowell?row:[...row.slice(0,5),row[1]*row[4],row[5]];
     if(!groups[m]) groups[m]={mouvement:m,tables:t,options:[],deficient:true};
-    groups[m].options.push({tours:r,dpt:d,deficient:def});
-    if(!def) groups[m].deficient=false; // si une option non-def, le groupe n'est pas déficient
+    groups[m].options.push({tours:r,dpt:d,donnesCirc:dc,deficient:def});
+    if(!def) groups[m].deficient=false;
   });
   return Object.values(groups);
+}
+
+function renderOptionBtn(el,g,best){
+  const btn=document.createElement('button');
+  btn.className='option-btn';
+  const dc=g.options[0].donnesCirc;
+  const defStyle=g.deficient?'visibility:visible':'visibility:hidden';
+  const bestStyle=best?'visibility:visible':'visibility:hidden';
+  const toursLabel=g.options.length===1?g.options[0].tours+'x'+g.options[0].dpt:g.options.map(o=>o.tours+'x'+o.dpt).join(' ou ');
+  btn.innerHTML=`
+    <div style="flex:1">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="option-main" style="line-height:1">${MOUV_LABEL[g.mouvement]}</span>
+        <span style="font-size:11px;line-height:1;position:relative;top:-1px;${bestStyle}">⭐</span>
+        <span style="font-size:11px;color:#f87171;font-weight:600;line-height:1;position:relative;top:-1px;${defStyle}">déficient</span>
+      </div>
+      <div class="option-detail">${g.tables} tables · ${toursLabel} donnes · ${dc} en circulation</div>
+    </div>
+    <span class="option-badge ${MOUV_BADGE[g.mouvement]}">${MOUV_SHORT[g.mouvement]}</span>`;
+  btn.onclick=()=>selectMouvement(g);
+  el.appendChild(btn);
 }
 
 function updateOptions(){
@@ -293,47 +350,36 @@ function updateOptions(){
   const el=document.getElementById('options-list');
   const errEl=document.getElementById('e-paires');
   const sub=document.getElementById('options-sub');
-  if(p<11||p>36){errEl.style.display='block';el.innerHTML='';sub.textContent='';return;}
+  if(p<6||p>36){errEl.style.display='block';el.innerHTML='';sub.textContent='';return;}
   errEl.style.display='none';
-  const groups=getGrouped(p);
+
+  const mitchellGroups=getGrouped(p,DB);
+  const howellGroups=getGrouped(p,DB_HOWELL);
+  const allGroups=[...mitchellGroups,...howellGroups];
+
   el.innerHTML='';
-  if(!groups.length){el.innerHTML='<p class="no-options">Aucun mouvement disponible</p>';sub.textContent='';return;}
-  sub.textContent=groups.length===1?'Un seul mouvement possible':'Choisissez un mouvement';
-  const hasAlt=groups.some(g=>!g.deficient)&&groups.some(g=>g.deficient);
-  groups.forEach(g=>{
-    const best=hasAlt&&!g.deficient;
-    const btn=document.createElement('button');
-    btn.className='option-btn';
-    const donnesCirc=g.tables*g.options[0].dpt;
-    const toursInfo=g.options.length===1?g.options[0].tours+' positions':g.options.map(o=>o.tours).join(' ou ')+' positions';
-    const defStyle=g.deficient?'visibility:visible':'visibility:hidden';
-    const bestStyle=best?'visibility:visible':'visibility:hidden';
-    const toursLabel=g.options.length===1?g.options[0].tours+'x'+g.options[0].dpt:g.options.map(o=>o.tours+'x'+o.dpt).join(' ou ');
-    btn.innerHTML=`
-      <div style="flex:1">
-        <div style="display:flex;align-items:center;gap:6px">
-          <span class="option-main" style="line-height:1">${MOUV_LABEL[g.mouvement]}</span>
-          <span style="font-size:11px;line-height:1;position:relative;top:-1px;${bestStyle}">⭐</span>
-          <span style="font-size:11px;color:#f87171;font-weight:600;line-height:1;position:relative;top:-1px;${defStyle}">déficient</span>
-        </div>
-        <div class="option-detail">${g.tables} tables · ${toursLabel} donnes · ${donnesCirc} en circulation</div>
-      </div>
-      <span class="option-badge ${MOUV_BADGE[g.mouvement]}">${MOUV_SHORT[g.mouvement]}</span>`;
-    btn.onclick=()=>selectMouvement(p,g);
-    el.appendChild(btn);
-  });
+  if(!allGroups.length){el.innerHTML='<p class="no-options">Aucun mouvement disponible</p>';sub.textContent='';return;}
+  sub.textContent=allGroups.length===1?'Un seul mouvement possible':'Choisissez un mouvement';
+
+  if(mitchellGroups.length){
+    const sep=document.createElement('p');sep.className='section-sep';sep.textContent='Mitchell';el.appendChild(sep);
+    const hasAlt=mitchellGroups.some(g=>!g.deficient)&&mitchellGroups.some(g=>g.deficient);
+    mitchellGroups.forEach(g=>renderOptionBtn(el,g,hasAlt&&!g.deficient));
+  }
+  if(howellGroups.length){
+    const sep=document.createElement('p');sep.className='section-sep';sep.textContent='Howell';el.appendChild(sep);
+    howellGroups.forEach(g=>renderOptionBtn(el,g,false));
+  }
 }
 
-function selectMouvement(p,g){
+function selectMouvement(g){
   if(g.options.length===1){
-    // Une seule option de tours → passer directement à config
     applyConfig(g.mouvement,g.tables,g.options[0].tours,g.options[0].dpt);
   } else {
-    // Plusieurs options → écran de choix des tours
     const el=document.getElementById('tours-list');
     el.innerHTML='';
     document.getElementById('tours-title').textContent='Nombre de positions — '+MOUV_LABEL[g.mouvement];
-    document.getElementById('tours-sub').textContent=g.tables+' tables · '+g.options[0].dpt+' donnes/tour · '+g.tables*g.options[0].dpt+' donnes en circulation';
+    document.getElementById('tours-sub').textContent=g.tables+' tables · '+g.options[0].donnesCirc+' donnes en circulation';
     g.options.forEach(o=>{
       const btn=document.createElement('button');
       btn.className='tour-btn';
@@ -344,7 +390,7 @@ function selectMouvement(p,g){
             <div class="tour-main">${o.tours} positions · ${o.dpt} donnes/tour</div>
             <span style="font-size:11px;color:#f87171;font-weight:600;line-height:1;position:relative;top:-1px;${defStyle2}">déficient</span>
           </div>
-          <div class="tour-detail">${g.tables*o.dpt} donnes en circulation</div>
+          <div class="tour-detail">${o.donnesCirc} donnes en circulation</div>
         </div>
         <span style="font-size:13px;color:var(--text2)">→</span>`;
       btn.onclick=()=>applyConfig(g.mouvement,g.tables,o.tours,o.dpt);
