@@ -445,9 +445,31 @@ const HOWELL_MOVES = {
   },
 };
 
-// Lookup: pour un mouvement Howell donné, retourne les donnes d'une paire à un tour
+// Mapping nbPaires -> clé réelle dans HOWELL_MOVES
+const HOWELL_KEY_MAP = {
+  'classique_6_4':  'classique_6_4',
+  'classique_7_4':  'classique_6_4',  // 7p classique utilise le tableau 6p
+  'classique_8_4':  'classique_6_4',  // 8p classique 4dpt = tableau 6p
+  'classique_8_3':  'classique_8_3',
+  'classique_9_3':  'classique_8_3',  // 9p classique utilise tableau 8p
+  'classique_10_3': 'classique_10_3',
+  'classique_11_3': 'classique_10_3', // 11p classique utilise tableau 10p
+  'classique_12_3': 'classique_12_3',
+  'classique_13_2': 'classique_12_3',
+  'classique_14_2': 'classique_12_3',
+  'classique_15_2': 'classique_12_3',
+  'classique_16_2': 'classique_12_3',
+  'heredia_7_4':  'heredia_7_4',
+  'heredia_8_4':  'heredia_8_4',
+  'heredia_9_3':  'heredia_9_3',
+  'heredia_10_3': 'heredia_10_3',
+  'heredia_11_3': 'heredia_11_3',
+  'heredia_12_3': 'heredia_12_3',
+};
+
 function howellDonnes(key, paire, tour) {
-  const mv = HOWELL_MOVES[key];
+  const realKey = HOWELL_KEY_MAP[key] || key;
+  const mv = HOWELL_MOVES[realKey];
   if(!mv) return null;
   if(mv.type==='classique') {
     // chercher dans les tables
@@ -508,40 +530,28 @@ function showScreen(to, from){
   document.getElementById(to).classList.add('active');
 }
 
-let _navLocked=false;
-function _withNavLock(fn){
-  if(_navLocked) return;
-  _navLocked=true;
-  setTimeout(()=>_navLocked=false, 400);
-  fn();
-}
-
 function goTo(to){
-  _withNavLock(()=>{
-    const screens=['s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu'];
-    const current=screens.find(s=>document.getElementById(s).classList.contains('active'));
-    if(current){ navHistory.push(current); document.getElementById(current).classList.remove('active'); }
-    document.getElementById(to).classList.add('active');
-  });
+  const screens=['s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu'];
+  const current=screens.find(s=>document.getElementById(s).classList.contains('active'));
+  if(current){ navHistory.push(current); document.getElementById(current).classList.remove('active'); }
+  document.getElementById(to).classList.add('active');
 }
 
 function goBack(){
-  _withNavLock(()=>{
-    if(!navHistory.length) return;
-    const current=['s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu'].find(s=>document.getElementById(s).classList.contains('active'));
-    if(current) document.getElementById(current).classList.remove('active');
-    const prev=navHistory.pop();
-    document.getElementById(prev).classList.add('active');
-    if(prev==='s-tournoi'){
-      donnesData={};
-      window._donnesFichier=null;
-      const btn=document.getElementById('btn-charger-donnes');
-      if(btn) btn.style.display='';
-      document.getElementById('tournoi-sub').textContent='Chargement...';
-      document.getElementById('tournoi-list').innerHTML='';
-      initTournoi();
-    }
-  });
+  if(!navHistory.length) return;
+  const current=['s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu'].find(s=>document.getElementById(s).classList.contains('active'));
+  if(current) document.getElementById(current).classList.remove('active');
+  const prev=navHistory.pop();
+  document.getElementById(prev).classList.add('active');
+  if(prev==='s-tournoi'){
+    donnesData={};
+    window._donnesFichier=null;
+    const btn=document.getElementById('btn-charger-donnes');
+    if(btn) btn.style.display='';
+    document.getElementById('tournoi-sub').textContent='Chargement...';
+    document.getElementById('tournoi-list').innerHTML='';
+    initTournoi();
+  }
 }
 
 // Groupe les entrées DB par mouvement+dpt pour un nb de paires donné
@@ -790,11 +800,7 @@ function render(){
   document.getElementById('prog').style.width=Math.round(n/R*100)+'%';
 }
 
-let _goLocked=false;
 function go(d){
-  if(_goLocked) return;
-  _goLocked=true;
-  setTimeout(()=>_goLocked=false, 300);
   const next=Math.max(0,Math.min(cfg.R-1,tourActuel+d));
   if(next===tourActuel) return;
   tourActuel=next;
