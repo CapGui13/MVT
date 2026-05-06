@@ -218,8 +218,8 @@
     <div class="chips" id="d-donnes"></div>
   </div>
   <div class="nav">
-    <button type="button" class="nav-btn" id="btn-prev" onclick="go(-1)">← Précédent</button>
-    <button type="button" class="nav-btn fwd" id="btn-next" onclick="go(1)">Suivant →</button>
+    <button type="button" class="nav-btn" id="btn-prev">← Précédent</button>
+    <button type="button" class="nav-btn fwd" id="btn-next">Suivant →</button>
   </div>
   <button class="reset" onclick="reset()">← Quitter le tournoi</button>
 </div>
@@ -793,12 +793,16 @@ function render(){
   document.getElementById('prog').style.width=Math.round(n/R*100)+'%';
 }
 
+let _rafPending=false;
 function go(d){
   const next=Math.max(0,Math.min(cfg.R-1,tourActuel+d));
   if(next===tourActuel) return;
   tourActuel=next;
-  saveState();
-  render();
+  setTimeout(saveState, 0);
+  if(!_rafPending){
+    _rafPending=true;
+    requestAnimationFrame(()=>{ _rafPending=false; render(); });
+  }
 }
 
 function reset(){
@@ -1035,6 +1039,16 @@ function showUpdateBanner(){
 setSens('NS');
 initTournoi();
 checkForUpdate();
+
+// touchend sur les boutons nav pour éviter le délai 300ms iOS
+function addNavListener(id, delta){
+  const btn=document.getElementById(id);
+  if(!btn) return;
+  btn.addEventListener('touchend', e=>{ e.preventDefault(); go(delta); }, {passive:false});
+  btn.addEventListener('click', e=>{ go(delta); }); // fallback desktop
+}
+addNavListener('btn-prev', -1);
+addNavListener('btn-next', 1);
 </script>
 </body>
 </html>
