@@ -97,7 +97,28 @@
 <div class="wrap">
 
 <!-- ÉCRAN 1 : NOMBRE DE PAIRES -->
-<div class="screen active" id="s-paires">
+<div class="screen active" id="s-tournoi">
+  <div class="header">
+    <div class="header-icon">♠</div>
+    <div><h1>Bridge Mitchell</h1><p>Gestion de tournoi</p></div>
+  </div>
+  <div id="s-tournoi-resume" style="display:none">
+    <p class="section-title">Tournoi en cours</p>
+    <div id="resume-card" style="background:var(--bg2);border:1.5px solid var(--blue);border-radius:12px;padding:14px;margin-bottom:1rem;cursor:pointer" onclick="resumeTournoi()">
+      <p id="resume-desc" style="font-size:14px;font-weight:600;color:var(--text)"></p>
+      <p id="resume-sub" style="font-size:12px;color:var(--text2);margin-top:4px"></p>
+    </div>
+    <button class="btn-go" onclick="resumeTournoi()">↩ Reprendre</button>
+    <button class="btn-go" style="margin-top:.6rem;background:var(--bg3);color:var(--text2);font-size:14px" onclick="clearResume()">Ignorer et recommencer</button>
+    <div style="margin:1.5rem 0;border-top:1px solid var(--border)"></div>
+  </div>
+  <p class="section-title">Choisir un tournoi</p>
+  <p class="section-sub" id="tournoi-sub">Chargement...</p>
+  <div class="options-list" id="tournoi-list"></div>
+  <button class="btn-go" style="margin-top:1rem;background:var(--bg3);color:var(--text2);font-size:14px" onclick="showScreen('s-paires','s-tournoi')">Continuer sans donnes →</button>
+</div>
+
+<div class="screen" id="s-paires">
   <div class="header">
     <div class="header-icon">♠</div>
     <div><h1>Bridge Mitchell</h1><p>Gestion de tournoi</p></div>
@@ -660,6 +681,7 @@ function start(){
     sim=buildSim(T,N,R,mode,sens);
   }
   tourActuel=0;
+  saveState();
   showScreen('s-jeu','s-config');
   render();
 }
@@ -732,35 +754,159 @@ function render(){
   document.getElementById('prog').style.width=Math.round(n/R*100)+'%';
 }
 
-function go(d){tourActuel=Math.max(0,Math.min(cfg.R-1,tourActuel+d));render();window.scrollTo({top:0,behavior:'instant'});}
+function go(d){tourActuel=Math.max(0,Math.min(cfg.R-1,tourActuel+d));saveState();render();window.scrollTo({top:0,behavior:'instant'});}
 
 function reset(){
+  localStorage.removeItem('bridge_state');
   document.getElementById('s-jeu').classList.remove('active');
-  document.getElementById('s-paires').classList.add('active');
+  document.getElementById('s-tournoi').classList.add('active');
 }
 
-if('serviceWorker' in navigator){
-  const sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(clients.claim()));self.addEventListener('fetch',e=>{e.respondWith(caches.open('bridge-v4').then(cache=>cache.match(e.request).then(r=>r||fetch(e.request).then(res=>{cache.put(e.request,res.clone());return res;}))));});`;
-  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'})));
+// ============================================================
+// SAUVEGARDE / RESTAURATION D'ÉTAT
+// ============================================================
+function saveState(){
+  try{
+    localStorage.setItem('bridge_state', JSON.stringify({
+      cfg, sim, tourActuel, mode, sens,
+      donnesFichier: window._donnesFichier||null,
+      ts: Date.now()
+    }));
+  }catch(e){}
 }
 
-// Charger donnes.json depuis le même repo GitHub Pages
-async function loadDonnesFromServer(){
-  try {
-    const base=window.location.href.replace(/\/[^/]*$/, '/');
-    const res=await fetch(base+'donnes.json?t='+Date.now());
-    if(!res.ok) return;
-    const data=await res.json();
-    donnesData=data;
-    console.log('Donnes chargées depuis donnes.json : '+Object.keys(data).length+' donnes');
-  } catch(e){
-    console.log('Pas de donnes.json trouvé, mode sans infos.');
+function loadState(){
+  try{
+    const raw=localStorage.getItem('bridge_state');
+    if(!raw) return null;
+    const s=JSON.parse(raw);
+    // Expire après 24h
+    if(Date.now()-s.ts > 24*3600*1000){ localStorage.removeItem('bridge_state'); return null; }
+    return s;
+  }catch(e){ return null; }
+}
+
+function clearResume(){
+  localStorage.removeItem('bridge_state');
+  document.getElementById('s-tournoi-resume').style.display='none';
+}
+
+function resumeTournoi(){
+  const s=loadState();
+  if(!s) return;
+  cfg=s.cfg; sim=s.sim; tourActuel=s.tourActuel; mode=s.mode; sens=s.sens||'NS';
+  showScreen('s-jeu','s-tournoi');
+  render();
+}
+
+function modeLabel(m){
+  const l={mitchell:'Mitchell simple',saut:'Mitchell saut',guerid:'Guéridon',heredia:'Howell Hérédia',classique:'Howell Classique'};
+  return l[m]||m;
+}
+
+// ============================================================
+// SÉLECTION DU TOURNOI
+// ============================================================
+async function initTournoi(){
+  // Vérifier s'il y a un état sauvegardé
+  const saved=loadState();
+  if(saved){
+    const resume=document.getElementById('s-tournoi-resume');
+    const d=new Date(saved.ts);
+    const dateStr=d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
+    const timeStr=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('resume-desc').textContent=modeLabel(saved.mode)+' — Tour '+(saved.tourActuel+1)+'/'+saved.cfg.R;
+    document.getElementById('resume-sub').textContent='Sauvegardé le '+dateStr+' à '+timeStr;
+    resume.style.display='';
   }
+
+  const base=window.location.href.replace(/\/[^/]*$/,'/');
+  const list=document.getElementById('tournoi-list');
+  const sub=document.getElementById('tournoi-sub');
+
+  // Détecter le repo GitHub depuis l'URL (CapGui13.github.io/MVT/)
+  try{
+    const hostname=window.location.hostname; // ex: capgui13.github.io
+    const parts=hostname.split('.');
+    let user=null, repo=null;
+
+    if(parts.length>=3 && parts[1]==='github' && parts[2]==='io'){
+      user=parts[0];
+      const pathParts=window.location.pathname.split('/').filter(Boolean);
+      repo=pathParts[0]||null;
+    }
+
+    if(!user||!repo) throw new Error('Pas sur GitHub Pages');
+
+    // Appel API GitHub pour lister les fichiers du repo
+    const apiUrl=`https://api.github.com/repos/${user}/${repo}/contents/`;
+    const res=await fetch(apiUrl, {headers:{Accept:'application/vnd.github.v3+json'}});
+    if(!res.ok) throw new Error();
+    const files=await res.json();
+
+    // Filtrer les fichiers donnes-*.json
+    const donneFichiers=files
+      .filter(f=>f.type==='file' && /^donnes.*\.json$/i.test(f.name))
+      .sort((a,b)=>b.name.localeCompare(a.name)); // plus récent en premier
+
+    if(!donneFichiers.length){
+      sub.textContent='Aucun fichier de donnes trouvé sur GitHub.';
+      return;
+    }
+
+    sub.textContent=donneFichiers.length+' tournoi'+(donneFichiers.length>1?'s':'')+' disponible'+(donneFichiers.length>1?'s':'');
+
+    donneFichiers.forEach(f=>{
+      const btn=document.createElement('button');
+      btn.className='option-btn';
+      const match=f.name.match(/(\d{4}-\d{2}-\d{2})/);
+      let label=f.name.replace('.json','').replace(/^donnes[-_]?/i,'');
+      if(match){
+        const d=new Date(match[1]+'T12:00:00');
+        label=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+        label=label.charAt(0).toUpperCase()+label.slice(1);
+      }
+      btn.innerHTML=`<div style="flex:1"><div class="option-main">${label||f.name}</div><div class="option-detail">${f.name}</div></div><span style="font-size:18px">→</span>`;
+      btn.onclick=()=>chargerTournoi(base+f.name, f.name);
+      list.appendChild(btn);
+    });
+
+  }catch(e){
+    // Fallback : charger donnes.json directement
+    sub.textContent='Chargement du fichier par défaut...';
+    await chargerTournoi(base+'donnes.json','donnes.json', true);
+    sub.textContent='Fichier de donnes chargé.';
+  }
+}
+
+async function chargerTournoi(url, fichier, silencieux=false){
+  try{
+    const res=await fetch(url+'?t='+Date.now());
+    if(!res.ok) throw new Error();
+    donnesData=await res.json();
+    window._donnesFichier=fichier;
+    if(!silencieux){
+      const sub=document.getElementById('tournoi-sub');
+      sub.textContent='✓ '+Object.keys(donnesData).length+' donnes chargées';
+    }
+  }catch(e){
+    donnesData={};
+    if(!silencieux) console.log('Impossible de charger',url);
+  }
+  if(!silencieux) showScreen('s-paires','s-tournoi');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+if('serviceWorker' in navigator){
+  const sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(clients.claim()));self.addEventListener('fetch',e=>{e.respondWith(caches.open('bridge-v5').then(cache=>cache.match(e.request).then(r=>r||fetch(e.request).then(res=>{cache.put(e.request,res.clone());return res;}))));});`;
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'})));
 }
 
 setSens('NS');
 updateOptions();
-loadDonnesFromServer();
+initTournoi();
 </script>
 </body>
 </html>
