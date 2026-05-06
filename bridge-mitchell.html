@@ -14,6 +14,8 @@
   @media(prefers-color-scheme:light){:root{--bg:#f8f8f7;--bg2:#fff;--bg3:#efefed;--text:#111;--text2:#666;--border:#ddd;--chip-bg:#dbeafe;--chip-text:#1e3a8a;}}
   body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;padding-bottom:env(safe-area-inset-bottom);}
   .wrap{max-width:480px;margin:0 auto;padding:1.5rem 1rem}
+  .screen{display:none}
+  .screen.active{display:block}
   #s-jeu{display:none;flex-direction:column}
   #s-jeu.active{display:flex;position:fixed;top:0;left:0;right:0;bottom:0;padding:1.5rem 1rem;overflow:hidden;overscroll-behavior:none;background:var(--bg);}
   .header{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem}
@@ -917,7 +919,7 @@ async function chargerTournoi(url, fichier, silencieux=false){
 // INIT
 // ============================================================
 if('serviceWorker' in navigator){
-  const sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(clients.claim()));self.addEventListener('fetch',e=>{e.respondWith(caches.open('bridge-v5').then(cache=>cache.match(e.request).then(r=>r||fetch(e.request).then(res=>{cache.put(e.request,res.clone());return res;}))));});`;
+  const sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(clients.claim()));self.addEventListener('fetch',e=>{e.respondWith(caches.open('bridge-v6').then(cache=>cache.match(e.request).then(r=>r||fetch(e.request).then(res=>{cache.put(e.request,res.clone());return res;}))));});`;
   navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'})));
 }
 
