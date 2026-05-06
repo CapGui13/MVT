@@ -871,7 +871,6 @@ async function initTournoi(){
 
     const today=new Date(); today.setHours(0,0,0,0);
 
-    // Séparer futurs/aujourd'hui et passés, trier chaque groupe
     const futurs=[], passes=[];
     donneFichiers.forEach(fname=>{
       const match=fname.match(/(\d{4}-\d{2}-\d{2})/);
@@ -879,12 +878,21 @@ async function initTournoi(){
       const passe=date&&date<today;
       (passe?passes:futurs).push({fname,date});
     });
-    // Futurs : du plus proche au plus lointain (croissant)
     futurs.sort((a,b)=>(a.date||0)-(b.date||0));
-    // Passés : du plus récent au plus ancien (décroissant)
     passes.sort((a,b)=>(b.date||0)-(a.date||0));
 
-    [...futurs,...passes].forEach(({fname,date})=>{
+    // Charger le nb de donnes de chaque fichier en parallèle
+    const tous=[...futurs,...passes];
+    const counts = await Promise.all(tous.map(async ({fname})=>{
+      try{
+        const r=await fetch(base+fname+'?t='+Date.now());
+        if(!r.ok) return null;
+        const data=await r.json();
+        return Object.keys(data).length;
+      }catch(e){ return null; }
+    }));
+
+    tous.forEach(({fname,date},i)=>{
       const btn=document.createElement('button');
       btn.className='option-btn';
       const passe=date&&date<today;
@@ -895,8 +903,10 @@ async function initTournoi(){
         label=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
         label=label.charAt(0).toUpperCase()+label.slice(1);
       }
+      const nbDonnes=counts[i];
+      const countHtml=nbDonnes!==null?`<span style="font-style:italic;font-size:12px;color:var(--text2);margin-left:8px">${nbDonnes} donnes</span>`:'';
       if(passe) btn.style.opacity='0.4';
-      btn.innerHTML=`<div style="flex:1"><div class="option-main">${label}</div></div><span style="font-size:18px">→</span>`;
+      btn.innerHTML=`<div style="flex:1;display:flex;align-items:center"><div class="option-main">${label}</div>${countHtml}</div><span style="font-size:18px">→</span>`;
       btn.onclick=()=>chargerTournoi(base+fname, fname);
       list.appendChild(btn);
     });
