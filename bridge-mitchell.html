@@ -123,21 +123,26 @@
 <!-- ÉCRAN 3 : CONFIG -->
 <div class="screen" id="s-config">
   <button class="back-btn" onclick="showScreen('s-paires','s-config')">← Retour</button>
-  <div class="field">
+  <div class="field" id="field-paire-howell" style="display:none">
+    <label>Votre numéro de paire</label>
+    <input type="number" id="f-paire-howell" min="1" value="1" step="1" onfocus="this.select()"/>
+    <p class="err" id="e-paire-howell">Numéro invalide</p>
+  </div>
+  <div class="field" id="field-mode" style="">
     <label>Mouvement</label>
     <div class="seg">
       <button class="seg-btn" id="btn-mitchell" onclick="setMode('mitchell')">Mitchell</button>
       <button class="seg-btn" id="btn-guerid" onclick="setMode('guerid')">Guéridon</button>
     </div>
   </div>
-  <div class="field">
+  <div class="field" id="field-sens">
     <label>Votre sens</label>
     <div class="seg">
       <button class="seg-btn" id="btn-ns" onclick="setSens('NS')">Nord / Sud</button>
       <button class="seg-btn" id="btn-eo" onclick="setSens('EO')">Est / Ouest</button>
     </div>
   </div>
-  <div class="field">
+  <div class="field" id="field-table">
     <label>Votre table de départ</label>
     <input type="number" id="f-table" min="1" value="1" step="1" onfocus="this.select()"/>
     <p class="err" id="e-table">Entre 1 et le nombre de tables</p>
@@ -183,12 +188,13 @@
       <p class="big-sub" id="d-tour-sub">sur 7</p>
       <span class="badge badge-saut" id="d-saut" style="visibility:hidden">Tour du saut</span>
       <span class="badge badge-guerid" id="d-guerid" style="visibility:hidden">Tables miroir</span>
+      <span class="badge" id="d-relais" style="visibility:hidden;background:#f3e8ff;color:#6b21a8">Relais — pas de jeu</span>
     </div>
   </div>
   <div class="meta">
     <div class="meta-cell"><p class="meta-label">Mouvement</p><p class="meta-val" id="d-mode">—</p></div>
-    <div class="meta-cell"><p class="meta-label">Table</p><p class="meta-val" id="d-table">—</p></div>
-    <div class="meta-cell"><p class="meta-label">Sens</p><p class="meta-val" id="d-sens">—</p></div>
+    <div class="meta-cell"><p class="meta-label" id="d-label-table">Table</p><p class="meta-val" id="d-table">—</p></div>
+    <div class="meta-cell"><p class="meta-label" id="d-label-sens">Sens</p><p class="meta-val" id="d-sens">—</p></div>
   </div>
   <div class="boards-card">
     <p class="boards-label">Donnes à jouer</p>
@@ -279,6 +285,175 @@ const BLUE ={background:'#60a5fa',color:'#000',border:'1.5px solid #60a5fa',font
 const GREEN={background:'#4ade80',color:'#000',border:'1.5px solid #4ade80',fontWeight:'700'};
 
 function applyStyle(el,s){Object.assign(el.style,s);}
+
+// ============================================================
+// HOWELL - Tableaux de mouvement complets
+// Format classique: tables = [[ns,eo,[debut,fin]], ...]  par tour
+// Format hérédia:  paires = {p: [{t,o,e:[debut,fin]} ou {relais:true}], ...}
+// ============================================================
+const HOWELL_MOVES = {
+  // --- CLASSIQUE 6 paires, 4 donnes/tour, 5 tours ---
+  'classique_6_4': {
+    type:'classique', nbPaires:6, dpt:4, nbTours:5,
+    tables:[
+      [[6,1,[1,4]],[6,2,[5,8]],[6,3,[9,12]],[6,4,[13,16]],[6,5,[17,20]]],
+      [[5,2,[13,16]],[1,3,[13,16]],[2,4,[1,4]],[3,5,[1,4]],[4,1,[17,20]]],
+      [[4,3,[5,8]],[5,4,[9,12]],[1,5,[5,8]],[2,1,[9,12]],[3,2,[17,20]]],
+    ]
+  },
+  // --- CLASSIQUE 8 paires, 3 donnes/tour, 7 tours ---
+  'classique_8_3': {
+    type:'classique', nbPaires:8, dpt:3, nbTours:7,
+    tables:[
+      [[8,1,[1,3]],[8,2,[4,6]],[8,3,[7,9]],[8,4,[10,12]],[8,5,[13,15]],[8,6,[16,18]],[8,7,[19,21]]],
+      [[2,6,[10,12]],[3,7,[13,15]],[4,1,[16,18]],[5,2,[19,21]],[6,3,[1,3]],[7,4,[4,6]],[1,5,[7,9]]],
+      [[5,7,[16,18]],[6,1,[19,21]],[7,2,[1,3]],[1,3,[4,6]],[2,4,[7,9]],[3,5,[10,12]],[4,6,[13,15]]],
+      [[3,4,[19,21]],[4,5,[1,3]],[5,6,[4,6]],[6,7,[7,9]],[7,1,[10,12]],[1,2,[13,15]],[2,3,[16,18]]],
+    ]
+  },
+  // --- CLASSIQUE 10 paires, 3 donnes/tour, 9 tours ---
+  'classique_10_3': {
+    type:'classique', nbPaires:10, dpt:3, nbTours:9,
+    tables:[
+      [[10,1,[1,3]],[10,2,[4,6]],[10,3,[7,9]],[10,4,[10,12]],[10,5,[13,15]],[10,6,[16,18]],[10,7,[19,21]],[10,8,[22,24]],[10,9,[25,27]]],
+      [[8,9,[4,6]],[9,1,[7,9]],[1,2,[10,12]],[2,3,[13,15]],[3,4,[16,18]],[4,5,[19,21]],[5,6,[22,24]],[6,7,[25,27]],[7,8,[1,3]]],
+      [[6,4,[7,9]],[7,5,[10,12]],[8,6,[13,15]],[9,7,[16,18]],[1,8,[19,21]],[2,9,[22,24]],[3,1,[25,27]],[4,2,[1,3]],[5,3,[4,6]]],
+      [[3,7,[22,24]],[4,8,[25,27]],[5,9,[1,3]],[6,1,[4,6]],[7,2,[7,9]],[8,3,[10,12]],[9,4,[13,15]],[1,5,[16,18]],[2,6,[19,21]]],
+      [[2,5,[25,27]],[3,6,[1,3]],[4,7,[4,6]],[5,8,[7,9]],[6,9,[10,12]],[7,1,[13,15]],[8,2,[16,18]],[9,3,[19,21]],[1,4,[22,24]]],
+    ]
+  },
+  // --- CLASSIQUE 12 paires, 3 donnes/tour, 11 tours ---
+  'classique_12_3': {
+    type:'classique', nbPaires:12, dpt:3, nbTours:11,
+    tables:[
+      [[12,1,[1,3]],[12,2,[4,6]],[12,3,[7,9]],[12,4,[10,12]],[12,5,[13,15]],[12,6,[16,18]],[12,7,[19,21]],[12,8,[22,24]],[12,9,[25,27]],[12,10,[28,30]],[12,11,[31,33]]],
+      [[6,11,[7,9]],[7,1,[10,12]],[8,2,[13,15]],[9,3,[16,18]],[10,4,[19,21]],[11,5,[22,24]],[1,6,[25,27]],[2,7,[28,30]],[3,8,[31,33]],[4,9,[1,3]],[5,10,[4,6]]],
+      [[5,9,[19,21]],[6,10,[22,24]],[7,11,[25,27]],[8,1,[28,30]],[9,2,[31,33]],[10,3,[1,3]],[11,4,[4,6]],[1,5,[7,9]],[2,6,[10,12]],[3,7,[13,15]],[4,8,[16,18]]],
+      [[2,3,[22,24]],[3,4,[25,27]],[4,5,[28,30]],[5,6,[31,33]],[6,7,[1,3]],[7,8,[4,6]],[8,9,[7,9]],[9,10,[10,12]],[10,11,[13,15]],[11,1,[16,18]],[1,2,[19,21]]],
+      [[10,8,[25,27]],[11,9,[28,30]],[1,10,[31,33]],[2,11,[1,3]],[3,1,[4,6]],[4,2,[7,9]],[5,3,[10,12]],[6,4,[13,15]],[7,5,[16,18]],[8,6,[19,21]],[9,7,[22,24]]],
+      [[4,7,[31,33]],[5,8,[1,3]],[6,9,[4,6]],[7,10,[7,9]],[8,11,[10,12]],[9,1,[13,15]],[10,2,[16,18]],[11,3,[19,21]],[1,4,[22,24]],[2,5,[25,27]],[3,6,[1,3]]],
+    ]
+  },
+  // --- HÉRÉDIA 7 paires, 4 donnes/tour, 6 jouées + 1 relais ---
+  'heredia_7_4': {
+    type:'heredia', nbPaires:7, dpt:4, nbTours:7,
+    paires:{
+      1:[{e:[13,16]},{e:[17,20]},{e:[25,28]},{e:[21,24]},{e:[5,8]},{e:[9,12]},{relais:true}],
+      2:[{e:[9,12]},{e:[1,4]},{e:[17,20]},{e:[21,24]},{e:[13,16]},{relais:true},{e:[25,28]}],
+      3:[{e:[21,24]},{e:[1,4]},{e:[25,28]},{e:[17,20]},{relais:true},{e:[5,8]},{e:[13,16]}],
+      4:[{e:[21,24]},{e:[17,20]},{e:[5,8]},{relais:true},{e:[9,12]},{e:[1,4]},{e:[25,28]}],
+      5:[{e:[9,12]},{e:[21,24]},{relais:true},{e:[25,28]},{e:[5,8]},{e:[1,4]},{e:[13,16]}],
+      6:[{e:[13,16]},{relais:true},{e:[17,20]},{e:[25,28]},{e:[9,12]},{e:[5,8]},{e:[1,4]}],
+      7:[{relais:true},{e:[21,24]},{e:[5,8]},{e:[17,20]},{e:[13,16]},{e:[9,12]},{e:[1,4]}],
+    }
+  },
+  // --- HÉRÉDIA 8 paires, 4 donnes/tour, 6 tours ---
+  'heredia_8_4': {
+    type:'heredia', nbPaires:8, dpt:4, nbTours:6,
+    paires:{
+      1:[{e:[21,24]},{e:[17,20]},{e:[13,16]},{e:[9,12]},{e:[25,28]},{e:[29,32]}],
+      2:[{e:[13,16]},{e:[9,12]},{e:[29,32]},{e:[25,28]},{e:[21,24]},{e:[17,20]}],
+      3:[{e:[29,32]},{e:[1,4]},{e:[5,8]},{e:[21,24]},{e:[25,28]},{e:[17,20]}],
+      4:[{e:[25,28]},{e:[5,8]},{e:[1,4]},{e:[17,20]},{e:[21,24]},{e:[29,32]}],
+      5:[{e:[29,32]},{e:[5,8]},{e:[13,16]},{e:[25,28]},{e:[1,4]},{e:[9,12]}],
+      6:[{e:[25,28]},{e:[1,4]},{e:[29,32]},{e:[9,12]},{e:[5,8]},{e:[13,16]}],
+      7:[{e:[13,16]},{e:[17,20]},{e:[1,4]},{e:[21,24]},{e:[5,8]},{e:[9,12]}],
+      8:[{e:[21,24]},{e:[9,12]},{e:[5,8]},{e:[17,20]},{e:[1,4]},{e:[13,16]}],
+    }
+  },
+  // --- HÉRÉDIA 9 paires, 3 donnes/tour, 8 jouées + 1 relais ---
+  'heredia_9_3': {
+    type:'heredia', nbPaires:9, dpt:3, nbTours:9,
+    paires:{
+      1:[{e:[10,12]},{e:[25,27]},{e:[16,18]},{e:[13,15]},{e:[7,9]},{e:[22,24]},{e:[4,6]},{e:[19,21]},{relais:true}],
+      2:[{e:[19,21]},{e:[13,15]},{e:[16,18]},{e:[22,24]},{e:[25,27]},{e:[1,3]},{e:[7,9]},{relais:true},{e:[10,12]}],
+      3:[{e:[19,21]},{e:[25,27]},{e:[13,15]},{e:[1,3]},{e:[4,6]},{e:[10,12]},{relais:true},{e:[22,24]},{e:[16,18]}],
+      4:[{e:[4,6]},{e:[16,18]},{e:[19,21]},{e:[13,15]},{e:[25,27]},{relais:true},{e:[1,3]},{e:[22,24]},{e:[7,9]}],
+      5:[{e:[10,12]},{e:[19,21]},{e:[7,9]},{e:[22,24]},{relais:true},{e:[4,6]},{e:[1,3]},{e:[25,27]},{e:[16,18]}],
+      6:[{e:[4,6]},{e:[13,15]},{e:[7,9]},{relais:true},{e:[22,24]},{e:[10,12]},{e:[25,27]},{e:[19,21]},{e:[1,3]}],
+      7:[{e:[13,15]},{e:[16,18]},{relais:true},{e:[10,12]},{e:[4,6]},{e:[22,24]},{e:[7,9]},{e:[25,27]},{e:[1,3]}],
+      8:[{e:[13,15]},{relais:true},{e:[19,21]},{e:[1,3]},{e:[7,9]},{e:[4,6]},{e:[25,27]},{e:[16,18]},{e:[10,12]}],
+      9:[{relais:true},{e:[19,21]},{e:[13,15]},{e:[10,12]},{e:[22,24]},{e:[1,3]},{e:[4,6]},{e:[16,18]},{e:[7,9]}],
+    }
+  },
+  // --- HÉRÉDIA 10 paires, 3 donnes/tour, 8 tours ---
+  'heredia_10_3': {
+    type:'heredia', nbPaires:10, dpt:3, nbTours:8,
+    paires:{
+      1: [{e:[13,15]},{e:[4,6]},{e:[22,24]},{e:[16,18]},{e:[19,21]},{e:[7,9]},{e:[25,27]},{e:[28,30]}],
+      2: [{e:[7,9]},{e:[10,12]},{e:[13,15]},{e:[19,21]},{e:[28,30]},{e:[25,27]},{e:[1,3]},{e:[16,18]}],
+      3: [{e:[28,30]},{e:[1,3]},{e:[16,18]},{e:[19,21]},{e:[10,12]},{e:[4,6]},{e:[25,27]},{e:[22,24]}],
+      4: [{e:[4,6]},{e:[13,15]},{e:[7,9]},{e:[1,3]},{e:[22,24]},{e:[25,27]},{e:[19,21]},{e:[28,30]}],
+      5: [{e:[4,6]},{e:[1,3]},{e:[22,24]},{e:[10,12]},{e:[25,27]},{e:[28,30]},{e:[7,9]},{e:[16,18]}],
+      6: [{e:[7,9]},{e:[4,6]},{e:[1,3]},{e:[13,15]},{e:[10,12]},{e:[22,24]},{e:[19,21]},{e:[25,27]}],
+      7: [{e:[28,30]},{e:[16,18]},{e:[13,15]},{e:[10,12]},{e:[22,24]},{e:[7,9]},{e:[4,6]},{e:[25,27]}],
+      8: [{e:[10,12]},{e:[13,15]},{e:[1,3]},{e:[16,18]},{e:[28,30]},{e:[4,6]},{e:[7,9]},{e:[19,21]}],
+      9: [{e:[10,12]},{e:[16,18]},{e:[7,9]},{e:[13,15]},{e:[19,21]},{e:[28,30]},{e:[1,3]},{e:[22,24]}],
+      10:[{e:[13,15]},{e:[10,12]},{e:[16,18]},{e:[1,3]},{e:[25,27]},{e:[22,24]},{e:[4,6]},{e:[19,21]}],
+    }
+  },
+  // --- HÉRÉDIA 11 paires, 3 donnes/tour, 8 jouées + 1 relais ---
+  'heredia_11_3': {
+    type:'heredia', nbPaires:11, dpt:3, nbTours:9,
+    paires:{
+      1: [{e:[7,9]},{e:[22,24]},{e:[16,18]},{e:[25,27]},{e:[10,12]},{e:[19,21]},{e:[28,30]},{e:[4,6]},{relais:true}],
+      2: [{e:[22,24]},{e:[16,18]},{e:[10,12]},{e:[28,30]},{e:[25,27]},{e:[7,9]},{e:[13,15]},{e:[1,3]},{relais:true}],
+      3: [{e:[4,6]},{e:[28,30]},{e:[1,3]},{e:[25,27]},{e:[19,21]},{e:[22,24]},{e:[16,18]},{relais:true},{e:[10,12]}],
+      4: [{e:[22,24]},{e:[1,3]},{e:[25,27]},{e:[13,15]},{e:[7,9]},{e:[19,21]},{relais:true},{e:[16,18]},{e:[4,6]}],
+      5: [{e:[19,21]},{e:[28,30]},{e:[22,24]},{e:[7,9]},{e:[25,27]},{relais:true},{e:[10,12]},{e:[4,6]},{e:[1,3]}],
+      6: [{e:[4,6]},{e:[22,24]},{e:[25,27]},{e:[10,12]},{relais:true},{e:[1,3]},{e:[13,15]},{e:[19,21]},{e:[7,9]}],
+      7: [{e:[7,9]},{e:[16,18]},{e:[1,3]},{relais:true},{e:[28,30]},{e:[25,27]},{e:[10,12]},{e:[13,15]},{e:[4,6]}],
+      8: [{e:[13,15]},{e:[4,6]},{relais:true},{e:[10,12]},{e:[19,21]},{e:[7,9]},{e:[28,30]},{e:[16,18]},{e:[1,3]}],
+      9: [{e:[19,21]},{relais:true},{e:[16,18]},{e:[28,30]},{e:[7,9]},{e:[1,3]},{e:[4,6]},{e:[13,15]},{e:[10,12]}],
+      10:[{relais:true},{e:[4,6]},{e:[22,24]},{e:[13,15]},{e:[10,12]},{e:[25,27]},{e:[16,18]},{e:[1,3]},{e:[7,9]}],
+      11:[{e:[13,15]},{e:[1,3]},{e:[10,12]},{e:[7,9]},{e:[28,30]},{e:[22,24]},{e:[4,6]},{e:[19,21]},{relais:true}],
+    }
+  },
+  // --- HÉRÉDIA 12 paires, 3 donnes/tour, 8 tours ---
+  'heredia_12_3': {
+    type:'heredia', nbPaires:12, dpt:3, nbTours:8,
+    paires:{
+      1: [{e:[16,18]},{e:[7,9]},{e:[10,12]},{e:[13,15]},{e:[28,30]},{e:[22,24]},{e:[19,21]},{e:[4,6]}],
+      2: [{e:[22,24]},{e:[13,15]},{e:[25,27]},{e:[10,12]},{e:[1,3]},{e:[7,9]},{e:[16,18]},{e:[19,21]}],
+      3: [{e:[4,6]},{e:[16,18]},{e:[19,21]},{e:[1,3]},{e:[10,12]},{e:[22,24]},{e:[25,27]},{e:[13,15]}],
+      4: [{e:[13,15]},{e:[1,3]},{e:[25,27]},{e:[19,21]},{e:[4,6]},{e:[28,30]},{e:[7,9]},{e:[22,24]}],
+      5: [{e:[25,27]},{e:[22,24]},{e:[19,21]},{e:[7,9]},{e:[28,30]},{e:[4,6]},{e:[16,18]},{e:[10,12]}],
+      6: [{e:[22,24]},{e:[28,30]},{e:[13,15]},{e:[19,21]},{e:[7,9]},{e:[10,12]},{e:[1,3]},{e:[4,6]}],
+      7: [{e:[4,6]},{e:[1,3]},{e:[16,18]},{e:[13,15]},{e:[25,27]},{e:[7,9]},{e:[22,24]},{e:[10,12]}],
+      8: [{e:[13,15]},{e:[7,9]},{e:[4,6]},{e:[28,30]},{e:[1,3]},{e:[10,12]},{e:[25,27]},{e:[16,18]}],
+      9: [{e:[1,3]},{e:[22,24]},{e:[16,18]},{e:[10,12]},{e:[7,9]},{e:[28,30]},{e:[19,21]},{e:[13,15]}],
+      10:[{e:[16,18]},{e:[13,15]},{e:[4,6]},{e:[7,9]},{e:[10,12]},{e:[19,21]},{e:[1,3]},{e:[22,24]}],
+      11:[{e:[1,3]},{e:[16,18]},{e:[13,15]},{e:[28,30]},{e:[25,27]},{e:[4,6]},{e:[7,9]},{e:[19,21]}],
+      12:[{e:[25,27]},{e:[28,30]},{e:[10,12]},{e:[1,3]},{e:[4,6]},{e:[19,21]},{e:[22,24]},{e:[16,18]}],
+    }
+  },
+};
+
+// Lookup: pour un mouvement Howell donné, retourne les donnes d'une paire à un tour
+function howellDonnes(key, paire, tour) {
+  const mv = HOWELL_MOVES[key];
+  if(!mv) return null;
+  if(mv.type==='classique') {
+    // chercher dans les tables
+    for(const table of mv.tables) {
+      const t = table[tour];
+      if(!t) continue;
+      const [ns,eo,e] = t;
+      if(ns===paire||eo===paire) return Array.from({length:e[1]-e[0]+1},(_,i)=>e[0]+i);
+    }
+    return null;
+  } else {
+    // heredia
+    const pos = mv.paires[paire]?.[tour];
+    if(!pos||pos.relais) return null;
+    return Array.from({length:pos.e[1]-pos.e[0]+1},(_,i)=>pos.e[0]+i);
+  }
+}
+
+// Clé Howell pour la config actuelle
+function howellKey(mouvement, nbPaires, dpt) {
+  return mouvement+'_'+nbPaires+'_'+dpt;
+}
 
 function parseDonnes(){
   const raw=document.getElementById('donnes-input').value;
@@ -377,8 +552,9 @@ function updateOptions(){
 }
 
 function selectMouvement(g){
+  const p=parseInt(document.getElementById('f-paires').value)||0;
   if(g.options.length===1){
-    applyConfig(g.mouvement,g.tables,g.options[0].tours,g.options[0].dpt);
+    applyConfig(g.mouvement,g.tables,g.options[0].tours,g.options[0].dpt,p);
   } else {
     const el=document.getElementById('tours-list');
     el.innerHTML='';
@@ -397,23 +573,31 @@ function selectMouvement(g){
           <div class="tour-detail">${o.donnesCirc} donnes en circulation</div>
         </div>
         <span style="font-size:13px;color:var(--text2)">→</span>`;
-      btn.onclick=()=>applyConfig(g.mouvement,g.tables,o.tours,o.dpt);
+      btn.onclick=()=>applyConfig(g.mouvement,g.tables,o.tours,o.dpt,p);
       el.appendChild(btn);
     });
     showScreen('s-tours','s-paires');
   }
 }
 
-function applyConfig(mv,tables,tours,dpt){
-  mode=mv==='guerid'?'guerid':'mitchell';
+function applyConfig(mv,tables,tours,dpt,nbPaires){
+  const isHowell=['classique','heredia','suedois','brazza'].includes(mv);
+  mode=isHowell?mv:(mv==='guerid'?'guerid':'mitchell');
   document.getElementById('f-tables').value=tables;
   document.getElementById('f-tours').value=tours;
   document.getElementById('f-dpt').value=dpt;
-  applyStyle(document.getElementById('btn-mitchell'),mode==='mitchell'?BLUE:OFF);
-  applyStyle(document.getElementById('btn-guerid'),  mode==='guerid'  ?BLUE:OFF);
-  applyStyle(document.getElementById('btn-ns'),sens==='NS'?GREEN:OFF);
-  applyStyle(document.getElementById('btn-eo'),sens==='EO'?GREEN:OFF);
-  // Fermer l'écran actif (tours ou paires) et aller à config
+  document.getElementById('field-paire-howell').style.display=isHowell?'':'none';
+  document.getElementById('field-mode').style.display=isHowell?'none':'';
+  document.getElementById('field-sens').style.display=isHowell?'none':'';
+  document.getElementById('field-table').style.display=isHowell?'none':'';
+  if(!isHowell){
+    applyStyle(document.getElementById('btn-mitchell'),mode==='mitchell'?BLUE:OFF);
+    applyStyle(document.getElementById('btn-guerid'),  mode==='guerid'  ?BLUE:OFF);
+    applyStyle(document.getElementById('btn-ns'),sens==='NS'?GREEN:OFF);
+    applyStyle(document.getElementById('btn-eo'),sens==='EO'?GREEN:OFF);
+  }
+  // Stocker nbPaires pour validation Howell
+  window._nbPairesHowell = nbPaires || tables*2;
   document.getElementById('s-tours').classList.remove('active');
   document.getElementById('s-paires').classList.remove('active');
   document.getElementById('s-config').classList.add('active');
@@ -457,15 +641,25 @@ function buildSim(T,N,R,mode,sens){
 }
 
 function start(){
-  const T=int('f-table'),N=int('f-tables'),R=int('f-tours'),D=int('f-dpt');
+  const isHowell=['classique','heredia','suedois','brazza'].includes(mode);
+  const N=int('f-tables'),R=int('f-tours'),D=int('f-dpt');
   let ok=true;
   if(N<2){err('e-tables',1);ok=false;}else err('e-tables',0);
   if(R<1){err('e-tours',1);ok=false;}else err('e-tours',0);
   if(D<1){err('e-dpt',1);ok=false;}else err('e-dpt',0);
-  if(T<1||T>N){err('e-table',1);ok=false;}else err('e-table',0);
-  if(!ok)return;
-  cfg={T,N,R,D,sens,mode};
-  sim=buildSim(T,N,R,mode,sens);
+  if(isHowell){
+    const P=int('f-paire-howell');
+    const nbP=window._nbPairesHowell||N*2;
+    if(P<1||P>nbP){err('e-paire-howell',1);ok=false;}else err('e-paire-howell',0);
+    if(!ok)return;
+    cfg={N,R,D,mode,paireHowell:P,nbPaires:nbP};
+  } else {
+    const T=int('f-table');
+    if(T<1||T>N){err('e-table',1);ok=false;}else err('e-table',0);
+    if(!ok)return;
+    cfg={T,N,R,D,sens,mode};
+    sim=buildSim(T,N,R,mode,sens);
+  }
   tourActuel=0;
   showScreen('s-jeu','s-config');
   render();
@@ -473,17 +667,40 @@ function start(){
 
 function render(){
   const t=tourActuel,n=t+1;
-  const {R,D,sens:s,mode:m,N}=cfg;
-  const etat=sim[t];
-  const first=etat.blocIdx*D+1;
-  const donnes=Array.from({length:D},(_,i)=>first+i);
+  const {R,D,mode:m,N}=cfg;
+  const isHowell=['classique','heredia','suedois','brazza'].includes(m);
+
   document.getElementById('d-tour').textContent=n;
   document.getElementById('d-tour-sub').textContent='sur '+R;
-  document.getElementById('d-table').textContent=etat.tableAffichee;
-  document.getElementById('d-sens').textContent=s==='NS'?'N / S':'E / O';
-  document.getElementById('d-mode').textContent=m==='guerid'?'Guéridon':N%2===0?'Saut':'Simple';
-  document.getElementById('d-saut').style.visibility=(s==='EO'&&etat.estSaut)?'visible':'hidden';
-  document.getElementById('d-guerid').style.visibility=(m==='guerid'&&etat.tableAffichee.includes('&'))?'visible':'hidden';
+  document.getElementById('d-saut').style.visibility='hidden';
+  document.getElementById('d-guerid').style.visibility='hidden';
+  document.getElementById('d-relais').style.visibility='hidden';
+
+  let donnes=[];
+  if(isHowell){
+    document.getElementById('d-label-table').textContent='Paire';
+    document.getElementById('d-label-sens').textContent='Type';
+    const nbP=cfg.nbPaires||cfg.N*2;
+    const hkey=m+'_'+nbP+'_'+D;
+    const d=howellDonnes(hkey, cfg.paireHowell, t);
+    donnes=d||[];
+    document.getElementById('d-table').textContent='Paire '+cfg.paireHowell;
+    document.getElementById('d-sens').textContent=m==='classique'?'Classique':'Hérédia';
+    document.getElementById('d-mode').textContent=MOUV_LABEL[m]||m;
+    document.getElementById('d-relais').style.visibility=d?'hidden':'visible';
+  } else {
+    document.getElementById('d-label-table').textContent='Table';
+    document.getElementById('d-label-sens').textContent='Sens';
+    const {sens:s}=cfg;
+    const etat=sim[t];
+    const first=etat.blocIdx*D+1;
+    donnes=Array.from({length:D},(_,i)=>first+i);
+    document.getElementById('d-table').textContent=etat.tableAffichee;
+    document.getElementById('d-sens').textContent=s==='NS'?'N / S':'E / O';
+    document.getElementById('d-mode').textContent=m==='guerid'?'Guéridon':N%2===0?'Saut':'Simple';
+    document.getElementById('d-saut').style.visibility=(s==='EO'&&etat.estSaut)?'visible':'hidden';
+    document.getElementById('d-guerid').style.visibility=(m==='guerid'&&etat.tableAffichee.includes('&'))?'visible':'hidden';
+  }
   const container=document.getElementById('d-donnes');
   container.innerHTML='';
   donnes.forEach(d=>{
