@@ -843,42 +843,45 @@ async function initTournoi(){
   const list=document.getElementById('tournoi-list');
   const sub=document.getElementById('tournoi-sub');
 
-  // Détecter le repo GitHub depuis l'URL (CapGui13.github.io/MVT/)
+  // Appel API GitHub avec cache localStorage
   try{
-    const hostname=window.location.hostname; // ex: capgui13.github.io
+    const hostname=window.location.hostname;
     const parts=hostname.split('.');
     let user=null, repo=null;
-
     if(parts.length>=3 && parts[1]==='github' && parts[2]==='io'){
       user=parts[0];
-      const pathParts=window.location.pathname.split('/').filter(Boolean);
-      repo=pathParts[0]||null;
+      repo=window.location.pathname.split('/').filter(Boolean)[0]||null;
     }
-
     if(!user||!repo) throw new Error('Pas sur GitHub Pages');
 
-    // Appel API GitHub pour lister les fichiers du repo
-    const apiUrl=`https://api.github.com/repos/${user}/${repo}/contents/`;
-    const res=await fetch(apiUrl, {headers:{Accept:'application/vnd.github.v3+json'}});
-    if(!res.ok) throw new Error();
-    const files=await res.json();
-
-    // Filtrer les fichiers donnes-*.json
-    const donneFichiers=files
-      .filter(f=>f.type==='file' && /^donnes.*\.json$/i.test(f.name))
-      .sort((a,b)=>b.name.localeCompare(a.name)); // plus récent en premier
-
-    if(!donneFichiers.length){
-      sub.textContent='Aucun fichier de donnes trouvé sur GitHub.';
-      return;
+    // Vérifier le cache (valide 1h)
+    const cacheKey='bridge_files_cache';
+    const cached=localStorage.getItem(cacheKey);
+    let donneFichiers=null;
+    if(cached){
+      const c=JSON.parse(cached);
+      if(Date.now()-c.ts < 3600*1000) donneFichiers=c.files;
     }
 
+    if(!donneFichiers){
+      const res=await fetch(`https://api.github.com/repos/${user}/${repo}/contents/`,
+        {headers:{Accept:'application/vnd.github.v3+json'}});
+      if(!res.ok) throw new Error();
+      const files=await res.json();
+      donneFichiers=files
+        .filter(f=>f.type==='file' && /^donnes.*\.json$/i.test(f.name))
+        .sort((a,b)=>b.name.localeCompare(a.name))
+        .map(f=>f.name);
+      localStorage.setItem(cacheKey, JSON.stringify({ts:Date.now(), files:donneFichiers}));
+    }
+
+    if(!donneFichiers.length){ sub.textContent='Aucun fichier de donnes trouvé.'; return; }
     sub.textContent=donneFichiers.length+' tournoi'+(donneFichiers.length>1?'s':'')+' disponible'+(donneFichiers.length>1?'s':'');
 
-    donneFichiers.forEach(f=>{
+    donneFichiers.forEach(fname=>{
       const btn=document.createElement('button');
       btn.className='option-btn';
-      const match=f.name.match(/(\d{4}-\d{2}-\d{2})/);
+      const match=fname.match(/(\d{4}-\d{2}-\d{2})/);
       let label='Tournoi';
       if(match){
         const d=new Date(match[1]+'T12:00:00');
@@ -886,7 +889,7 @@ async function initTournoi(){
         label=label.charAt(0).toUpperCase()+label.slice(1);
       }
       btn.innerHTML=`<div style="flex:1"><div class="option-main">${label}</div></div><span style="font-size:18px">→</span>`;
-      btn.onclick=()=>chargerTournoi(base+f.name, f.name);
+      btn.onclick=()=>chargerTournoi(base+fname, fname);
       list.appendChild(btn);
     });
 
