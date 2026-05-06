@@ -878,9 +878,25 @@ async function initTournoi(){
     if(!donneFichiers.length){ sub.textContent='Aucun fichier de donnes trouvé.'; return; }
     sub.textContent=donneFichiers.length+' tournoi'+(donneFichiers.length>1?'s':'')+' disponible'+(donneFichiers.length>1?'s':'');
 
+    const today=new Date(); today.setHours(0,0,0,0);
+
+    // Séparer futurs/aujourd'hui et passés, trier chaque groupe
+    const futurs=[], passes=[];
     donneFichiers.forEach(fname=>{
+      const match=fname.match(/(\d{4}-\d{2}-\d{2})/);
+      const date=match?new Date(match[1]+'T12:00:00'):null;
+      const passe=date&&date<today;
+      (passe?passes:futurs).push({fname,date});
+    });
+    // Futurs : du plus proche au plus lointain (croissant)
+    futurs.sort((a,b)=>(a.date||0)-(b.date||0));
+    // Passés : du plus récent au plus ancien (décroissant)
+    passes.sort((a,b)=>(b.date||0)-(a.date||0));
+
+    [...futurs,...passes].forEach(({fname,date})=>{
       const btn=document.createElement('button');
       btn.className='option-btn';
+      const passe=date&&date<today;
       const match=fname.match(/(\d{4}-\d{2}-\d{2})/);
       let label='Tournoi';
       if(match){
@@ -888,6 +904,7 @@ async function initTournoi(){
         label=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
         label=label.charAt(0).toUpperCase()+label.slice(1);
       }
+      if(passe) btn.style.opacity='0.4';
       btn.innerHTML=`<div style="flex:1"><div class="option-main">${label}</div></div><span style="font-size:18px">→</span>`;
       btn.onclick=()=>chargerTournoi(base+fname, fname);
       list.appendChild(btn);
