@@ -68,7 +68,7 @@
   .meta-cell{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px;text-align:center}
   .meta-label{font-size:10px;color:var(--text2);margin-bottom:3px}
   .meta-val{font-size:14px;font-weight:600;color:var(--text)}
-  .boards-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:.85rem;margin-bottom:.75rem}
+  .boards-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:.85rem;margin-bottom:.75rem;min-height:200px}
   .boards-label{font-size:10px;color:var(--text2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px}
   .chips{display:flex;flex-direction:column;gap:6px}
   .chip{background:var(--chip-bg);color:var(--chip-text);border-radius:10px;padding:9px 14px;font-size:17px;font-weight:700;text-align:center}
@@ -104,7 +104,7 @@
   </div>
   <div class="field">
     <label>Nombre de paires</label>
-    <input type="number" id="f-paires" min="6" max="36" value="" step="1" oninput="updateOptions()" onfocus="this.select()"/>
+    <input type="number" id="f-paires" min="6" max="36" value="" step="1" oninput="updateOptions()" onfocus="this.select()" autocomplete="off" autocomplete="off"/>
     <p class="err" id="e-paires">Entre 6 et 36 paires</p>
   </div>
   <p class="section-title">Mouvements possibles</p>
@@ -125,7 +125,7 @@
   <button class="back-btn" onclick="showScreen('s-paires','s-config')">← Retour</button>
   <div class="field" id="field-paire-howell" style="display:none">
     <label>Votre numéro de paire</label>
-    <input type="number" id="f-paire-howell" min="1" value="1" step="1" onfocus="this.select()"/>
+    <input type="number" id="f-paire-howell" min="1" value="1" step="1" onfocus="this.select()" autocomplete="off"/>
     <p class="err" id="e-paire-howell">Numéro invalide</p>
   </div>
   <div class="field" id="field-mode" style="">
@@ -144,22 +144,22 @@
   </div>
   <div class="field" id="field-table">
     <label>Votre table de départ</label>
-    <input type="number" id="f-table" min="1" value="1" step="1" onfocus="this.select()"/>
+    <input type="number" id="f-table" min="1" value="1" step="1" onfocus="this.select()" autocomplete="off"/>
     <p class="err" id="e-table">Entre 1 et le nombre de tables</p>
   </div>
   <div class="field">
     <label>Nombre de tables</label>
-    <input type="number" id="f-tables" min="2" value="8" step="1" onfocus="this.select()"/>
+    <input type="number" id="f-tables" min="2" value="8" step="1" onfocus="this.select()" autocomplete="off"/>
     <p class="err" id="e-tables">Minimum 2 tables</p>
   </div>
   <div class="field">
     <label>Nombre de tours</label>
-    <input type="number" id="f-tours" min="1" value="7" step="1" onfocus="this.select()"/>
+    <input type="number" id="f-tours" min="1" value="7" step="1" onfocus="this.select()" autocomplete="off"/>
     <p class="err" id="e-tours">Minimum 1 tour</p>
   </div>
   <div class="field">
     <label>Donnes par tour</label>
-    <input type="number" id="f-dpt" min="1" value="4" step="1" onfocus="this.select()"/>
+    <input type="number" id="f-dpt" min="1" value="4" step="1" onfocus="this.select()" autocomplete="off"/>
     <p class="err" id="e-dpt">Minimum 1 donne par tour</p>
   </div>
   <button class="btn-go" onclick="start()">Commencer le tournoi</button>
@@ -201,8 +201,8 @@
     <div class="chips" id="d-donnes"></div>
   </div>
   <div class="nav">
-    <button class="nav-btn" id="btn-prev" onclick="go(-1)">← Précédent</button>
-    <button class="nav-btn fwd" id="btn-next" onclick="go(1)">Suivant →</button>
+    <button type="button" class="nav-btn" id="btn-prev" onclick="go(-1)">← Précédent</button>
+    <button type="button" class="nav-btn fwd" id="btn-next" onclick="go(1)">Suivant →</button>
   </div>
   <button class="reset" onclick="reset()">Recommencer</button>
 </div>
@@ -247,8 +247,7 @@ const DB=[
 
 // DB Howell : [paires, tables, mouvement, positions_jouees, dpt, donnesCirc, deficient]
 const DB_HOWELL=[
-  [6, 3,'suedois', 5,5,25,false],
-  [6, 3,'brazza',  5,5,25,false],
+  [6, 3,'classique',5,4,20,false],
   [7, 4,'heredia', 6,4,28,false],
   [7, 4,'classique',6,4,28,false],[7,4,'classique',7,4,28,false],
   [8, 4,'heredia', 6,4,32,false],
@@ -269,15 +268,15 @@ const DB_HOWELL=[
 
 const MOUV_LABEL={
   simple:'Mitchell simple',saut:'Mitchell avec saut',guerid:'Guéridon',
-  suedois:'Suédois',brazza:'Brazza',heredia:'Howell Hérédia',classique:'Howell Classique'
+  heredia:'Howell Hérédia',classique:'Howell Classique'
 };
 const MOUV_BADGE={
   simple:'badge-simple',saut:'badge-saut-opt',guerid:'badge-guerid-opt',
-  suedois:'badge-howell',brazza:'badge-howell',heredia:'badge-howell',classique:'badge-howell'
+  heredia:'badge-howell',classique:'badge-howell'
 };
 const MOUV_SHORT={
   simple:'Simple',saut:'Saut',guerid:'Guéridon',
-  suedois:'Suédois',brazza:'Brazza',heredia:'Hérédia',classique:'Classique'
+  heredia:'Hérédia',classique:'Classique'
 };
 
 const OFF  ={background:'transparent',color:'var(--text2)',border:'1.5px solid var(--border)',fontWeight:'400'};
@@ -581,7 +580,7 @@ function selectMouvement(g){
 }
 
 function applyConfig(mv,tables,tours,dpt,nbPaires){
-  const isHowell=['classique','heredia','suedois','brazza'].includes(mv);
+  const isHowell=['classique','heredia'].includes(mv);
   mode=isHowell?mv:(mv==='guerid'?'guerid':'mitchell');
   document.getElementById('f-tables').value=tables;
   document.getElementById('f-tours').value=tours;
@@ -641,7 +640,7 @@ function buildSim(T,N,R,mode,sens){
 }
 
 function start(){
-  const isHowell=['classique','heredia','suedois','brazza'].includes(mode);
+  const isHowell=['classique','heredia'].includes(mode);
   const N=int('f-tables'),R=int('f-tours'),D=int('f-dpt');
   let ok=true;
   if(N<2){err('e-tables',1);ok=false;}else err('e-tables',0);
@@ -668,7 +667,7 @@ function start(){
 function render(){
   const t=tourActuel,n=t+1;
   const {R,D,mode:m,N}=cfg;
-  const isHowell=['classique','heredia','suedois','brazza'].includes(m);
+  const isHowell=['classique','heredia'].includes(m);
 
   document.getElementById('d-tour').textContent=n;
   document.getElementById('d-tour-sub').textContent='sur '+R;
@@ -733,7 +732,7 @@ function render(){
   document.getElementById('prog').style.width=Math.round(n/R*100)+'%';
 }
 
-function go(d){tourActuel=Math.max(0,Math.min(cfg.R-1,tourActuel+d));render();}
+function go(d){tourActuel=Math.max(0,Math.min(cfg.R-1,tourActuel+d));render();window.scrollTo({top:0,behavior:'instant'});}
 
 function reset(){
   document.getElementById('s-jeu').classList.remove('active');
