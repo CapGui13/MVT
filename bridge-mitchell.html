@@ -524,6 +524,12 @@ function goBack(){
   if(current) document.getElementById(current).classList.remove('active');
   const prev=navHistory.pop();
   document.getElementById(prev).classList.add('active');
+  if(prev==='s-tournoi'){
+    donnesData={};
+    window._donnesFichier=null;
+    const btn=document.getElementById('btn-charger-donnes');
+    if(btn) btn.style.display='';
+  }
 }
 
 // Groupe les entrées DB par mouvement+dpt pour un nb de paires donné
@@ -775,6 +781,10 @@ function go(d){tourActuel=Math.max(0,Math.min(cfg.R-1,tourActuel+d));saveState()
 function reset(){
   localStorage.removeItem('bridge_state');
   navHistory=[];
+  donnesData={};
+  window._donnesFichier=null;
+  const btn=document.getElementById('btn-charger-donnes');
+  if(btn) btn.style.display='';
   const current=['s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu'].find(s=>document.getElementById(s).classList.contains('active'));
   if(current) document.getElementById(current).classList.remove('active');
   document.getElementById('s-tournoi').classList.add('active');
