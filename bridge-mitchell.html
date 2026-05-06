@@ -855,7 +855,7 @@ async function initTournoi(){
     if(!user||!repo) throw new Error('Pas sur GitHub Pages');
 
     // Vérifier le cache (valide 1h)
-    const cacheKey='bridge_files_cache';
+    const cacheKey='bridge_files_cache_v2';
     const cached=localStorage.getItem(cacheKey);
     let donneFichiers=null;
     if(cached){
@@ -869,10 +869,10 @@ async function initTournoi(){
       if(!res.ok) throw new Error();
       const files=await res.json();
       donneFichiers=files
-        .filter(f=>f.type==='file' && /^donnes.*\.json$/i.test(f.name))
+        .filter(f=>f.type==='file' && /^donnes[-_]?\d{4}.*\.json$/i.test(f.name))
         .sort((a,b)=>b.name.localeCompare(a.name))
         .map(f=>f.name);
-      localStorage.setItem(cacheKey, JSON.stringify({ts:Date.now(), files:donneFichiers}));
+      localStorage.setItem('bridge_files_cache_v2', JSON.stringify({ts:Date.now(), files:donneFichiers}));
     }
 
     if(!donneFichiers.length){ sub.textContent='Aucun fichier de donnes trouvé.'; return; }
