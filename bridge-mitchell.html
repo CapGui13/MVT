@@ -712,6 +712,7 @@ function start(){
 }
 
 function render(){
+  if(!cfg||!cfg.R) return;
   const t=tourActuel,n=t+1;
   const {R,D,mode:m,N}=cfg;
   const isHowell=['classique','heredia'].includes(m);
@@ -738,7 +739,8 @@ function render(){
     document.getElementById('d-label-table').textContent='Table';
     document.getElementById('d-label-sens').textContent='Sens';
     const {sens:s}=cfg;
-    const etat=sim[t];
+    const etat=sim&&sim[t];
+    if(!etat) return;
     const first=etat.blocIdx*D+1;
     donnes=Array.from({length:D},(_,i)=>first+i);
     document.getElementById('d-table').textContent=etat.tableAffichee;
@@ -779,7 +781,13 @@ function render(){
   document.getElementById('prog').style.width=Math.round(n/R*100)+'%';
 }
 
-function go(d){tourActuel=Math.max(0,Math.min(cfg.R-1,tourActuel+d));saveState();render();}
+function go(d){
+  const next=Math.max(0,Math.min(cfg.R-1,tourActuel+d));
+  if(next===tourActuel) return;
+  tourActuel=next;
+  saveState();
+  render();
+}
 
 function reset(){
   localStorage.removeItem('bridge_state');
@@ -788,9 +796,12 @@ function reset(){
   window._donnesFichier=null;
   const btn=document.getElementById('btn-charger-donnes');
   if(btn) btn.style.display='';
+  document.getElementById('tournoi-sub').textContent='Chargement...';
+  document.getElementById('tournoi-list').innerHTML='';
   const current=['s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu'].find(s=>document.getElementById(s).classList.contains('active'));
   if(current) document.getElementById(current).classList.remove('active');
   document.getElementById('s-tournoi').classList.add('active');
+  initTournoi();
 }
 
 // ============================================================
@@ -839,7 +850,14 @@ function modeLabel(m){
 // ============================================================
 // SÉLECTION DU TOURNOI
 // ============================================================
+let _initRunning=false;
 async function initTournoi(){
+  if(_initRunning) return;
+  _initRunning=true;
+  try{ await _initTournoiInner(); }finally{ _initRunning=false; }
+}
+
+async function _initTournoiInner(){
   // Vérifier s'il y a un état sauvegardé
   const saved=loadState();
   if(saved){
