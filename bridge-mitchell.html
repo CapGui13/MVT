@@ -116,11 +116,11 @@
   <p class="section-title">Choisir un tournoi</p>
   <p class="section-sub" id="tournoi-sub">Chargement...</p>
   <div class="options-list" id="tournoi-list"></div>
-  <button class="btn-go" style="margin-top:1rem;background:var(--bg3);color:var(--text2);font-size:14px" onclick="showScreen('s-paires','s-tournoi')">Continuer sans donnes →</button>
+  <button class="btn-go" style="margin-top:1rem;background:var(--bg3);color:var(--text2);font-size:14px" onclick="goTo('s-paires')">Continuer sans donnes →</button>
 </div>
 
 <div class="screen" id="s-paires">
-  <button class="back-btn" onclick="showScreen('s-tournoi','s-paires')">← Retour</button>
+  <button class="back-btn" onclick="goBack()">← Retour</button>
   <p class="section-title" style="margin-bottom:.3rem">Nombre de paires</p>
   <div class="field">
     <input type="number" id="f-paires" min="6" max="36" value="" step="1" oninput="updateOptions()" onfocus="this.select()"/>
@@ -133,7 +133,7 @@
 
 <!-- ÉCRAN 2 : CHOIX DU NOMBRE DE TOURS -->
 <div class="screen" id="s-tours">
-  <button class="back-btn" onclick="showScreen('s-paires','s-tours')">← Retour</button>
+  <button class="back-btn" onclick="goBack()">← Retour</button>
   <p class="section-title" id="tours-title">Choisissez le nombre de tours</p>
   <p class="section-sub" id="tours-sub"></p>
   <div class="tours-grid" id="tours-list"></div>
@@ -141,7 +141,7 @@
 
 <!-- ÉCRAN 3 : CONFIG -->
 <div class="screen" id="s-config">
-  <button class="back-btn" onclick="showScreen('s-paires','s-config')">← Retour</button>
+  <button class="back-btn" onclick="goBack()">← Retour</button>
   <div class="field" id="field-paire-howell" style="display:none">
     <label>Votre numéro de paire</label>
     <input type="number" id="f-paire-howell" min="1" value="1" step="1" onfocus="this.select()"/>
@@ -182,19 +182,19 @@
     <p class="err" id="e-dpt">Minimum 1 donne par tour</p>
   </div>
   <button class="btn-go" onclick="start()">Commencer le tournoi</button>
-  <button class="btn-go" style="margin-top:.6rem;background:var(--bg3);color:var(--text2);font-size:14px" onclick="showScreen('s-donnes','s-config')">📋 Charger les infos des donnes (optionnel)</button>
+  <button class="btn-go" style="margin-top:.6rem;background:var(--bg3);color:var(--text2);font-size:14px" onclick="goTo('s-donnes')">📋 Charger les infos des donnes (optionnel)</button>
 </div>
 
 <!-- ÉCRAN DONNES -->
 <div class="screen" id="s-donnes">
-  <button class="back-btn" onclick="showScreen('s-config','s-donnes')">← Retour</button>
+  <button class="back-btn" onclick="goBack()">← Retour</button>
   <p class="section-title">Infos des donnes</p>
   <p class="section-sub">Copiez-collez depuis Excel (colonnes : N° · NS · EO · Note)</p>
   <div class="field">
     <textarea class="donnes-textarea" id="donnes-input" placeholder="Collez ici le contenu copié depuis Excel..." oninput="parseDonnes()"></textarea>
     <div class="donnes-status" id="donnes-status"></div>
   </div>
-  <button class="btn-go" onclick="showScreen('s-config','s-donnes')">← Retour à la config</button>
+  <button class="btn-go" onclick="goBack()">← Retour à la config</button>
 </div>
 
 <!-- ÉCRAN 4 : JEU -->
@@ -503,7 +503,30 @@ function parseDonnes(){
     status.textContent=count+' donne'+(count>1?'s':'')+' chargée'+(count>1?'s':'')+' ✓';
   }
 }
-function showScreen(to,from){document.getElementById(from).classList.remove('active');document.getElementById(to).classList.add('active');}
+let navHistory=[];
+
+function showScreen(to, from){
+  if(from) document.getElementById(from).classList.remove('active');
+  document.getElementById(to).classList.add('active');
+}
+
+function goTo(to){
+  const screens=['s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu'];
+  const current=screens.find(s=>document.getElementById(s).classList.contains('active'));
+  if(current){
+    navHistory.push(current);
+    document.getElementById(current).classList.remove('active');
+  }
+  document.getElementById(to).classList.add('active');
+}
+
+function goBack(){
+  if(!navHistory.length) return;
+  const current=['s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu'].find(s=>document.getElementById(s).classList.contains('active'));
+  if(current) document.getElementById(current).classList.remove('active');
+  const prev=navHistory.pop();
+  document.getElementById(prev).classList.add('active');
+}
 
 // Groupe les entrées DB par mouvement+dpt pour un nb de paires donné
 // (mouvement+dpt = clé unique car donnes en circ = tables × dpt)
@@ -594,7 +617,7 @@ function selectMouvement(g){
       btn.onclick=()=>applyConfig(g.mouvement,g.tables,o.tours,o.dpt,p);
       el.appendChild(btn);
     });
-    showScreen('s-tours','s-paires');
+    goTo('s-tours'); // showScreen gardé pour compatibilité interne
   }
 }
 
@@ -614,11 +637,8 @@ function applyConfig(mv,tables,tours,dpt,nbPaires){
     applyStyle(document.getElementById('btn-ns'),sens==='NS'?GREEN:OFF);
     applyStyle(document.getElementById('btn-eo'),sens==='EO'?GREEN:OFF);
   }
-  // Stocker nbPaires pour validation Howell
   window._nbPairesHowell = nbPaires || tables*2;
-  document.getElementById('s-tours').classList.remove('active');
-  document.getElementById('s-paires').classList.remove('active');
-  document.getElementById('s-config').classList.add('active');
+  goTo('s-config');
 }
 
 function setMode(m){mode=m;applyStyle(document.getElementById('btn-mitchell'),m==='mitchell'?BLUE:OFF);applyStyle(document.getElementById('btn-guerid'),m==='guerid'?BLUE:OFF);}
@@ -680,7 +700,7 @@ function start(){
   }
   tourActuel=0;
   saveState();
-  showScreen('s-jeu','s-config');
+  goTo('s-jeu');
   render();
 }
 
@@ -756,7 +776,9 @@ function go(d){tourActuel=Math.max(0,Math.min(cfg.R-1,tourActuel+d));saveState()
 
 function reset(){
   localStorage.removeItem('bridge_state');
-  document.getElementById('s-jeu').classList.remove('active');
+  navHistory=[];
+  const current=['s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu'].find(s=>document.getElementById(s).classList.contains('active'));
+  if(current) document.getElementById(current).classList.remove('active');
   document.getElementById('s-tournoi').classList.add('active');
 }
 
@@ -793,7 +815,8 @@ function resumeTournoi(){
   const s=loadState();
   if(!s) return;
   cfg=s.cfg; sim=s.sim; tourActuel=s.tourActuel; mode=s.mode; sens=s.sens||'NS';
-  showScreen('s-jeu','s-tournoi');
+  navHistory=[];
+  goTo('s-jeu');
   render();
 }
 
@@ -891,7 +914,7 @@ async function chargerTournoi(url, fichier, silencieux=false){
     donnesData={};
     if(!silencieux) console.log('Impossible de charger',url);
   }
-  if(!silencieux) showScreen('s-paires','s-tournoi');
+  if(!silencieux) goTo('s-paires');
 }
 
 // ============================================================
