@@ -125,7 +125,7 @@
   </div>
   <div class="field">
     <label>Nombre de paires</label>
-    <input type="number" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="f-paires" min="6" max="36" value="" step="1" oninput="updateOptions()" onfocus="this.select()" autocomplete="one-time-code" autocomplete="one-time-code"/>
+    <input type="number" id="f-paires" min="6" max="36" value="" step="1" oninput="updateOptions()" onfocus="this.select()"/>
     <p class="err" id="e-paires">Entre 6 et 36 paires</p>
   </div>
   <p class="section-title">Mouvements possibles</p>
@@ -146,7 +146,7 @@
   <button class="back-btn" onclick="showScreen('s-paires','s-config')">← Retour</button>
   <div class="field" id="field-paire-howell" style="display:none">
     <label>Votre numéro de paire</label>
-    <input type="number" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="f-paire-howell" min="1" value="1" step="1" onfocus="this.select()" autocomplete="one-time-code"/>
+    <input type="number" id="f-paire-howell" min="1" value="1" step="1" onfocus="this.select()"/>
     <p class="err" id="e-paire-howell">Numéro invalide</p>
   </div>
   <div class="field" id="field-mode" style="">
@@ -165,22 +165,22 @@
   </div>
   <div class="field" id="field-table">
     <label>Votre table de départ</label>
-    <input type="number" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="f-table" min="1" value="1" step="1" onfocus="this.select()" autocomplete="one-time-code"/>
+    <input type="number" id="f-table" min="1" value="1" step="1" onfocus="this.select()"/>
     <p class="err" id="e-table">Entre 1 et le nombre de tables</p>
   </div>
   <div class="field">
     <label>Nombre de tables</label>
-    <input type="number" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="f-tables" min="2" value="8" step="1" onfocus="this.select()" autocomplete="one-time-code"/>
+    <input type="number" id="f-tables" min="2" value="8" step="1" onfocus="this.select()"/>
     <p class="err" id="e-tables">Minimum 2 tables</p>
   </div>
   <div class="field">
     <label>Nombre de tours</label>
-    <input type="number" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="f-tours" min="1" value="7" step="1" onfocus="this.select()" autocomplete="one-time-code"/>
+    <input type="number" id="f-tours" min="1" value="7" step="1" onfocus="this.select()"/>
     <p class="err" id="e-tours">Minimum 1 tour</p>
   </div>
   <div class="field">
     <label>Donnes par tour</label>
-    <input type="number" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="f-dpt" min="1" value="4" step="1" onfocus="this.select()" autocomplete="one-time-code"/>
+    <input type="number" id="f-dpt" min="1" value="4" step="1" onfocus="this.select()"/>
     <p class="err" id="e-dpt">Minimum 1 donne par tour</p>
   </div>
   <button class="btn-go" onclick="start()">Commencer le tournoi</button>
