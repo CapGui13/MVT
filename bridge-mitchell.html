@@ -120,12 +120,9 @@
 </div>
 
 <div class="screen" id="s-paires">
-  <div class="header">
-    <div class="header-icon">♠</div>
-    <div><h1>Bridge Mitchell</h1><p>Gestion de tournoi</p></div>
-  </div>
+  <button class="back-btn" onclick="showScreen('s-tournoi','s-paires')">← Retour</button>
+  <p class="section-title" style="margin-bottom:.3rem">Nombre de paires</p>
   <div class="field">
-    <label>Nombre de paires</label>
     <input type="number" id="f-paires" min="6" max="36" value="" step="1" oninput="updateOptions()" onfocus="this.select()"/>
     <p class="err" id="e-paires">Entre 6 et 36 paires</p>
   </div>
@@ -226,7 +223,7 @@
     <button type="button" class="nav-btn" id="btn-prev" onclick="go(-1)">← Précédent</button>
     <button type="button" class="nav-btn fwd" id="btn-next" onclick="go(1)">Suivant →</button>
   </div>
-  <button class="reset" onclick="reset()">Recommencer</button>
+  <button class="reset" onclick="reset()">← Quitter le tournoi</button>
 </div>
 
 </div>
