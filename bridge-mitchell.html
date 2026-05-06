@@ -125,7 +125,7 @@
   </div>
   <div class="field">
     <label>Nombre de paires</label>
-    <input type="number" id="f-paires" min="6" max="36" value="" step="1" oninput="updateOptions()" onfocus="this.select()" autocomplete="one-time-code" autocomplete="one-time-code"/>
+    <input type="text" inputmode="numeric" pattern="[0-9]*" id="f-paires" min="6" max="36" value="" step="1" oninput="updateOptions()" onfocus="this.select()" autocomplete="one-time-code" autocomplete="one-time-code"/>
     <p class="err" id="e-paires">Entre 6 et 36 paires</p>
   </div>
   <p class="section-title">Mouvements possibles</p>
@@ -146,7 +146,7 @@
   <button class="back-btn" onclick="showScreen('s-paires','s-config')">← Retour</button>
   <div class="field" id="field-paire-howell" style="display:none">
     <label>Votre numéro de paire</label>
-    <input type="number" id="f-paire-howell" min="1" value="1" step="1" onfocus="this.select()" autocomplete="one-time-code"/>
+    <input type="text" inputmode="numeric" pattern="[0-9]*" id="f-paire-howell" min="1" value="1" step="1" onfocus="this.select()" autocomplete="one-time-code"/>
     <p class="err" id="e-paire-howell">Numéro invalide</p>
   </div>
   <div class="field" id="field-mode" style="">
@@ -165,22 +165,22 @@
   </div>
   <div class="field" id="field-table">
     <label>Votre table de départ</label>
-    <input type="number" id="f-table" min="1" value="1" step="1" onfocus="this.select()" autocomplete="one-time-code"/>
+    <input type="text" inputmode="numeric" pattern="[0-9]*" id="f-table" min="1" value="1" step="1" onfocus="this.select()" autocomplete="one-time-code"/>
     <p class="err" id="e-table">Entre 1 et le nombre de tables</p>
   </div>
   <div class="field">
     <label>Nombre de tables</label>
-    <input type="number" id="f-tables" min="2" value="8" step="1" onfocus="this.select()" autocomplete="one-time-code"/>
+    <input type="text" inputmode="numeric" pattern="[0-9]*" id="f-tables" min="2" value="8" step="1" onfocus="this.select()" autocomplete="one-time-code"/>
     <p class="err" id="e-tables">Minimum 2 tables</p>
   </div>
   <div class="field">
     <label>Nombre de tours</label>
-    <input type="number" id="f-tours" min="1" value="7" step="1" onfocus="this.select()" autocomplete="one-time-code"/>
+    <input type="text" inputmode="numeric" pattern="[0-9]*" id="f-tours" min="1" value="7" step="1" onfocus="this.select()" autocomplete="one-time-code"/>
     <p class="err" id="e-tours">Minimum 1 tour</p>
   </div>
   <div class="field">
     <label>Donnes par tour</label>
-    <input type="number" id="f-dpt" min="1" value="4" step="1" onfocus="this.select()" autocomplete="one-time-code"/>
+    <input type="text" inputmode="numeric" pattern="[0-9]*" id="f-dpt" min="1" value="4" step="1" onfocus="this.select()" autocomplete="one-time-code"/>
     <p class="err" id="e-dpt">Minimum 1 donne par tour</p>
   </div>
   <button class="btn-go" onclick="start()">Commencer le tournoi</button>
@@ -626,7 +626,7 @@ function applyConfig(mv,tables,tours,dpt,nbPaires){
 function setMode(m){mode=m;applyStyle(document.getElementById('btn-mitchell'),m==='mitchell'?BLUE:OFF);applyStyle(document.getElementById('btn-guerid'),m==='guerid'?BLUE:OFF);}
 function setSens(s){sens=s;applyStyle(document.getElementById('btn-ns'),s==='NS'?GREEN:OFF);applyStyle(document.getElementById('btn-eo'),s==='EO'?GREEN:OFF);}
 
-function int(id){return parseInt(document.getElementById(id).value)||0;}
+function int(id){return parseInt(document.getElementById(id).value.replace(/[^0-9]/g,''))||0;}
 function err(id,v){document.getElementById(id).style.display=v?'block':'none';}
 
 function tToSlot(t,N){if(t===1||t===N)return 0;if(t<=N/2)return t-1;return t;}
