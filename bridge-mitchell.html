@@ -891,10 +891,7 @@ async function initTournoi(){
     });
 
   }catch(e){
-    // Fallback : charger donnes.json directement
-    sub.textContent='Chargement du fichier par défaut...';
-    await chargerTournoi(base+'donnes.json','donnes.json', true);
-    sub.textContent='Fichier de donnes chargé.';
+    sub.textContent='';
   }
 }
 
@@ -967,7 +964,6 @@ function showUpdateBanner(){
 }
 
 setSens('NS');
-updateOptions();
 initTournoi();
 checkForUpdate();
 </script>
