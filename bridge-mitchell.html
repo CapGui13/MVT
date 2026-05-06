@@ -97,12 +97,8 @@
 <body>
 <div class="wrap">
 
-<!-- ÉCRAN 1 : NOMBRE DE PAIRES -->
+<!-- ÉCRAN 1 : CHOIX DU TOURNOI -->
 <div class="screen active" id="s-tournoi">
-  <div class="header">
-    <div class="header-icon">♠</div>
-    <div><h1>Bridge Mitchell</h1><p>Gestion de tournoi</p></div>
-  </div>
   <div id="s-tournoi-resume" style="display:none">
     <p class="section-title">Tournoi en cours</p>
     <div id="resume-card" style="background:var(--bg2);border:1.5px solid var(--blue);border-radius:12px;padding:14px;margin-bottom:1rem;cursor:pointer" onclick="resumeTournoi()">
@@ -887,7 +883,7 @@ async function initTournoi(){
         label=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
         label=label.charAt(0).toUpperCase()+label.slice(1);
       }
-      btn.innerHTML=`<div style="flex:1"><div class="option-main">${label||f.name}</div><div class="option-detail">${f.name}</div></div><span style="font-size:18px">→</span>`;
+      btn.innerHTML=`<div style="flex:1"><div class="option-main">${label||f.name}</div></div><span style="font-size:18px">→</span>`;
       btn.onclick=()=>chargerTournoi(base+f.name, f.name);
       list.appendChild(btn);
     });
