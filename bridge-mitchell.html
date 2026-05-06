@@ -854,26 +854,17 @@ async function initTournoi(){
     }
     if(!user||!repo) throw new Error('Pas sur GitHub Pages');
 
-    // Vérifier le cache (valide 1h)
-    const cacheKey='bridge_files_cache_v2';
-    const cached=localStorage.getItem(cacheKey);
-    let donneFichiers=null;
-    if(cached){
-      const c=JSON.parse(cached);
-      if(Date.now()-c.ts < 3600*1000) donneFichiers=c.files;
+    const res=await fetch(`https://api.github.com/repos/${user}/${repo}/contents/`,
+      {headers:{Accept:'application/vnd.github.v3+json'}});
+    if(!res.ok){
+      if(res.status===403) sub.textContent='Limite API atteinte — réessaie dans une heure.';
+      throw new Error();
     }
-
-    if(!donneFichiers){
-      const res=await fetch(`https://api.github.com/repos/${user}/${repo}/contents/`,
-        {headers:{Accept:'application/vnd.github.v3+json'}});
-      if(!res.ok) throw new Error();
-      const files=await res.json();
-      donneFichiers=files
-        .filter(f=>f.type==='file' && /^donnes[-_]?\d{4}.*\.json$/i.test(f.name))
-        .sort((a,b)=>b.name.localeCompare(a.name))
-        .map(f=>f.name);
-      localStorage.setItem('bridge_files_cache_v2', JSON.stringify({ts:Date.now(), files:donneFichiers}));
-    }
+    const files=await res.json();
+    const donneFichiers=files
+      .filter(f=>f.type==='file' && /^donnes[-_]?\d{4}.*\.json$/i.test(f.name))
+      .sort((a,b)=>b.name.localeCompare(a.name))
+      .map(f=>f.name);
 
     if(!donneFichiers.length){ sub.textContent='Aucun fichier de donnes trouvé.'; return; }
     sub.textContent=donneFichiers.length+' tournoi'+(donneFichiers.length>1?'s':'')+' disponible'+(donneFichiers.length>1?'s':'');
