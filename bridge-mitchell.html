@@ -877,13 +877,13 @@ async function initTournoi(){
       const btn=document.createElement('button');
       btn.className='option-btn';
       const match=f.name.match(/(\d{4}-\d{2}-\d{2})/);
-      let label=f.name.replace('.json','').replace(/^donnes[-_]?/i,'');
+      let label='Tournoi';
       if(match){
         const d=new Date(match[1]+'T12:00:00');
         label=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
         label=label.charAt(0).toUpperCase()+label.slice(1);
       }
-      btn.innerHTML=`<div style="flex:1"><div class="option-main">${label||f.name}</div></div><span style="font-size:18px">→</span>`;
+      btn.innerHTML=`<div style="flex:1"><div class="option-main">${label}</div></div><span style="font-size:18px">→</span>`;
       btn.onclick=()=>chargerTournoi(base+f.name, f.name);
       list.appendChild(btn);
     });
