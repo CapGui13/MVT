@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="Bridge Mitchell"/>
+<meta name="apple-mobile-web-app-title" content="Mvt App"/>
 <meta name="theme-color" content="#111111"/>
-<title>Bridge Mitchell</title>
+<title>Mvt App</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   :root{--bg:#111;--bg2:#1a1a1a;--bg3:#222;--text:#f5f5f5;--text2:#999;--border:#333;--blue:#60a5fa;--green:#4ade80;--chip-bg:#1d4ed8;--chip-text:#bfdbfe;}
@@ -114,7 +114,7 @@
   <p class="section-title">Choisir un tournoi</p>
   <p class="section-sub" id="tournoi-sub">Chargement...</p>
   <div class="options-list" id="tournoi-list"></div>
-  <button class="btn-go" style="margin-top:1rem;background:var(--bg3);color:var(--text2);font-size:14px" onclick="goTo('s-paires')">Continuer sans donnes →</button>
+  <button class="btn-go" style="margin-top:1rem;background:var(--bg3);color:var(--text2);font-size:14px" onclick="const b=document.getElementById('btn-charger-donnes');if(b)b.style.display='';goTo('s-paires')">Continuer sans donnes →</button>
 </div>
 
 <div class="screen" id="s-paires">
@@ -180,7 +180,7 @@
     <p class="err" id="e-dpt">Minimum 1 donne par tour</p>
   </div>
   <button class="btn-go" onclick="start()">Commencer le tournoi</button>
-  <button class="btn-go" style="margin-top:.6rem;background:var(--bg3);color:var(--text2);font-size:14px" onclick="goTo('s-donnes')">📋 Charger les infos des donnes (optionnel)</button>
+  <button class="btn-go" id="btn-charger-donnes" style="margin-top:.6rem;background:var(--bg3);color:var(--text2);font-size:14px" onclick="goTo('s-donnes')">📋 Charger les infos des donnes (optionnel)</button>
 </div>
 
 <!-- ÉCRAN DONNES -->
@@ -912,7 +912,12 @@ async function chargerTournoi(url, fichier, silencieux=false){
     donnesData={};
     if(!silencieux) console.log('Impossible de charger',url);
   }
-  if(!silencieux) goTo('s-paires');
+  if(!silencieux){
+    // Masquer le bouton "charger les donnes" puisqu'elles sont déjà chargées
+    const btn=document.getElementById('btn-charger-donnes');
+    if(btn) btn.style.display='none';
+    goTo('s-paires');
+  }
 }
 
 // ============================================================
