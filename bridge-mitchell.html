@@ -266,15 +266,12 @@ const DB=[
 const DB_HOWELL=[
   [6, 3,'classique',5,4,20,false],
   [7, 4,'heredia', 6,4,28,false],
-  [7, 4,'classique',6,4,28,false],[7,4,'classique',7,4,28,false],
   [8, 4,'heredia', 6,4,32,false],
-  [8, 4,'classique',6,4,28,false],[8,4,'classique',7,4,28,false],
+  [8, 4,'classique',6,3,24,false],[8,4,'classique',7,3,24,false],
   [9, 5,'heredia', 8,3,27,false],
-  [9, 5,'classique',8,3,27,false],[9,5,'classique',9,3,27,false],
   [10,5,'heredia', 8,3,30,false],
   [10,5,'classique',8,3,27,false],[10,5,'classique',9,3,27,false],
   [11,6,'heredia', 8,3,30,false],
-  [11,6,'classique',8,3,33,false],[11,6,'classique',9,3,33,false],
   [12,6,'heredia', 8,3,30,false],
   [12,6,'classique',8,3,33,false],[12,6,'classique',9,3,33,false],
   [13,7,'classique',12,2,26,false],[13,7,'classique',13,2,26,false],
@@ -448,12 +445,8 @@ const HOWELL_MOVES = {
 // Mapping nbPaires -> clé réelle dans HOWELL_MOVES
 const HOWELL_KEY_MAP = {
   'classique_6_4':  'classique_6_4',
-  'classique_7_4':  'classique_6_4',  // 7p classique utilise le tableau 6p
-  'classique_8_4':  'classique_6_4',  // 8p classique 4dpt = tableau 6p
   'classique_8_3':  'classique_8_3',
-  'classique_9_3':  'classique_8_3',  // 9p classique utilise tableau 8p
   'classique_10_3': 'classique_10_3',
-  'classique_11_3': 'classique_10_3', // 11p classique utilise tableau 10p
   'classique_12_3': 'classique_12_3',
   'classique_13_2': 'classique_12_3',
   'classique_14_2': 'classique_12_3',
