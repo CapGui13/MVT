@@ -529,6 +529,9 @@ function goBack(){
     window._donnesFichier=null;
     const btn=document.getElementById('btn-charger-donnes');
     if(btn) btn.style.display='';
+    document.getElementById('tournoi-sub').textContent='Chargement...';
+    document.getElementById('tournoi-list').innerHTML='';
+    initTournoi();
   }
 }
 
