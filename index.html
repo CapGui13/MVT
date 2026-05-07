@@ -111,7 +111,10 @@
     <button class="btn-go" style="margin-top:.6rem;background:var(--bg3);color:var(--text2);font-size:14px" onclick="clearResume()">Ignorer et recommencer</button>
     <div style="margin:1.5rem 0;border-top:1px solid var(--border)"></div>
   </div>
-  <p class="section-title">Choisir un tournoi</p>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.3rem">
+    <p class="section-title" style="margin-bottom:0">Choisir un tournoi</p>
+    <a href="https://capgui13.github.io/MVT/gen" style="font-size:12px;padding:5px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--green);text-decoration:none;font-family:inherit;white-space:nowrap;line-height:1;display:inline-flex;align-items:center">🗂 Générateur</a>
+  </div>
   <p class="section-sub" id="tournoi-sub">Chargement...</p>
   <div class="options-list" id="tournoi-list"></div>
   <button class="btn-go" style="margin-top:1rem;background:var(--bg3);color:var(--text2);font-size:14px" onclick="const b=document.getElementById('btn-charger-donnes');if(b)b.style.display='';goTo('s-paires')">Continuer sans donnes →</button>
