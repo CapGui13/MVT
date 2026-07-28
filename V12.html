@@ -1,0 +1,2910 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Mvt App"/>
+<meta name="theme-color" content="#111111"/>
+<title>Mvt App</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{--bg:#111;--bg2:#1a1a1a;--bg3:#222;--bg4:#2a2a2a;--text:#f5f5f5;--text2:#999;--text3:#555;--border:#333;--border2:#444;--blue:#60a5fa;--green:#4ade80;--chip-bg:#1d4ed8;--chip-text:#bfdbfe;--accent:#e8ff47;--r:10px;--r2:14px;--r3:18px;--ns:#4ade80;--eo:#f87171;}
+  @media(prefers-color-scheme:light){:root{--bg:#f8f8f7;--bg2:#fff;--bg3:#efefed;--bg4:#e0ded8;--text:#111;--text2:#666;--text3:#aaa;--border:#ddd;--border2:#ccc;--chip-bg:#dbeafe;--chip-text:#1e3a8a;--accent:#5c6f00;--ns:#166534;--eo:#b91c1c;}}
+  body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;padding-bottom:env(safe-area-inset-bottom);touch-action:manipulation;-webkit-user-select:none;user-select:none;}
+  .wrap{max-width:480px;margin:0 auto;padding:1.5rem 1rem}
+  .screen{display:none}
+  .screen.active{display:block;animation:screenIn 0.2s ease forwards}
+  #s-jeu.active{animation:screenInFixed 0.2s ease forwards}
+  @keyframes screenIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes screenInFixed{from{opacity:0}to{opacity:1}}
+  #s-jeu{display:none;flex-direction:column}
+  #s-jeu.active{display:flex;position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;bottom:0;padding:1.5rem 1rem;overflow:hidden;overscroll-behavior:none;background:var(--bg);}
+  .header{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem}
+  .header-icon{width:40px;height:40px;border-radius:10px;background:#1d4ed8;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .header h1{font-size:20px;font-weight:600;color:var(--text)}
+  .header p{font-size:13px;color:var(--text2)}
+  .field{margin-bottom:1.1rem}
+  .field label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:500}
+  .seg{display:flex;gap:8px}
+  .seg-btn{flex:1;padding:11px 8px;border-radius:10px;font-size:14px;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--text2);transition:all 0.15s;font-family:inherit;}
+  .seg-btn:active{transform:scale(0.97)}
+  input[type=number]{width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:16px;font-family:inherit;-webkit-appearance:none;}
+  input[type=number]:focus{outline:none;border-color:var(--blue)}
+  .err{font-size:12px;color:#f87171;margin-top:5px;display:none}
+  .btn-go{width:100%;margin-top:1.4rem;padding:14px;border:none;border-radius:12px;background:var(--text);color:var(--bg);font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity 0.15s;}
+  .btn-go:active{opacity:0.8}
+  .section-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:.3rem}
+  .section-sub{font-size:12px;color:var(--text2);margin-bottom:.8rem}
+  .back-btn{display:inline-flex;align-items:center;gap:4px;border:none;background:none;color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:1.1rem;padding:0;}
+
+  /* Options */
+  .options-list{display:flex;flex-direction:column;gap:8px}
+  .option-btn{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;font-family:inherit;cursor:pointer;text-align:left;transition:all 0.15s;display:flex;justify-content:space-between;align-items:center;min-height:64px}
+  .option-btn:active{transform:scale(0.98);opacity:0.8}
+  .option-main{font-weight:600;font-size:14px}
+  .option-detail{font-size:12px;color:var(--text2);margin-top:2px}
+  .option-badge{font-size:11px;padding:3px 8px;border-radius:999px;font-weight:600;flex-shrink:0;margin-left:8px}
+  .badge-simple{background:#dbeafe;color:#1e3a8a}
+  .badge-saut-opt{background:#fef3c7;color:#92400e}
+  .badge-guerid-opt{background:#d1fae5;color:#065f46}
+  .badge-howell{background:#f3e8ff;color:#6b21a8}
+  .section-sep{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;padding:4px 2px 2px}
+  .no-options{font-size:13px;color:var(--text2);padding:12px;background:var(--bg3);border-radius:10px;text-align:center}
+  .saut-note{font-size:12px;font-weight:600;color:#fbbf24;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:8px 10px;margin-top:10px;display:none;}
+
+  /* Sélection tours */
+  .tours-grid{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
+  .tour-btn{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;font-family:inherit;cursor:pointer;text-align:left;transition:all 0.15s;display:flex;justify-content:space-between;align-items:center;min-height:60px}
+  .tour-btn:active{transform:scale(0.98);opacity:0.8}
+  .tour-main{font-weight:600}
+  .tour-detail{font-size:12px;color:var(--text2)}
+
+  /* Jeu */
+  .prog{height:2px;background:var(--border);margin-bottom:1rem;overflow:hidden}
+  .prog-fill{height:100%;background:var(--blue);transition:width 0.4s ease}
+
+  /* Carte tour */
+  .big-card{background:var(--bg2);border-radius:18px;padding:1rem 1.2rem;margin-bottom:.7rem;border:1px solid var(--border);display:flex;align-items:center;gap:1rem;}
+  .tour-circle{position:relative;flex-shrink:0;width:72px;height:72px}
+  .tour-circle svg{position:absolute;top:0;left:0;width:72px;height:72px;transform:rotate(-90deg)}
+  .tour-circle-bg{fill:none;stroke:var(--border);stroke-width:4}
+  .tour-circle-fill{fill:none;stroke:var(--blue);stroke-width:4;stroke-linecap:round;stroke-dasharray:188.5;stroke-dashoffset:188.5;transition:stroke-dashoffset 0.5s ease}
+  .tour-circle-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+  .big-num{font-size:28px;font-weight:800;color:var(--text);line-height:1;letter-spacing:-.03em}
+  .big-sub{font-size:10px;color:var(--text2);line-height:1;margin-top:1px}
+  .tour-right{flex:1;min-width:0}
+  .badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;gap:4px}
+  .badge-saut{background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.3)}
+  .badge-guerid{background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.25)}
+  .badge-relais{background:rgba(167,139,250,.12);color:#a78bfa;border:1px solid rgba(167,139,250,.25)}
+  .badges-row{display:flex;gap:6px;flex-wrap:wrap;min-height:24px}
+  .meta-cell{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:10px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .meta-label{font-size:10px;font-weight:700;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+  .meta-val{font-size:14px;font-weight:700;color:var(--text);line-height:1}
+
+  /* Donnes */
+  .boards-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:1rem;margin-bottom:.7rem;flex:1;overflow-y:auto}
+  .boards-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem}
+  .boards-label{font-size:10px;font-weight:700;color:var(--text2);letter-spacing:0.1em;text-transform:uppercase}
+  .boards-count{font-size:11px;color:var(--text2)}
+  .chips{display:flex;flex-direction:column;gap:7px}
+
+  /* Chip simple (sans info) */
+  .chip{border-radius:14px;padding:14px 16px;font-size:22px;font-weight:800;text-align:center;background:var(--bg3);color:var(--text);letter-spacing:-.02em}
+
+  /* Chip riche (avec scores) */
+  .chip-rich{background:var(--bg3);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;border:none}
+  .chip-num{font-size:20px;font-weight:800;background:var(--chip-bg);color:var(--chip-text);border-radius:10px;padding:6px 12px;flex-shrink:0;min-width:48px;text-align:center;line-height:1.3;letter-spacing:-.02em}
+  .chip-info{flex:1;display:flex;flex-direction:column;gap:4px}
+  .chip-scores{display:flex;gap:0;border-radius:8px;overflow:hidden;width:fit-content}
+  .chip-score-item{font-size:12px;font-weight:700;padding:3px 10px;display:flex;align-items:center;gap:4px}
+  .chip-score-ns{background:rgba(74,222,128,.15);color:#4ade80}
+  .chip-score-eo{background:rgba(248,113,113,.15);color:#f87171}
+  .chip-score-mine{background:rgba(74,222,128,.15);color:#4ade80}
+  .chip-score-other{background:rgba(248,113,113,.15);color:#f87171}
+  .chip-score-label{font-size:9px;font-weight:800;opacity:.7;letter-spacing:.05em}
+  .chip-note{font-size:11px;color:var(--text2);font-style:italic}
+  .chip-note-hidden{visibility:hidden;height:0;margin:0;padding:0}
+
+  /* Nav */
+  .nav{display:flex;gap:8px}
+  .nav-btn{flex:1;padding:13px;border:1.5px solid var(--border);border-radius:12px;background:transparent;color:var(--text);font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;transition:all 0.15s;}
+  .nav-btn:active{transform:scale(0.97)}
+  .nav-btn:disabled{opacity:0.2;cursor:default}
+  .nav-btn.fwd{background:var(--text);color:var(--bg);border-color:transparent;font-weight:700}
+  .reset{display:block;width:100%;margin-top:.6rem;padding:6px;border:none;background:none;color:var(--text2);font-size:13px;cursor:pointer;text-decoration:underline;font-family:inherit;}
+  /* Écran donnes */
+  .donnes-textarea{width:100%;height:140px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;font-family:inherit;resize:none;line-height:1.4}
+  .donnes-textarea:focus{outline:none;border-color:var(--blue)}
+  .donnes-status{font-size:12px;margin-top:6px;padding:6px 10px;border-radius:8px;display:none}
+  .donnes-status.ok{display:block;background:#d1fae5;color:#065f46}
+  .donnes-status.err{display:block;background:#fee2e2;color:#991b1b}
+  /* Générateur */
+  .gen-block{background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:.75rem}
+  .gen-block-header{padding:.6rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+  .gen-step{width:18px;height:18px;border-radius:50%;background:#1d4ed8;color:#bfdbfe;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .gen-block-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text2)}
+  .gen-block-body{padding:1rem}
+  .gen-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .gen-col label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);display:block;margin-bottom:4px}
+  select{width:100%;padding:9px 10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;font-family:inherit;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;padding-right:26px;}
+  select:focus{outline:none;border-color:var(--blue)}
+  .gen-textarea{width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:monospace;resize:vertical;line-height:1.7;min-height:120px}
+  .gen-textarea:focus{outline:none;border-color:var(--blue)}
+  .gen-textarea::placeholder{color:var(--text2)}
+  .gen-token-input{width:100%;padding:9px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:monospace}
+  .gen-token-input:focus{outline:none;border-color:var(--blue)}
+  .gen-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:.75rem}
+  .gen-btn-primary{padding:12px 18px;border:none;border-radius:12px;background:var(--text);color:var(--bg);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity 0.15s;white-space:nowrap}
+  .gen-btn-primary:active{opacity:0.8}
+  .gen-btn-primary:disabled{opacity:0.4;cursor:default}
+  .gen-btn-secondary{padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;background:transparent;color:var(--text2);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;}
+  .gen-btn-secondary:active{opacity:0.8}
+  .gen-status{display:none;font-size:12px;font-weight:500;padding:7px 12px;border-radius:10px}
+  .gen-status.ok{display:inline-flex;background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.3)}
+  .gen-status.err{display:inline-flex;background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.3)}
+  .gen-chip{display:none;font-size:12px;font-weight:500;padding:7px 12px;border-radius:10px;background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.3)}
+  .gen-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:.75rem}
+  .gen-stat{background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:.85rem 1rem}
+  .gen-stat:first-child{border-color:rgba(96,165,250,.4);background:rgba(96,165,250,.06)}
+  .gen-stat-num{font-size:28px;font-weight:700;color:var(--text);letter-spacing:-.03em;line-height:1;margin-bottom:3px}
+  .gen-stat:first-child .gen-stat-num{color:var(--blue)}
+  .gen-stat-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text2)}
+  .gen-preview-bar{background:var(--bg3);border-bottom:1px solid var(--border);padding:8px 12px;display:flex;align-items:center;gap:8px}
+  .gen-dots{display:flex;gap:5px}
+  .gen-dot{width:10px;height:10px;border-radius:50%}
+  .gen-preview-body{padding:1rem;font-size:11px;font-family:monospace;color:#7ec8a0;max-height:180px;overflow-y:auto;white-space:pre;line-height:1.8;background:var(--bg)}
+
+/* ── PAR des donnes (s-gen2) ── */
+
+#s-gen2{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',Helvetica,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overscroll-behavior:none;}
+
+#s-gen2 .par-app{display:flex;flex-direction:column;min-height:100dvh;max-width:520px;margin:0 auto;}
+#s-gen2 .par-topbar{padding:1rem 1.25rem .75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;background:var(--bg);}
+#s-gen2 .par-topbar-title{font-size:15px;font-weight:600;letter-spacing:-.01em}
+#s-gen2 .par-content{flex:1;overflow-y:auto;padding:1rem 1.25rem 6rem;}
+
+#s-gen2 .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r2);border:1px solid var(--border);}
+#s-gen2 table{width:100%;border-collapse:collapse;font-size:13px;}
+#s-gen2 thead th{background:var(--bg3);padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);}
+thead th:first-child{border-radius:var(--r2) 0 0 0}
+thead th:last-child{border-radius:0 var(--r2) 0 0}
+#s-gen2 tbody tr{border-top:1px solid var(--border);}
+#s-gen2 tbody tr.sep-thick{border-top:4px solid var(--border2);}
+#s-gen2 tbody tr:hover{background:var(--bg3);}
+#s-gen2 tbody td{padding:0;}
+#s-gen2 tbody td.num-cell{padding:9px 10px;color:var(--text2);font-size:12px;font-weight:600;min-width:36px;text-align:center;}
+
+/* Affichage du commentaire en ligne dédiée sur mobile */
+/* Affichage du commentaire en ligne dédiée sur mobile (uniquement écran "Gérer les fichiers") */
+#s-gen2 tr.note-display-row{display:none;}
+@media (max-width:600px){
+  #s-gen2.compact-notes tr.note-display-row.has-note{display:table-row;}
+  #s-gen2.compact-notes #th-note,
+  #s-gen2.compact-notes tbody td.note-input-cell{display:none;}
+}
+#s-gen2 tr.note-display-row td{padding:2px 10px 9px;font-size:12px;color:var(--text2);font-style:italic;line-height:1.3;word-break:break-word;}
+
+/* contenteditable cells */
+.ce{width:100%;padding:9px 10px;background:transparent;border:none;outline:none;min-width:60px;font-size:13px;font-family:inherit;font-weight:400;color:var(--text3);cursor:text;white-space:nowrap;overflow:hidden;}
+.ce:focus{background:var(--bg4);box-shadow:inset 0 0 0 1.5px var(--accent);color:var(--text);}
+.ce.col-ns{color:var(--text3);}
+.ce.col-eo{color:var(--text3);}
+/* rendered contract spans */
+.ce span.c{font-weight:400;}
+.ce span.c-ns{color:var(--ns);}
+.ce span.c-eo{color:var(--eo);}
+.ce span.w-manche{font-weight:700;font-size:14px;}
+.ce span.w-chelem{font-weight:900;font-size:14.5px;letter-spacing:.02em;}
+/* note input stays as input */
+tbody td input.note-input{width:100%;padding:9px 10px;background:transparent;border:none;color:var(--text);font-size:13px;font-family:inherit;font-weight:400;outline:none;}
+tbody td input.note-input:focus{background:var(--bg4);box-shadow:inset 0 0 0 1.5px var(--accent);}
+
+#s-gen2 .par-bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--bg);border-top:1px solid var(--border);padding:.75rem 1.25rem calc(.75rem + env(safe-area-inset-bottom));display:flex;gap:8px;z-index:20;}
+#s-gen2 .par-btn{flex:1;padding:12px;border-radius:var(--r2);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:none;transition:all .15s;}
+#s-gen2 .par-btn:active{transform:scale(.97);}
+#s-gen2 .par-btn-primary{background:var(--accent);color:#111;}
+
+#s-gen2 .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem;}
+#s-gen2 .stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:.75rem;text-align:center;}
+#s-gen2 .stat-num{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.03em;line-height:1;}
+#s-gen2 .stat-label{font-size:10px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:3px;}
+
+#s-gen2 .par-toast{position:fixed;top:1.5rem;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--bg2);color:var(--text);border:1px solid var(--border2);border-radius:999px;padding:8px 16px;font-size:13px;font-weight:500;z-index:200;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;}
+#s-gen2 .par-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+
+/* ── Visualiseur de donnes (s-visu) ── */
+
+#s-visu{padding-bottom:env(safe-area-inset-bottom,34px);}
+#s-visu .visu-nav{display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;margin-bottom:.75rem;border-bottom:1px solid var(--border);}
+#s-visu .visu-ctr{font-size:13px;color:var(--text2);}
+#s-visu .visu-arr{display:flex;gap:6px;}
+#s-visu .visu-btn{width:34px;height:34px;border-radius:8px;border:none;background:#1a4d2e;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+#s-visu .visu-btn:disabled{background:var(--bg3);color:var(--text3);cursor:not-allowed;}
+#s-visu .board-hdr{background:linear-gradient(135deg,#0f2d1a 0%,#206038 100%);border-radius:12px;padding:11px 14px;display:flex;flex-direction:row;justify-content:space-between;align-items:center;box-shadow:var(--sh-lg);border:1px solid rgba(200,151,58,.2);gap:10px;margin-bottom:10px;}
+#s-visu .board-num{color:#fff;font-size:13px;font-weight:700;flex:1;}
+#s-visu .board-badges{display:flex;gap:5px;flex-shrink:0;}
+#s-visu .vbadge{padding:4px 7px;border-radius:6px;font-size:10px;font-weight:600;background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);white-space:nowrap;}
+#s-visu .vbadge-vul{background:rgba(185,28,28,.33);color:#fca5a5;}
+#s-visu .vbadge-nov{background:rgba(34,197,94,.18);color:#86efac;}
+#s-visu .diag-card{background:linear-gradient(155deg,#206038 0%,#1a4d2e 50%,#0f2d1a 100%);border-radius:12px;box-shadow:var(--sh-lg);border:1px solid rgba(200,151,58,.1);padding:10px;}
+#s-visu .diag-grid{display:flex;flex-direction:column;gap:5px;}
+#s-visu .diag-row{display:flex;flex-direction:row;gap:5px;align-items:stretch;justify-content:center;}
+#s-visu .diag-row-ns{display:flex;flex-direction:column;align-items:center;}
+#s-visu .hand{flex:1 1 0;background:#1e1e1e;border:1px solid #333;border-radius:9px;padding:22px 11px 24px;box-shadow:var(--sh-sm);position:relative;min-width:0;}
+#s-visu .hand-ns{flex:none;width:calc((100% - 54px) / 2);margin:0 auto;}
+#s-visu .hand-lbl{position:absolute;top:6px;left:0;right:0;font-size:8px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:4px;}
+#s-visu .lbl-vul{color:#e05555;}
+#s-visu .lbl-nov{color:#5aaa6a;}
+#s-visu .dealer-badge{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;border:1.5px solid #fff;color:#fff;font-size:7px;font-weight:900;flex-shrink:0;}
+#s-visu .dealer-spacer{width:13px;flex-shrink:0;visibility:hidden;}
+#s-visu .hcp-badge{position:absolute;bottom:7px;right:9px;background:rgba(200,151,58,.18);color:#c8973a;font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;border:1px solid rgba(200,151,58,.25);}
+#s-visu .diag-col{display:flex;flex-direction:column;flex:1 1 0;min-width:0;}
+#s-visu .sr{display:flex;align-items:baseline;gap:5px;line-height:1.72;min-height:22px;}
+#s-visu .sym{font-size:14px;width:18px;text-align:center;flex-shrink:0;}
+#s-visu .cds{font-size:13px;font-weight:700;word-spacing:2px;white-space:nowrap;color:#f0ebe0;}
+#s-visu .vd{font-size:11px;color:#4a6048;font-weight:400;}
+#s-visu .compass-cell{flex:0 0 44px;display:flex;align-items:center;justify-content:center;}
+#s-visu .compass{width:38px;height:38px;position:relative;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.07),rgba(0,0,0,.4));border-radius:50%;border:1px solid rgba(200,151,58,.33);box-shadow:inset 0 2px 6px rgba(0,0,0,.3);}
+#s-visu .compass::before{content:'';position:absolute;top:50%;left:6px;right:6px;height:1px;background:rgba(200,151,58,.28);transform:translateY(-50%);}
+#s-visu .compass::after{content:'';position:absolute;left:50%;top:6px;bottom:6px;width:1px;background:rgba(200,151,58,.28);transform:translateX(-50%);}
+#s-visu .cpt{position:absolute;color:rgba(255,255,255,.85);font-size:8px;font-weight:800;}
+#s-visu .cpt-n{top:2px;left:50%;transform:translateX(-50%);}
+#s-visu .cpt-s{bottom:2px;left:50%;transform:translateX(-50%);}
+#s-visu .cpt-o{left:3px;top:50%;transform:translateY(-50%);}
+#s-visu .cpt-e{right:3px;top:50%;transform:translateY(-50%);}
+#s-visu .vcs{color:#6b9fd4;}#s-visu .vch{color:#d4706a;}#s-visu .vcd{color:#c8924a;}#s-visu .vcc{color:#6aaa78;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ÉCRAN 1 : CHOIX DU TOURNOI -->
+<div class="screen active" id="s-tournoi">
+  <div id="s-tournoi-resume" style="display:none">
+    <p class="section-title">Tournoi en cours</p>
+    <div id="resume-card" style="background:var(--bg2);border:1.5px solid var(--blue);border-radius:12px;padding:14px;margin-bottom:1rem;cursor:pointer" onclick="resumeTournoi()">
+      <p id="resume-desc" style="font-size:14px;font-weight:600;color:var(--text)"></p>
+      <p id="resume-sub" style="font-size:12px;color:var(--text2);margin-top:4px"></p>
+    </div>
+    <button class="btn-go" onclick="resumeTournoi()">↩ Reprendre</button>
+    <button class="btn-go" style="margin-top:.6rem;background:var(--bg3);color:var(--text2);font-size:14px" onclick="clearResume()">Ignorer et recommencer</button>
+    <div style="margin:1.5rem 0;border-top:1px solid var(--border)"></div>
+  </div>
+  <div id="tournoi-token-section" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.3rem">
+      <p class="section-title" style="margin-bottom:0">Choisir un tournoi</p>
+      <button onclick="openGen2Fresh();" style="font-size:12px;padding:5px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--green);font-family:inherit;white-space:nowrap;line-height:1;display:inline-flex;align-items:center;cursor:pointer">🗂 Générateur</button>
+    </div>
+    <p class="section-sub" id="tournoi-sub">Chargement...</p>
+    <div class="options-list" id="tournoi-list"></div>
+    <button class="btn-go" style="margin-top:.5rem;background:var(--bg3);color:var(--text2);font-size:13px" onclick="
+      try{localStorage.removeItem('bridge_tournoi_list');}catch(e){}
+      try{localStorage.removeItem('bridge_update_check');}catch(e){}
+      document.getElementById('tournoi-list').innerHTML='';
+      document.getElementById('tournoi-sub').textContent='Chargement...';
+      _initRunning=false;
+      initTournoi();
+    ">↺ Rafraîchir la liste</button>
+    <button style="display:block;width:100%;margin-top:.3rem;padding:8px;border:none;background:none;color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit;opacity:.6;text-decoration:none" onclick="lancerTournoiSansDonnes()">Continuer sans donnes →</button>
+  </div>
+  <div id="tournoi-no-token-section" style="display:none">
+    <button class="btn-go" onclick="lancerTournoiSansDonnes()">🎲 Lancer un tournoi</button>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem;border-top:1px solid var(--border);padding-top:.75rem;">
+    <button onclick="openTokenModal();" id="btn-params" style="font-size:12px;padding:5px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text2);font-family:inherit;display:inline-flex;align-items:center;gap:5px;cursor:pointer;">⚙ Paramètres</button>
+    <button onclick="goTo('s-delete');setTimeout(loadDeleteList,50);" id="btn-gerer-fichiers" style="font-size:12px;padding:5px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:#f87171;font-family:inherit;cursor:pointer;">🗑 Gérer les fichiers</button>
+  </div>
+  <div style="margin-top:.6rem;">
+    <button onclick="uploadSelf();" style="width:100%;padding:11px 14px;border-radius:10px;border:none;background:#1d4ed8;color:#fff;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;">
+      <svg height="18" width="18" viewBox="0 0 16 16" fill="white"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      Mise à jour GitHub
+    </button>
+  </div>
+</div>
+
+<div class="screen" id="s-paires">
+  <button class="back-btn" onclick="goBack()">← Retour</button>
+  <p class="section-title" style="margin-bottom:.3rem">Nombre de paires</p>
+  <div class="field">
+    <input type="number" id="f-paires" min="6" max="36" value="" step="1" inputmode="numeric" oninput="updateOptions()" onfocus="this.select()"/>
+    <p class="err" id="e-paires">Entre 6 et 36 paires</p>
+  </div>
+  <button class="btn-go" id="btn-liste-donnes" style="margin-bottom:1.1rem;background:var(--bg3);color:var(--text2);font-size:14px;display:none" onclick="renderListeDonnes();goTo('s-liste-donnes')">📋 Liste des donnes</button>
+  <div class="options-list" id="options-list"></div>
+</div>
+
+<!-- ÉCRAN LISTE DES DONNES -->
+<div class="screen" id="s-liste-donnes">
+  <button class="back-btn" onclick="goBack()">← Retour</button>
+  <p class="section-title" style="margin-bottom:.3rem">Toutes les donnes</p>
+  <div class="boards-card" style="flex:none;">
+    <div class="boards-header">
+      <span class="boards-label">Donnes du tournoi</span>
+      <span class="boards-count" id="liste-donnes-count"></span>
+    </div>
+    <div class="chips" id="liste-donnes-chips"></div>
+  </div>
+</div>
+
+<!-- ÉCRAN 2 : CHOIX DU NOMBRE DE TOURS -->
+<div class="screen" id="s-tours">
+  <button class="back-btn" onclick="goBack()">← Retour</button>
+  <p class="section-title" id="tours-title">Choisissez le nombre de tours</p>
+  <p class="section-sub" id="tours-sub"></p>
+  <div class="tours-grid" id="tours-list"></div>
+</div>
+
+<!-- ÉCRAN 3 : CONFIG -->
+<div class="screen" id="s-config">
+  <button class="back-btn" onclick="goBack()">← Retour</button>
+  <!-- Howell : numéro de paire -->
+  <div class="field" id="field-paire-howell" style="display:none">
+    <label>Votre numéro de paire</label>
+    <input type="number" id="f-paire-howell" min="1" value="" step="1" inputmode="numeric" onfocus="this.select()" oninput="const v=int('f-paire-howell'),nbP=window._nbPairesHowell||0;if(v>=1&&v<=nbP)err('e-paire-howell',0);else if(v){document.getElementById('e-paire-howell').textContent='Choisir entre 1 et '+nbP;err('e-paire-howell',1);}"/>
+    <p class="err err-inline" id="e-paire-howell" style="min-height:16px;visibility:hidden;display:block">Numéro invalide</p>
+  </div>
+  <!-- Mitchell : sens -->
+  <div class="field" id="field-sens">
+    <label>Votre sens</label>
+    <div class="seg">
+      <button class="seg-btn" id="btn-ns" onclick="setSens('NS')">Nord / Sud</button>
+      <button class="seg-btn" id="btn-eo" onclick="setSens('EO')">Est / Ouest</button>
+    </div>
+  </div>
+  <!-- Mitchell : table de départ -->
+  <div class="field" id="field-table">
+    <label>Votre table de départ</label>
+    <input type="number" id="f-table" min="1" value="" step="1" inputmode="numeric" onfocus="this.select()" oninput="updateEvents();const v=int('f-table'),N=int('f-tables');if(v>=1&&v<=N)err('e-table',0);else if(v){document.getElementById('e-table').textContent='Choisir entre 1 et '+N;err('e-table',1);}"/>
+    <p class="err err-inline" id="e-table" style="min-height:16px;visibility:hidden;display:block">Entre 1 et le nombre de tables</p>
+  </div>
+  <!-- Mitchell impair : ligne du relais -->
+  <div class="field" id="field-relais" style="display:none">
+    <label id="label-relais">Ligne du relais (table N)</label>
+    <div class="seg">
+      <button class="seg-btn" id="btn-relais-ns" onclick="setRelais('NS')">Nord / Sud</button>
+      <button class="seg-btn" id="btn-relais-eo" onclick="setRelais('EO')">Est / Ouest</button>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-top:6px">La ligne qui a une paire de plus (celle qui sera en relais à tour de rôle)</p>
+  </div>
+  <!-- Info événements du tournoi -->
+  <div id="field-events" style="display:none;margin-bottom:1.1rem">
+    <div id="events-list" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+  <!-- Champs cachés conservés pour la logique existante -->
+  <input type="number" id="f-tables" style="display:none" value="8"/>
+  <input type="number" id="f-tours" style="display:none" value="7"/>
+  <input type="number" id="f-dpt" style="display:none" value="4"/>
+  <!-- Champs cachés : erreurs conservées pour compatibilité -->
+  <p class="err" id="e-tables" style="display:none"></p>
+  <p class="err" id="e-tours" style="display:none"></p>
+  <p class="err" id="e-dpt" style="display:none"></p>
+  <!-- Mode caché (déjà fixé par le choix précédent) -->
+  <div id="field-mode" style="display:none">
+    <button id="btn-mitchell"></button>
+    <button id="btn-guerid"></button>
+  </div>
+  <button class="btn-go" onclick="start()">Commencer le tournoi</button>
+  <button class="btn-go" id="btn-charger-donnes" style="margin-top:.6rem;background:var(--bg3);color:var(--text2);font-size:14px" onclick="goTo('s-donnes')">📋 Charger les infos des donnes (optionnel)</button>
+</div>
+
+<!-- ÉCRAN DONNES -->
+<div class="screen" id="s-donnes">
+  <button class="back-btn" onclick="goBack()">← Retour</button>
+  <p class="section-title">Infos des donnes</p>
+  <p class="section-sub">Copiez-collez depuis Excel (colonnes : N° · NS · EO · Note)</p>
+  <div class="field">
+    <textarea class="donnes-textarea" id="donnes-input" placeholder="Collez ici le contenu copié depuis Excel..." oninput="parseDonnes()"></textarea>
+    <div class="donnes-status" id="donnes-status"></div>
+  </div>
+  <button class="btn-go" onclick="goBack()">← Retour à la config</button>
+</div>
+
+<!-- ÉCRAN 4 : JEU -->
+<div class="screen" id="s-jeu">
+  <div class="prog"><div class="prog-fill" id="prog"></div></div>
+  <div style="display:grid;grid-template-columns:80px 1fr 1fr 1fr;gap:8px;margin-bottom:.7rem">
+    <!-- Cadran tour -->
+    <div class="big-card" style="margin-bottom:0;padding:.5rem;flex-direction:column;align-items:center;justify-content:center;gap:3px">
+      <div class="tour-circle" style="width:52px;height:52px">
+        <svg viewBox="0 0 72 72" style="width:52px;height:52px"><circle class="tour-circle-bg" cx="36" cy="36" r="30"/><circle class="tour-circle-fill" id="prog-circle" cx="36" cy="36" r="30"/></svg>
+        <div class="tour-circle-inner">
+          <span class="big-num" id="d-tour" style="font-size:20px">1</span>
+          <span class="big-sub" id="d-tour-sub" style="font-size:9px">/ —</span>
+        </div>
+      </div>
+      <span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2)">Tour</span>
+    </div>
+    <!-- Mouvement -->
+    <div class="meta-cell">
+      <p class="meta-label">Mouvement</p>
+      <p class="meta-val" id="d-mode">—</p>
+    </div>
+    <!-- Table -->
+    <div class="meta-cell">
+      <p class="meta-label" id="d-label-table">Table</p>
+      <p class="meta-val" id="d-table">—</p>
+    </div>
+    <!-- Sens -->
+    <div class="meta-cell">
+      <p class="meta-label" id="d-label-sens">Sens</p>
+      <p class="meta-val" id="d-sens">—</p>
+    </div>
+  </div>
+  <div class="badges-row" style="margin-bottom:.5rem">
+    <span class="badge badge-saut" id="d-saut" style="visibility:hidden">⤵ Saut</span>
+    <span class="badge badge-guerid" id="d-guerid" style="visibility:hidden">⇄ Tables miroir</span>
+    <span class="badge badge-relais" id="d-relais" style="visibility:hidden">⏸ Relais</span>
+  </div>
+  <div class="boards-card" id="boards-card-inner">
+    <div class="boards-header">
+      <span class="boards-label" id="boards-label-text">Donnes à jouer</span>
+      <span class="boards-count" id="d-donnes-count"></span>
+    </div>
+    <div class="chips" id="d-donnes"></div>
+  </div>
+  <div class="nav">
+    <button type="button" class="nav-btn" id="btn-prev">← Précédent</button>
+    <button type="button" class="nav-btn fwd" id="btn-next">Suivant →</button>
+  </div>
+  <button class="reset" onclick="reset()">← Quitter le tournoi</button>
+</div>
+
+<!-- ÉCRAN GÉNÉRATEUR -->
+<div class="screen" id="s-gen">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+    <p class="section-title" style="margin-bottom:0">Générateur</p>
+    <button class="back-btn" onclick="goBack()">← Retour</button>
+  </div>
+
+  <!-- Colonnes -->
+  <div class="gen-block">
+    <div class="gen-block-header">
+      <span class="gen-step">1</span>
+      <span class="gen-block-title">Colonnes</span>
+    </div>
+    <div class="gen-block-body">
+      <div class="gen-grid">
+        <div class="gen-col"><label>N° donne</label>
+          <select id="gen-col-num" onchange="genUpdatePreview()">
+            <option value="0">Col. A</option><option value="1">Col. B</option>
+            <option value="2">Col. C</option><option value="3">Col. D</option>
+          </select>
+        </div>
+        <div class="gen-col"><label>NS</label>
+          <select id="gen-col-ns" onchange="genUpdatePreview()">
+            <option value="0">A</option><option value="1" selected>B</option>
+            <option value="2">C</option><option value="3">D</option>
+          </select>
+        </div>
+        <div class="gen-col"><label>EO</label>
+          <select id="gen-col-eo" onchange="genUpdatePreview()">
+            <option value="0">A</option><option value="1">B</option>
+            <option value="2" selected>C</option><option value="3">D</option>
+          </select>
+        </div>
+        <div class="gen-col"><label>Note</label>
+          <select id="gen-col-note" onchange="genUpdatePreview()">
+            <option value="0">A</option><option value="1">B</option>
+            <option value="2">C</option><option value="3" selected>D</option>
+            <option value="-1">— aucune</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Données Excel -->
+  <div class="gen-block">
+    <div class="gen-block-header">
+      <span class="gen-step">2</span>
+      <span class="gen-block-title">Données Excel</span>
+    </div>
+    <div class="gen-block-body">
+      <p class="section-sub">Copie-colle directement depuis Excel. Les lignes vides et en-têtes sont ignorés.</p>
+      <textarea id="gen-input" class="gen-textarea" placeholder="Colle ici tes données Excel…" oninput="genUpdatePreview()"></textarea>
+    </div>
+  </div>
+
+  <!-- Token GitHub -->
+  <div class="gen-block">
+    <div class="gen-block-header">
+      <span class="gen-step">3</span>
+      <span class="gen-block-title">GitHub — upload automatique</span>
+    </div>
+    <div class="gen-block-body">
+      <p class="section-sub">Token pour publier directement sur <strong id="gen-repo-label">…</strong>. Stocké uniquement dans ce navigateur.</p>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="gen-token-input" type="password" class="gen-token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+          oninput="genOnTokenInput()"
+          onfocus="if(/^•+/.test(this.value)){this.value='';}"/>
+        <button class="gen-btn-secondary" onclick="genClearToken()">Supprimer</button>
+      </div>
+      <div style="margin-top:8px" id="gen-token-status"></div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="gen-actions">
+    <button class="gen-btn-primary" id="gen-btn-generate" onclick="genGenerate()">⬇ Générer</button>
+    <button class="gen-btn-secondary" onclick="genReset()">Effacer</button>
+    <span id="gen-status" class="gen-status"></span>
+    <span id="gen-date-chip" class="gen-chip"></span>
+  </div>
+
+  <!-- Aperçu -->
+  <div id="gen-results" style="display:none;flex-direction:column;gap:.75rem">
+    <div class="gen-stats">
+      <div class="gen-stat"><div class="gen-stat-num" id="gen-s-total">0</div><div class="gen-stat-label">Donnes</div></div>
+      <div class="gen-stat"><div class="gen-stat-num" id="gen-s-scores">0</div><div class="gen-stat-label">Avec score</div></div>
+      <div class="gen-stat"><div class="gen-stat-num" id="gen-s-notes">0</div><div class="gen-stat-label">Avec note</div></div>
+    </div>
+    <div class="gen-block">
+      <div class="gen-preview-bar">
+        <div class="gen-dots">
+          <div class="gen-dot" style="background:#fe5f57"></div>
+          <div class="gen-dot" style="background:#febc2e"></div>
+          <div class="gen-dot" style="background:#28c840"></div>
+        </div>
+        <span id="gen-preview-fname" style="font-size:11px;font-family:monospace;color:var(--text2);margin-left:4px">donnes.json</span>
+      </div>
+      <div id="gen-preview" class="gen-preview-body"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ÉCRAN : VISUALISEUR DE DONNES -->
+<div class="screen" id="s-visu">
+  <div class="visu-nav">
+    <button class="back-btn" onclick="goBack()">← Retour</button>
+    <span class="visu-ctr" id="visu-ctr"></span>
+    <div class="visu-arr">
+      <button class="visu-btn" id="visu-prev" onclick="visuNav(-1)">‹</button>
+      <button class="visu-btn" id="visu-next" onclick="visuNav(1)">›</button>
+    </div>
+  </div>
+  <div id="visu-content"><div style="color:var(--text2);text-align:center;padding:2rem;">Chargement…</div></div>
+</div>
+
+<div class="screen" id="s-delete" style="background:var(--bg);min-height:100dvh;padding:1.5rem 1rem;max-width:480px;margin:0 auto;">
+  <button class="back-btn" onclick="goBack()">← Retour</button>
+  <p class="section-title">Gérer les fichiers</p>
+  <p class="section-sub" id="delete-sub">Chargement...</p>
+  <div class="options-list" id="delete-list"></div>
+</div>
+
+<!-- ÉCRAN GEN2 : PAR DES DONNES -->
+<div class="screen" id="s-gen2" style="padding-bottom:80px;">
+  <button class="back-btn" onclick="goBack()">← Retour</button>
+
+  <div style="padding:.75rem 0 .5rem;display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-size:15px;font-weight:600;">PAR des donnes</div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div id="day-of-week" style="font-size:12px;font-weight:700;color:var(--text2);background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r);padding:6px 9px;letter-spacing:.02em;white-space:nowrap;">—</div>
+      <input type="text" id="day-input" maxlength="2" placeholder="JJ"
+        onblur="onDayInput()" onkeydown="if(event.key==='Enter')this.blur()"
+        style="width:40px;text-align:center;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r);padding:6px 6px;color:var(--text);font-size:15px;font-weight:600;font-family:inherit;outline:none;"
+        onfocus="this.select()"/>
+      <div id="month-display" style="font-size:12px;font-weight:700;color:var(--text2);background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r);padding:6px 9px;letter-spacing:.02em;white-space:nowrap;">—</div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <button onclick="shiftDate(1)" style="width:24px;height:22px;border-radius:5px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:11px;cursor:pointer;line-height:1;">▲</button>
+        <button onclick="shiftDate(-1)" style="width:24px;height:22px;border-radius:5px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:11px;cursor:pointer;line-height:1;">▼</button>
+      </div>
+    </div>
+  </div>
+  <div style="flex:1;padding:.5rem 0 5rem;">
+    <div class="stats-row">
+      <div class="stat" onclick="document.getElementById('pbn-input').click()" style="cursor:pointer;border-color:#166534;background:#052e16;">
+        <div class="stat-num" style="font-size:16px;color:#4ade80;">↑</div>
+        <div class="stat-label" style="color:#4ade80;">Import PBN</div>
+      </div>
+      <div class="stat" onclick="goTo('s-gen');genRenderTokenStatus();" style="cursor:pointer;">
+        <div class="stat-num" style="font-size:14px;">🗂</div>
+        <div class="stat-label">Ancien gén.</div>
+      </div>
+      <div class="stat" onclick="clearAll()" style="cursor:pointer;border-color:#7f1d1d;background:#2d0a0a;">
+        <div class="stat-num" style="font-size:16px;color:#f87171;">✕</div>
+        <div class="stat-label" style="color:#f87171;">Effacer</div>
+      </div>
+    </div>
+    <input type="file" id="pbn-input" accept=".pbn,.PBN" style="display:none" onchange="importPBN(this)"/>
+    <div class="table-wrap">
+      <table id="main-table">
+        <thead><tr>
+          <th style="width:36px;text-align:center">#</th>
+          <th>NS</th>
+          <th>EO</th>
+          <th id="th-note">Note</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+<div class="par-bottom-bar">
+  <button class="par-btn par-btn-primary" style="background:#166534;color:#4ade80;flex:.5;white-space:nowrap;" onclick="publish()">↑ Publier</button>
+</div>
+
+    
+<div class="par-toast" id="par-toast"></div>
+
+</div>
+<script>
+let mode='mitchell', sens='NS', relaisLigne='EO', cfg={}, tourActuel=0, sim=[];
+let donnesData={}; // {numDonne: {ns, eo, note}}
+
+// DB Mitchell : [paires, tables, mouvement, positions_jouees, dpt, deficient]
+// donnes en circulation = tables × dpt
+// DB Mitchell : [paires, tables, mouvement, tours, dpt, impair, deficient]
+const DB=[
+  [10,5,'simple',5,5,false,false],
+  [12,6,'guerid',6,4,false,false],
+  [13,7,'simple',7,4,true,false],
+  [14,7,'simple',6,4,false,false],[14,7,'simple',7,4,false,false],
+  [15,8,'saut',7,4,true,false],
+  [16,8,'saut',6,4,false,false],[16,8,'saut',7,4,false,false],[16,8,'guerid',8,3,false,false],
+  [17,9,'simple',9,3,true,false],
+  [18,9,'simple',8,3,false,false],[18,9,'simple',9,3,false,false],
+  [19,10,'saut',9,3,true,false],[19,10,'guerid',10,3,true,false],
+  [20,10,'saut',8,3,false,false],[20,10,'saut',9,3,false,false],[20,10,'guerid',10,3,true,false],
+  [21,11,'simple',9,3,true,false],[21,11,'simple',10,3,true,false],
+  [22,11,'simple',8,3,false,false],[22,11,'simple',9,3,false,false],[22,11,'simple',10,3,false,false],
+  [23,12,'saut',9,3,true,false],[23,12,'saut',10,3,true,false],
+  [24,12,'saut',9,3,false,false],[24,12,'saut',10,3,false,false],[24,12,'saut',11,3,false,false],[24,12,'guerid',12,2,false,false],
+  [25,13,'simple',13,2,true,false],
+  [26,13,'simple',12,2,false,false],[26,13,'simple',13,2,false,false],
+  [27,14,'saut',13,2,true,false],[27,14,'guerid',14,2,true,false],
+  [28,14,'saut',12,2,false,false],[28,14,'saut',13,2,false,false],[28,14,'guerid',14,2,false,false],
+  [29,15,'simple',13,2,true,false],[30,15,'simple',12,2,false,false],[30,15,'simple',13,2,false,false],
+  [31,16,'saut',13,2,true,false],
+  [32,16,'saut',12,2,false,false],[32,16,'saut',13,2,false,false],
+  [33,17,'simple',13,2,true,false],[34,17,'simple',12,2,false,false],[34,17,'simple',13,2,false,false],
+  [35,18,'saut',13,2,true,false],[36,18,'saut',12,2,false,false],[36,18,'saut',13,2,false,false],
+];
+
+// DB Howell : [paires, tables, mouvement, positions_jouees, dpt, donnesCirc, deficient]
+const DB_HOWELL=[
+  [6, 3,'classique',5,5,25,false],
+  [7, 4,'heredia', 7,4,28,false],
+  [8, 4,'heredia', 6,4,32,false],
+  [8, 4,'classique',6,4,32,false],[8,4,'classique',7,4,32,false],
+  [9, 5,'heredia', 9,3,27,false],
+  [10,5,'heredia', 8,3,30,false],
+  [10,5,'classique',8,3,27,false],[10,5,'classique',9,3,27,false],
+  [11,6,'heredia', 9,3,30,false],
+  [12,6,'heredia', 8,3,30,false],
+  [12,6,'classique',8,3,33,false],[12,6,'classique',9,3,33,false],
+];
+
+const MOUV_LABEL={
+  simple:'Mitchell simple',saut:'Mitchell avec saut',guerid:'Guéridon',
+  heredia:'Howell Hérédia',classique:'Howell Classique'
+};
+const MOUV_BADGE={
+  simple:'badge-simple',saut:'badge-saut-opt',guerid:'badge-guerid-opt',
+  heredia:'badge-howell',classique:'badge-howell'
+};
+const MOUV_SHORT={
+  simple:'Simple',saut:'Saut',guerid:'Guéridon',
+  heredia:'Hérédia',classique:'Classique'
+};
+
+const OFF  ={background:'transparent',color:'var(--text2)',border:'1.5px solid var(--border)',fontWeight:'400'};
+const BLUE ={background:'#60a5fa',color:'#000',border:'1.5px solid #60a5fa',fontWeight:'700'};
+const RED  ={background:'#f87171',color:'#000',border:'1.5px solid #f87171',fontWeight:'700'};
+const GREEN={background:'#4ade80',color:'#000',border:'1.5px solid #4ade80',fontWeight:'700'};
+
+function applyStyle(el,s){Object.assign(el.style,s);}
+
+// ============================================================
+// HOWELL - Tableaux de mouvement complets
+// Format classique: tables = [[ns,eo,[debut,fin]], ...]  par tour
+// Format hérédia:  paires = {p: [{t,o,e:[debut,fin]} ou {relais:true}], ...}
+// ============================================================
+const HOWELL_MOVES = {
+  // --- CLASSIQUE 6 paires, 5 donnes/tour, 5 tours ---
+  'classique_6_5': {
+    type:'classique', nbPaires:6, dpt:5, nbTours:5,
+    tables:[
+      [[6,1,[1,5]],[6,2,[6,10]],[6,3,[11,15]],[6,4,[16,20]],[6,5,[21,25]]],
+      [[2,5,[1,5]],[3,1,[6,10]],[4,2,[11,15]],[5,3,[16,20]],[1,4,[21,25]]],
+      [[3,4,[1,5]],[4,5,[6,10]],[5,1,[11,15]],[1,2,[16,20]],[2,3,[21,25]]],
+    ]
+  },
+  // --- CLASSIQUE 8 paires, 4 donnes/tour, 6 ou 7 tours ---
+  'classique_8_4': {
+    type:'classique', nbPaires:8, dpt:4, nbTours:7,
+    tables:[
+      [[8,1,[1,4]],[8,2,[5,8]],[8,3,[9,12]],[8,4,[13,16]],[8,5,[17,20]],[8,6,[21,24]],[8,7,[25,28]]],
+      [[2,7,[1,4]],[3,1,[5,8]],[4,2,[9,12]],[5,3,[13,16]],[6,4,[17,20]],[7,5,[21,24]],[1,6,[25,28]]],
+      [[3,6,[1,4]],[4,7,[5,8]],[5,1,[9,12]],[6,2,[13,16]],[7,3,[17,20]],[1,4,[21,24]],[2,5,[25,28]]],
+      [[4,5,[1,4]],[5,6,[5,8]],[6,7,[9,12]],[7,1,[13,16]],[1,2,[17,20]],[2,3,[21,24]],[3,4,[25,28]]],
+    ]
+  },
+  // --- CLASSIQUE 10 paires, 3 donnes/tour, 9 tours ---
+  'classique_10_3': {
+    type:'classique', nbPaires:10, dpt:3, nbTours:9,
+    tables:[
+      [[10,1,[1,3]],[10,2,[4,6]],[10,3,[7,9]],[10,4,[10,12]],[10,5,[13,15]],[10,6,[16,18]],[10,7,[19,21]],[10,8,[22,24]],[10,9,[25,27]]],
+      [[8,9,[4,6]],[9,1,[7,9]],[1,2,[10,12]],[2,3,[13,15]],[3,4,[16,18]],[4,5,[19,21]],[5,6,[22,24]],[6,7,[25,27]],[7,8,[1,3]]],
+      [[6,4,[7,9]],[7,5,[10,12]],[8,6,[13,15]],[9,7,[16,18]],[1,8,[19,21]],[2,9,[22,24]],[3,1,[25,27]],[4,2,[1,3]],[5,3,[4,6]]],
+      [[3,7,[22,24]],[4,8,[25,27]],[5,9,[1,3]],[6,1,[4,6]],[7,2,[7,9]],[8,3,[10,12]],[9,4,[13,15]],[1,5,[16,18]],[2,6,[19,21]]],
+      [[2,5,[25,27]],[3,6,[1,3]],[4,7,[4,6]],[5,8,[7,9]],[6,9,[10,12]],[7,1,[13,15]],[8,2,[16,18]],[9,3,[19,21]],[1,4,[22,24]]],
+    ]
+  },
+  // --- CLASSIQUE 12 paires, 3 donnes/tour, 11 tours ---
+  'classique_12_3': {
+    type:'classique', nbPaires:12, dpt:3, nbTours:11,
+    tables:[
+      [[12,1,[1,3]],[12,2,[4,6]],[12,3,[7,9]],[12,4,[10,12]],[12,5,[13,15]],[12,6,[16,18]],[12,7,[19,21]],[12,8,[22,24]],[12,9,[25,27]],[12,10,[28,30]],[12,11,[31,33]]],
+      [[6,11,[7,9]],[7,1,[10,12]],[8,2,[13,15]],[9,3,[16,18]],[10,4,[19,21]],[11,5,[22,24]],[1,6,[25,27]],[2,7,[28,30]],[3,8,[31,33]],[4,9,[1,3]],[5,10,[4,6]]],
+      [[5,9,[19,21]],[6,10,[22,24]],[7,11,[25,27]],[8,1,[28,30]],[9,2,[31,33]],[10,3,[1,3]],[11,4,[4,6]],[1,5,[7,9]],[2,6,[10,12]],[3,7,[13,15]],[4,8,[16,18]]],
+      [[2,3,[22,24]],[3,4,[25,27]],[4,5,[28,30]],[5,6,[31,33]],[6,7,[1,3]],[7,8,[4,6]],[8,9,[7,9]],[9,10,[10,12]],[10,11,[13,15]],[11,1,[16,18]],[1,2,[19,21]]],
+      [[10,8,[25,27]],[11,9,[28,30]],[1,10,[31,33]],[2,11,[1,3]],[3,1,[4,6]],[4,2,[7,9]],[5,3,[10,12]],[6,4,[13,15]],[7,5,[16,18]],[8,6,[19,21]],[9,7,[22,24]]],
+      [[4,7,[31,33]],[5,8,[1,3]],[6,9,[4,6]],[7,10,[7,9]],[8,11,[10,12]],[9,1,[13,15]],[10,2,[16,18]],[11,3,[19,21]],[1,4,[22,24]],[2,5,[25,27]],[3,6,[1,3]]],
+    ]
+  },
+  // --- HÉRÉDIA 7 paires, 4 donnes/tour, 6 jouées + 1 relais ---
+  'heredia_7_4': {
+    type:'heredia', nbPaires:7, dpt:4, nbTours:7,
+    paires:{
+      1:[{e:[13,16]},{e:[17,20]},{e:[25,28]},{e:[21,24]},{e:[5,8]},{e:[9,12]},{relais:true}],
+      2:[{e:[9,12]},{e:[1,4]},{e:[17,20]},{e:[21,24]},{e:[13,16]},{relais:true},{e:[25,28]}],
+      3:[{e:[21,24]},{e:[1,4]},{e:[25,28]},{e:[17,20]},{relais:true},{e:[5,8]},{e:[13,16]}],
+      4:[{e:[21,24]},{e:[17,20]},{e:[5,8]},{relais:true},{e:[9,12]},{e:[1,4]},{e:[25,28]}],
+      5:[{e:[9,12]},{e:[21,24]},{relais:true},{e:[25,28]},{e:[5,8]},{e:[1,4]},{e:[13,16]}],
+      6:[{e:[13,16]},{relais:true},{e:[17,20]},{e:[25,28]},{e:[9,12]},{e:[5,8]},{e:[1,4]}],
+      7:[{relais:true},{e:[21,24]},{e:[5,8]},{e:[17,20]},{e:[13,16]},{e:[9,12]},{e:[1,4]}],
+    },
+    sens:{
+      1:['EO','EO','NS','EO','NS','NS',null],
+      2:['EO','EO','NS','NS','EO',null,'NS'],
+      3:['EO','NS','EO','NS',null,'EO','NS'],
+      4:['NS','NS','EO',null,'NS','EO','EO'],
+      5:['NS','NS',null,'EO','EO','NS','EO'],
+      6:['NS',null,'EO','NS','EO','NS','EO'],
+      7:[null,'EO','NS','EO','NS','EO','NS'],
+    }
+  },
+  // --- HÉRÉDIA 8 paires, 4 donnes/tour, 6 tours ---
+  'heredia_8_4': {
+    type:'heredia', nbPaires:8, dpt:4, nbTours:6,
+    paires:{
+      1:[{e:[21,24]},{e:[17,20]},{e:[13,16]},{e:[9,12]},{e:[25,28]},{e:[29,32]}],
+      2:[{e:[13,16]},{e:[9,12]},{e:[29,32]},{e:[25,28]},{e:[21,24]},{e:[17,20]}],
+      3:[{e:[29,32]},{e:[1,4]},{e:[5,8]},{e:[21,24]},{e:[25,28]},{e:[17,20]}],
+      4:[{e:[25,28]},{e:[5,8]},{e:[1,4]},{e:[17,20]},{e:[21,24]},{e:[29,32]}],
+      5:[{e:[29,32]},{e:[5,8]},{e:[13,16]},{e:[25,28]},{e:[1,4]},{e:[9,12]}],
+      6:[{e:[25,28]},{e:[1,4]},{e:[29,32]},{e:[9,12]},{e:[5,8]},{e:[13,16]}],
+      7:[{e:[13,16]},{e:[17,20]},{e:[1,4]},{e:[21,24]},{e:[5,8]},{e:[9,12]}],
+      8:[{e:[21,24]},{e:[9,12]},{e:[5,8]},{e:[17,20]},{e:[1,4]},{e:[13,16]}],
+    },
+    sens:{
+      1:['EO','NS','NS','EO','NS','EO'],
+      2:['EO','NS','NS','EO','NS','EO'],
+      3:['NS','EO','EO','NS','EO','NS'],
+      4:['NS','EO','EO','NS','EO','NS'],
+      5:['EO','NS','EO','NS','EO','NS'],
+      6:['EO','NS','EO','NS','EO','NS'],
+      7:['NS','EO','NS','EO','NS','EO'],
+      8:['NS','EO','NS','EO','NS','EO'],
+    }
+  },
+  // --- HÉRÉDIA 9 paires, 3 donnes/tour, 8 jouées + 1 relais ---
+  'heredia_9_3': {
+    type:'heredia', nbPaires:9, dpt:3, nbTours:9,
+    paires:{
+      1:[{e:[10,12]},{e:[25,27]},{e:[16,18]},{e:[13,15]},{e:[7,9]},{e:[22,24]},{e:[4,6]},{e:[19,21]},{relais:true}],
+      2:[{e:[19,21]},{e:[13,15]},{e:[16,18]},{e:[22,24]},{e:[25,27]},{e:[1,3]},{e:[7,9]},{relais:true},{e:[10,12]}],
+      3:[{e:[19,21]},{e:[25,27]},{e:[13,15]},{e:[1,3]},{e:[4,6]},{e:[10,12]},{relais:true},{e:[22,24]},{e:[16,18]}],
+      4:[{e:[4,6]},{e:[16,18]},{e:[19,21]},{e:[13,15]},{e:[25,27]},{relais:true},{e:[1,3]},{e:[22,24]},{e:[7,9]}],
+      5:[{e:[10,12]},{e:[19,21]},{e:[7,9]},{e:[22,24]},{relais:true},{e:[4,6]},{e:[1,3]},{e:[25,27]},{e:[16,18]}],
+      6:[{e:[4,6]},{e:[13,15]},{e:[7,9]},{relais:true},{e:[22,24]},{e:[10,12]},{e:[25,27]},{e:[19,21]},{e:[1,3]}],
+      7:[{e:[13,15]},{e:[16,18]},{relais:true},{e:[10,12]},{e:[4,6]},{e:[22,24]},{e:[7,9]},{e:[25,27]},{e:[1,3]}],
+      8:[{e:[13,15]},{relais:true},{e:[19,21]},{e:[1,3]},{e:[7,9]},{e:[4,6]},{e:[25,27]},{e:[16,18]},{e:[10,12]}],
+      9:[{relais:true},{e:[19,21]},{e:[13,15]},{e:[10,12]},{e:[22,24]},{e:[1,3]},{e:[4,6]},{e:[16,18]},{e:[7,9]}],
+    },
+    sens:{
+      1:['NS','NS','EO','EO','EO','NS','NS','EO',null],
+      2:['EO','NS','NS','EO','NS','EO','EO',null,'NS'],
+      3:['NS','EO','NS','EO','NS','EO',null,'EO','NS'],
+      4:['NS','EO','NS','NS','EO',null,'EO','NS','EO'],
+      5:['EO','NS','EO','NS',null,'EO','NS','NS','EO'],
+      6:['EO','EO','NS',null,'EO','NS','NS','NS','EO'],
+      7:['EO','NS',null,'NS','EO','EO','NS','EO','NS'],
+      8:['NS',null,'EO','NS','NS','NS','EO','EO','EO'],
+      9:[null,'EO','EO','EO','NS','NS','EO','NS','NS'],
+    }
+  },
+  // --- HÉRÉDIA 10 paires, 3 donnes/tour, 8 tours ---
+  'heredia_10_3': {
+    type:'heredia', nbPaires:10, dpt:3, nbTours:8,
+    paires:{
+      1: [{e:[13,15]},{e:[4,6]},{e:[22,24]},{e:[16,18]},{e:[19,21]},{e:[7,9]},{e:[25,27]},{e:[28,30]}],
+      2: [{e:[7,9]},{e:[10,12]},{e:[13,15]},{e:[19,21]},{e:[28,30]},{e:[25,27]},{e:[1,3]},{e:[16,18]}],
+      3: [{e:[28,30]},{e:[1,3]},{e:[16,18]},{e:[19,21]},{e:[10,12]},{e:[4,6]},{e:[25,27]},{e:[22,24]}],
+      4: [{e:[4,6]},{e:[13,15]},{e:[7,9]},{e:[1,3]},{e:[22,24]},{e:[25,27]},{e:[19,21]},{e:[28,30]}],
+      5: [{e:[4,6]},{e:[1,3]},{e:[22,24]},{e:[10,12]},{e:[25,27]},{e:[28,30]},{e:[7,9]},{e:[16,18]}],
+      6: [{e:[7,9]},{e:[4,6]},{e:[1,3]},{e:[13,15]},{e:[10,12]},{e:[22,24]},{e:[19,21]},{e:[25,27]}],
+      7: [{e:[28,30]},{e:[16,18]},{e:[13,15]},{e:[10,12]},{e:[22,24]},{e:[7,9]},{e:[4,6]},{e:[25,27]}],
+      8: [{e:[10,12]},{e:[13,15]},{e:[1,3]},{e:[16,18]},{e:[28,30]},{e:[4,6]},{e:[7,9]},{e:[19,21]}],
+      9: [{e:[10,12]},{e:[16,18]},{e:[7,9]},{e:[13,15]},{e:[19,21]},{e:[28,30]},{e:[1,3]},{e:[22,24]}],
+      10:[{e:[13,15]},{e:[10,12]},{e:[16,18]},{e:[1,3]},{e:[25,27]},{e:[22,24]},{e:[4,6]},{e:[19,21]}],
+    },
+    sens:{
+      1:['EO','EO','NS','EO','NS','NS','NS','EO'],
+      2:['NS','NS','EO','EO','NS','NS','EO','EO'],
+      3:['NS','NS','EO','NS','EO','EO','EO','NS'],
+      4:['EO','NS','EO','NS','EO','EO','NS','NS'],
+      5:['NS','EO','EO','NS','EO','NS','EO','NS'],
+      6:['EO','NS','NS','EO','NS','NS','EO','EO'],
+      7:['EO','NS','NS','EO','NS','EO','EO','NS'],
+      8:['EO','EO','EO','NS','EO','NS','NS','NS'],
+      9:['NS','EO','NS','NS','EO','EO','NS','EO'],
+      10:['NS','EO','NS','EO','NS','EO','NS','EO'],
+    }
+  },
+  // --- HÉRÉDIA 11 paires, 3 donnes/tour, 8 jouées + 1 relais ---
+  'heredia_11_3': {
+    type:'heredia', nbPaires:11, dpt:3, nbTours:9,
+    paires:{
+      1: [{e:[7,9]},{e:[22,24]},{e:[16,18]},{e:[25,27]},{e:[10,12]},{e:[19,21]},{e:[28,30]},{e:[4,6]},{relais:true}],
+      2: [{e:[22,24]},{e:[16,18]},{e:[10,12]},{e:[28,30]},{e:[25,27]},{e:[7,9]},{e:[13,15]},{e:[1,3]},{relais:true}],
+      3: [{e:[4,6]},{e:[28,30]},{e:[1,3]},{e:[25,27]},{e:[19,21]},{e:[22,24]},{e:[16,18]},{relais:true},{e:[10,12]}],
+      4: [{e:[22,24]},{e:[1,3]},{e:[25,27]},{e:[13,15]},{e:[7,9]},{e:[19,21]},{relais:true},{e:[16,18]},{e:[4,6]}],
+      5: [{e:[19,21]},{e:[28,30]},{e:[22,24]},{e:[7,9]},{e:[25,27]},{relais:true},{e:[10,12]},{e:[4,6]},{e:[1,3]}],
+      6: [{e:[4,6]},{e:[22,24]},{e:[25,27]},{e:[10,12]},{relais:true},{e:[1,3]},{e:[13,15]},{e:[19,21]},{e:[7,9]}],
+      7: [{e:[7,9]},{e:[16,18]},{e:[1,3]},{relais:true},{e:[28,30]},{e:[25,27]},{e:[10,12]},{e:[13,15]},{e:[4,6]}],
+      8: [{e:[13,15]},{e:[4,6]},{relais:true},{e:[10,12]},{e:[19,21]},{e:[7,9]},{e:[28,30]},{e:[16,18]},{e:[1,3]}],
+      9: [{e:[19,21]},{relais:true},{e:[16,18]},{e:[28,30]},{e:[7,9]},{e:[1,3]},{e:[4,6]},{e:[13,15]},{e:[10,12]}],
+      10:[{relais:true},{e:[4,6]},{e:[22,24]},{e:[13,15]},{e:[10,12]},{e:[25,27]},{e:[16,18]},{e:[1,3]},{e:[7,9]}],
+      11:[{e:[13,15]},{e:[1,3]},{e:[10,12]},{e:[7,9]},{e:[28,30]},{e:[22,24]},{e:[4,6]},{e:[19,21]},{relais:true}],
+    },
+    sens:{
+      1:['NS','EO','NS','NS','EO','EO','EO','NS',null],
+      2:['NS','EO','EO','EO','EO','NS','NS','NS',null],
+      3:['EO','NS','NS','EO','EO','NS','EO',null,'NS'],
+      4:['EO','EO','NS','NS','EO','NS',null,'NS','EO'],
+      5:['NS','EO','EO','NS','NS',null,'NS','EO','EO'],
+      6:['NS','NS','EO','NS',null,'EO','EO','EO','NS'],
+      7:['EO','NS','EO',null,'NS','EO','EO','NS','NS'],
+      8:['EO','NS',null,'EO','NS','EO','NS','EO','NS'],
+      9:['EO',null,'EO','NS','NS','NS','NS','EO','EO'],
+      10:[null,'EO','NS','EO','NS','NS','NS','EO','EO'],
+      11:['NS','NS','NS','EO','EO','EO','EO','NS',null],
+    }
+  },
+  // --- HÉRÉDIA 12 paires, 3 donnes/tour, 8 tours ---
+  'heredia_12_3': {
+    type:'heredia', nbPaires:12, dpt:3, nbTours:8,
+    paires:{
+      1: [{e:[16,18]},{e:[7,9]},{e:[10,12]},{e:[13,15]},{e:[28,30]},{e:[22,24]},{e:[19,21]},{e:[4,6]}],
+      2: [{e:[22,24]},{e:[13,15]},{e:[25,27]},{e:[10,12]},{e:[1,3]},{e:[7,9]},{e:[16,18]},{e:[19,21]}],
+      3: [{e:[4,6]},{e:[16,18]},{e:[19,21]},{e:[1,3]},{e:[10,12]},{e:[22,24]},{e:[25,27]},{e:[13,15]}],
+      4: [{e:[13,15]},{e:[1,3]},{e:[25,27]},{e:[19,21]},{e:[4,6]},{e:[28,30]},{e:[7,9]},{e:[22,24]}],
+      5: [{e:[25,27]},{e:[22,24]},{e:[19,21]},{e:[7,9]},{e:[28,30]},{e:[4,6]},{e:[16,18]},{e:[10,12]}],
+      6: [{e:[22,24]},{e:[28,30]},{e:[13,15]},{e:[19,21]},{e:[7,9]},{e:[10,12]},{e:[1,3]},{e:[4,6]}],
+      7: [{e:[4,6]},{e:[1,3]},{e:[16,18]},{e:[13,15]},{e:[25,27]},{e:[7,9]},{e:[22,24]},{e:[10,12]}],
+      8: [{e:[13,15]},{e:[7,9]},{e:[4,6]},{e:[28,30]},{e:[1,3]},{e:[10,12]},{e:[25,27]},{e:[16,18]}],
+      9: [{e:[1,3]},{e:[22,24]},{e:[16,18]},{e:[10,12]},{e:[7,9]},{e:[28,30]},{e:[19,21]},{e:[13,15]}],
+      10:[{e:[16,18]},{e:[13,15]},{e:[4,6]},{e:[7,9]},{e:[10,12]},{e:[19,21]},{e:[1,3]},{e:[22,24]}],
+      11:[{e:[1,3]},{e:[16,18]},{e:[13,15]},{e:[28,30]},{e:[25,27]},{e:[4,6]},{e:[7,9]},{e:[19,21]}],
+      12:[{e:[25,27]},{e:[28,30]},{e:[10,12]},{e:[1,3]},{e:[4,6]},{e:[19,21]},{e:[22,24]},{e:[16,18]}],
+    },
+    sens:{
+      1:['EO','EO','EO','NS','NS','NS','NS','EO'],
+      2:['NS','NS','NS','EO','NS','EO','EO','EO'],
+      3:['NS','NS','NS','EO','EO','EO','EO','NS'],
+      4:['NS','EO','EO','NS','NS','EO','EO','NS'],
+      5:['EO','NS','EO','EO','EO','NS','NS','NS'],
+      6:['EO','NS','EO','EO','EO','NS','NS','NS'],
+      7:['EO','NS','NS','EO','NS','NS','EO','EO'],
+      8:['EO','NS','NS','EO','EO','EO','NS','NS'],
+      9:['NS','EO','EO','NS','NS','NS','EO','EO'],
+      10:['NS','EO','EO','NS','NS','NS','EO','EO'],
+      11:['EO','EO','NS','NS','EO','EO','NS','NS'],
+      12:['NS','EO','NS','NS','EO','EO','NS','EO'],
+    }
+  },
+};
+
+// Mapping nbPaires -> clé réelle dans HOWELL_MOVES
+const HOWELL_KEY_MAP = {
+  'classique_6_5':  'classique_6_5',
+  'classique_8_4':  'classique_8_4',
+  'classique_10_3': 'classique_10_3',
+  'classique_12_3': 'classique_12_3',
+  'heredia_7_4':  'heredia_7_4',
+  'heredia_8_4':  'heredia_8_4',
+  'heredia_9_3':  'heredia_9_3',
+  'heredia_10_3': 'heredia_10_3',
+  'heredia_11_3': 'heredia_11_3',
+  'heredia_12_3': 'heredia_12_3',
+};
+
+function howellSens(key, paire, tour) {
+  const realKey = HOWELL_KEY_MAP[key] || key;
+  const mv = HOWELL_MOVES[realKey];
+  if(!mv) return null;
+  if(mv.type==='classique') {
+    for(const table of mv.tables) {
+      const t = table[tour];
+      if(!t) continue;
+      const [ns,eo] = t;
+      if(ns===paire) return 'NS';
+      if(eo===paire) return 'EO';
+    }
+    return null;
+  }
+  if(mv.type==='heredia') {
+    const arr = mv.sens && mv.sens[paire];
+    if(!arr) return null;
+    return arr[tour] || null;
+  }
+  return null;
+}
+
+function howellDonnes(key, paire, tour) {
+  const realKey = HOWELL_KEY_MAP[key] || key;
+  const mv = HOWELL_MOVES[realKey];
+  if(!mv) return null;
+  if(mv.type==='classique') {
+    // chercher dans les tables
+    for(const table of mv.tables) {
+      const t = table[tour];
+      if(!t) continue;
+      const [ns,eo,e] = t;
+      if(ns===paire||eo===paire) return Array.from({length:e[1]-e[0]+1},(_,i)=>e[0]+i);
+    }
+    return null;
+  } else {
+    // heredia
+    const pos = mv.paires[paire]?.[tour];
+    if(!pos||pos.relais) return null;
+    return Array.from({length:pos.e[1]-pos.e[0]+1},(_,i)=>pos.e[0]+i);
+  }
+}
+
+// Clé Howell pour la config actuelle
+function howellKey(mouvement, nbPaires, dpt) {
+  return mouvement+'_'+nbPaires+'_'+dpt;
+}
+
+function parseDonnes(){
+  const raw=document.getElementById('donnes-input').value;
+  const status=document.getElementById('donnes-status');
+  donnesData={};
+  if(!raw.trim()){status.className='donnes-status';return;}
+
+  const lines=raw.split('\n');
+  let count=0;
+  lines.forEach(line=>{
+    const cols=line.split('\t');
+    // Colonne A = numéro de donne (ignorer les lignes sans numéro valide)
+    const num=parseInt(cols[0]);
+    if(!num||isNaN(num)) return;
+    const ns=(cols[1]||'').trim();
+    const eo=(cols[2]||'').trim();
+    const note=(cols[3]||'').trim();
+    if(ns||eo||note){
+      donnesData[num]={ns,eo,note};
+      count++;
+    }
+  });
+
+  if(count===0){
+    status.className='donnes-status err';
+    status.textContent='Aucune donne reconnue. Vérifiez le format (copier depuis Excel).';
+  } else {
+    status.className='donnes-status ok';
+    status.textContent=count+' donne'+(count>1?'s':'')+' chargée'+(count>1?'s':'')+' ✓';
+  }
+}
+// Token GitHub : présence contrôlant l'affichage de tout ce qui touche aux donnes (json/pbn)
+function hasGhToken(){ return !!(localStorage.getItem('gh_token')||'').trim(); }
+
+function lancerTournoiSansDonnes(){
+  const b=document.getElementById('btn-charger-donnes');
+  if(b) b.style.display=hasGhToken()?'':'none';
+  updateListeDonnesBtn();
+  goTo('s-paires');
+}
+
+function applyTournoiTokenUI(){
+  const has=hasGhToken();
+  const withTok=document.getElementById('tournoi-token-section');
+  const noTok=document.getElementById('tournoi-no-token-section');
+  const gerer=document.getElementById('btn-gerer-fichiers');
+  const resume=document.getElementById('s-tournoi-resume');
+  if(withTok) withTok.style.display=has?'':'none';
+  if(noTok) noTok.style.display=has?'none':'';
+  if(gerer) gerer.style.display=has?'':'none';
+  if(!has && resume) resume.style.display='none';
+}
+
+let navHistory=[];
+
+function updateListeDonnesBtn(){
+  const b=document.getElementById('btn-liste-donnes');
+  if(b) b.style.display=Object.keys(donnesData).length?'':'none';
+}
+
+function renderListeDonnes(){
+  const container=document.getElementById('liste-donnes-chips');
+  container.innerHTML='';
+  const nums=Object.keys(donnesData).map(Number).filter(n=>!isNaN(n)).sort((a,b)=>a-b);
+  const countEl=document.getElementById('liste-donnes-count');
+  if(countEl) countEl.textContent=nums.length+' donne'+(nums.length>1?'s':'');
+  nums.forEach(d=>{
+    const info=donnesData[d];
+    if(info){
+      const div=document.createElement('div');
+      div.className='chip-rich';
+      const nsHtml=info.ns?`<span class="chip-score-item chip-score-ns"><span class="chip-score-label">NS</span>${info.ns}</span>`:'';
+      const eoPlaceholder=(!info.ns && info.eo)?`<span class="chip-score-item chip-score-ns" style="visibility:hidden"><span class="chip-score-label">NS</span>—</span>`:'';
+      const eoHtml=info.eo?`<span class="chip-score-item chip-score-eo"><span class="chip-score-label">EO</span>${info.eo}</span>`:'';
+      const noteHtml=info.note?`<div class="chip-note">${info.note}</div>`:'';
+      div.innerHTML=`
+        <div class="chip-num" onclick="openVisu(${d})" style="cursor:pointer;">${d}</div>
+        <div class="chip-info">
+          <div class="chip-scores">${nsHtml}${eoPlaceholder}${eoHtml}</div>
+          ${noteHtml}
+        </div>`;
+      container.appendChild(div);
+    } else {
+      const c=document.createElement('div');
+      c.className='chip';
+      c.textContent=d;
+      c.style.cursor='pointer';
+      c.onclick=()=>openVisu(d);
+      container.appendChild(c);
+    }
+  });
+}
+
+function showScreen(to, from){
+  if(from) document.getElementById(from).classList.remove('active');
+  document.getElementById(to).classList.add('active');
+}
+
+const screenScrollPos={};
+
+function goTo(to){
+  const screens=['s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu','s-gen','s-delete','s-gen2','s-visu','s-liste-donnes'];
+  const current=screens.find(s=>document.getElementById(s).classList.contains('active'));
+  if(current){
+    screenScrollPos[current]=window.scrollY;
+    navHistory.push(current);
+    document.getElementById(current).classList.remove('active');
+  }
+  document.getElementById(to).classList.add('active');
+}
+
+function goBack(){
+  if(!navHistory.length) return;
+  const current=['s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu','s-gen','s-delete','s-gen2','s-visu','s-liste-donnes'].find(s=>document.getElementById(s).classList.contains('active'));
+  if(current) document.getElementById(current).classList.remove('active');
+  const prev=navHistory.pop();
+  document.getElementById(prev).classList.add('active');
+  if(prev==='s-liste-donnes' && screenScrollPos[prev]!==undefined){
+    requestAnimationFrame(()=>window.scrollTo(0, screenScrollPos[prev]));
+  }
+  if(prev==='s-tournoi'){
+    donnesData={};
+    window._donnesFichier=null;
+    window._nbPairesConfig=null;
+    window._nbPairesHowell=null;
+    const btn=document.getElementById('btn-charger-donnes');
+    if(btn) btn.style.display=hasGhToken()?'':'none';
+    updateListeDonnesBtn();
+    document.getElementById('tournoi-sub').textContent='Chargement...';
+    document.getElementById('tournoi-list').innerHTML='';
+    initTournoi();
+  }
+  if(prev==='s-paires'){
+    window._nbPairesConfig=null;
+    window._nbPairesHowell=null;
+  }
+}
+
+// Groupe les entrées DB par mouvement+dpt pour un nb de paires donné
+// (mouvement+dpt = clé unique car donnes en circ = tables × dpt)
+function getGrouped(p, dbSource){
+  const rows=dbSource.filter(r=>r[0]===p);
+  const groups={};
+  rows.forEach(row=>{
+    const isHowell=dbSource===DB_HOWELL;
+    const [,t,m,r,d,dc,def]=isHowell?row:[...row.slice(0,5),row[1]*row[4],row[6]];
+    const key=m+'_'+d; // grouper par mouvement ET dpt
+    if(!groups[key]) groups[key]={mouvement:m,tables:t,options:[],deficient:true};
+    groups[key].options.push({tours:r,dpt:d,donnesCirc:dc,deficient:def});
+    if(!def) groups[key].deficient=false;
+  });
+  return Object.values(groups);
+}
+
+function renderOptionBtn(el,g,best){
+  const btn=document.createElement('button');
+  btn.className='option-btn';
+  const dc=g.options[0].donnesCirc;
+  const defStyle=g.deficient?'visibility:visible':'visibility:hidden';
+  const bestStyle=best?'visibility:visible':'visibility:hidden';
+  const toursLabel=g.options.length===1?g.options[0].tours+'x'+g.options[0].dpt:g.options.map(o=>o.tours+'x'+o.dpt).join(' ou ');
+  btn.innerHTML=`
+    <div style="flex:1">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="option-main" style="line-height:1">${MOUV_LABEL[g.mouvement]}</span>
+        <span style="font-size:11px;line-height:1;position:relative;top:-1px;${bestStyle}">⭐</span>
+        <span style="font-size:11px;color:#f87171;font-weight:600;line-height:1;position:relative;top:-1px;${defStyle}">déficient</span>
+      </div>
+      <div class="option-detail">${g.tables} tables · ${toursLabel} donnes · ${dc} en circulation</div>
+    </div>
+    <span class="option-badge ${MOUV_BADGE[g.mouvement]}">${MOUV_SHORT[g.mouvement]}</span>`;
+  btn.onclick=()=>selectMouvement(g);
+  el.appendChild(btn);
+}
+
+function updateOptions(){
+  const p=parseInt(document.getElementById('f-paires').value)||0;
+  const el=document.getElementById('options-list');
+  const errEl=document.getElementById('e-paires');
+  if(p<6||p>36){errEl.style.display='block';el.innerHTML='';return;}
+  errEl.style.display='none';
+
+  const mitchellGroups=getGrouped(p,DB);
+  const howellGroups=getGrouped(p,DB_HOWELL);
+  const allGroups=[...mitchellGroups,...howellGroups];
+
+  el.innerHTML='';
+  if(!allGroups.length){el.innerHTML='<p class="no-options">Aucun mouvement disponible</p>';return;}
+
+  if(mitchellGroups.length){
+    const sep=document.createElement('p');sep.className='section-sep';sep.textContent='Mitchell';el.appendChild(sep);
+    const hasAlt=mitchellGroups.some(g=>!g.deficient)&&mitchellGroups.some(g=>g.deficient);
+    mitchellGroups.forEach(g=>renderOptionBtn(el,g,hasAlt&&!g.deficient));
+  }
+  if(howellGroups.length){
+    const sep=document.createElement('p');sep.className='section-sep';sep.textContent='Howell';el.appendChild(sep);
+    howellGroups.forEach(g=>renderOptionBtn(el,g,false));
+  }
+}
+
+function selectMouvement(g){
+  const p=parseInt(document.getElementById('f-paires').value)||0;
+  if(g.options.length===1){
+    applyConfig(g.mouvement,g.tables,g.options[0].tours,g.options[0].dpt,p);
+  } else {
+    const el=document.getElementById('tours-list');
+    el.innerHTML='';
+    document.getElementById('tours-title').textContent='Nombre de positions — '+MOUV_LABEL[g.mouvement];
+    document.getElementById('tours-sub').textContent=g.tables+' tables · '+g.options[0].donnesCirc+' donnes en circulation';
+    g.options.forEach(o=>{
+      const btn=document.createElement('button');
+      btn.className='tour-btn';
+      const defStyle2=o.deficient?'visibility:visible':'visibility:hidden';
+      btn.innerHTML=`
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="tour-main">${o.tours} positions · ${o.dpt} donnes/tour</div>
+            <span style="font-size:11px;color:#f87171;font-weight:600;line-height:1;position:relative;top:-1px;${defStyle2}">déficient</span>
+          </div>
+          <div class="tour-detail">${o.donnesCirc} donnes en circulation</div>
+        </div>
+        <span style="font-size:13px;color:var(--text2)">→</span>`;
+      btn.onclick=()=>applyConfig(g.mouvement,g.tables,o.tours,o.dpt,p);
+      el.appendChild(btn);
+    });
+    goTo('s-tours'); // showScreen gardé pour compatibilité interne
+  }
+}
+
+function applyConfig(mv,tables,tours,dpt,nbPaires){
+  const isHowell=['classique','heredia'].includes(mv);
+  mode=isHowell?mv:(mv==='guerid'?'guerid':mv==='saut'?'saut':'mitchell');
+  document.getElementById('f-tables').value=tables;
+  document.getElementById('f-tours').value=tours;
+  document.getElementById('f-dpt').value=dpt;
+  document.getElementById('field-paire-howell').style.display=isHowell?'':'none';
+  document.getElementById('field-sens').style.display=isHowell?'none':'';
+  document.getElementById('field-table').style.display=isHowell?'none':'';
+  // Champ relais : uniquement Mitchell/Guéridon avec nombre impair de paires
+  const impair=!isHowell&&mv!=='guerid'&&(nbPaires%2!==0);
+  document.getElementById('field-relais').style.display=impair?'':'none';
+  if(impair){
+    document.getElementById('label-relais').textContent='Ligne du relais (table '+tables+')';
+    setRelais('EO');
+  } else {
+    relaisLigne='EO'; // reset si le champ est masqué
+  }
+  if(!isHowell){
+    sens='NS';
+    applyStyle(document.getElementById('btn-ns'),GREEN);
+    applyStyle(document.getElementById('btn-eo'),OFF);
+  }
+  window._nbPairesHowell = nbPaires || tables*2;
+  window._nbPairesConfig = nbPaires;
+  goTo('s-config');
+  updateEvents();
+}
+
+function setRelais(r){relaisLigne=r;applyStyle(document.getElementById('btn-relais-ns'),r==='NS'?GREEN:OFF);applyStyle(document.getElementById('btn-relais-eo'),r==='EO'?RED:OFF);updateEvents();}
+function setMode(m){mode=m;applyStyle(document.getElementById('btn-mitchell'),m==='mitchell'?BLUE:OFF);applyStyle(document.getElementById('btn-guerid'),m==='guerid'?BLUE:OFF);}
+function setSens(s){sens=s;applyStyle(document.getElementById('btn-ns'),s==='NS'?GREEN:OFF);applyStyle(document.getElementById('btn-eo'),s==='EO'?RED:OFF);updateEvents();}
+
+function updateEvents(){
+  const N=int('f-tables'),R=int('f-tours'),D=int('f-dpt');
+  const T=int('f-table');
+  const el=document.getElementById('field-events');
+  const list=document.getElementById('events-list');
+  list.innerHTML='';
+  // Guéridon : pas d'info
+  if(mode==='guerid'||['classique','heredia'].includes(mode)){el.style.display='none';return;}
+  if(!T||T<1||T>N||!R){el.style.display='none';return;}
+  const simTmp=buildSim(T,N,R,mode,sens);
+  const nbPaires=window._nbPairesConfig||N*2;
+  const impair=nbPaires%2!==0;
+  const doitVerifierRelais=impair && sens===relaisLigne;
+  // Si la ligne relais est NS (paire fixe), on compare la table fixe (T) à la rotation
+  // "fantôme" de la ligne EO déficitaire. Si la ligne relais est EO, la paire EO tourne
+  // elle-même et passe par la table N une seule fois : le test direct suffit.
+  const phantomTmp=(doitVerifierRelais && sens==='NS')?buildPhantomSchedule(N,R,mode):null;
+  const items=[];
+  simTmp.forEach((tour,i)=>{
+    // Relais : la ligne du relais arrive à la table N (EO) ou reçoit le fantôme (NS)
+    const estRelaisCe=doitVerifierRelais && (sens==='NS'
+      ? phantomTmp[i].tableAffichee===String(T)
+      : tour.tableAffichee===String(N));
+    if(estRelaisCe){
+      items.push({
+        type:'relais',
+        html:`<span style="font-size:12px;font-weight:600;color:#a78bfa">🔄 Relais tour ${i+1}</span><span style="font-size:11px;color:var(--text2);margin-left:6px">— vous serez à la table ${tour.tableAffichee}, sans adversaire</span>`
+      });
+    }
+    // Saut : détecté par estSaut (uniquement paires EO)
+    if(tour.estSaut){
+      // table sautée = tableAffichee du tour précédent + 1 (mod N)
+      const prevTable=simTmp[i-1]?parseInt(simTmp[i-1].tableAffichee):null;
+      const sauteeLabel=prevTable?` (saute la table ${prevTable===N?1:prevTable+1})`:'';
+      items.push({
+        type:'saut',
+        html:`<span style="font-size:12px;font-weight:600;color:#fbbf24">↪ Saut tour ${i+1}</span><span style="font-size:11px;color:var(--text2);margin-left:6px">${sauteeLabel}</span>`
+      });
+    }
+  });
+  if(!items.length){el.style.display='none';return;}
+  items.forEach(item=>{
+    const div=document.createElement('div');
+    div.style.cssText='padding:8px 12px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;flex-wrap:wrap;gap:4px';
+    div.innerHTML=item.html;
+    list.appendChild(div);
+  });
+  el.style.display='';
+}
+
+function int(id){return parseInt(document.getElementById(id).value)||0;}
+function err(id,v){const el=document.getElementById(id);if(!el)return;if(el.classList.contains('err-inline')){el.style.visibility=v?'visible':'hidden';}else{el.style.display=v?'block':'none';}}
+
+function tToSlot(t,N){if(t===1||t===N)return 0;if(t<=N/2)return t-1;return t;}
+
+// La ligne "relais" (celle qui a une paire de plus) est complète (N paires fixes, une par table).
+// L'autre ligne est déficitaire d'une paire : il lui manque un membre parmi ses N positions
+// théoriques. Cette position manquante tourne de table en table exactement comme une paire
+// normale de cette ligne (même trajectoire, y compris le saut éventuel), en partant par
+// convention de la table N. Quand cette rotation "fantôme" tombe sur la table fixe d'une
+// paire de la ligne relais, cette paire n'a pas d'adversaire ce tour-là (relais).
+function buildPhantomSchedule(N,R,mode){
+  return buildSim(N,N,R,mode,'EO');
+}
+
+function buildSim(T,N,R,mode,sens){
+  const withSaut=(mode==='saut')||(mode==='mitchell'&&N%2===0);
+  const isGuerid=mode==='guerid';
+  const sautApres=withSaut?N/2-1:-1;
+  let blocs=Array.from({length:N},(_,i)=>i);
+  let eoPos=T-1,eoTable=T;
+  const tours=[];
+  for(let t=0;t<R;t++){
+    let tableAffichee,blocIdx,estSaut=false,avantSaut=false;
+    if(isGuerid){
+      const tRef=sens==='NS'?T:eoTable;
+      const slot=tToSlot(tRef,N);
+      blocIdx=blocs[slot];
+      tableAffichee=(tRef===1||tRef===N)?'1 & '+N:String(tRef);
+    }else{
+      avantSaut=withSaut&&t===sautApres;
+      if(sens==='NS'){blocIdx=blocs[T-1];tableAffichee=String(T);}
+      else{blocIdx=blocs[eoPos];tableAffichee=String(eoPos+1);estSaut=withSaut&&t===sautApres+1;}
+    }
+    tours.push({blocIdx,tableAffichee,estSaut,avantSaut});
+    const nd=Array(N);
+    if(isGuerid){for(let i=0;i<N;i++)nd[i]=blocs[(i+1)%N];}
+    else{nd[N-1]=blocs[0];for(let i=0;i<N-1;i++)nd[i]=blocs[i+1];}
+    blocs=nd;
+    if(isGuerid)eoTable=(eoTable%N)+1;
+    else{const pas=withSaut&&t===sautApres?2:1;eoPos=(eoPos+pas)%N;}
+  }
+  return tours;
+}
+
+function start(){
+  const isHowell=['classique','heredia'].includes(mode);
+  const N=int('f-tables'),R=int('f-tours'),D=int('f-dpt');
+  if(isHowell){
+    const P=int('f-paire-howell');
+    const nbP=window._nbPairesHowell||N*2;
+    if(P<1||P>nbP){document.getElementById('e-paire-howell').textContent='Choisir entre 1 et '+nbP;err('e-paire-howell',1);return;}
+    err('e-paire-howell',0);
+    cfg={N,R,D,mode,paireHowell:P,nbPaires:nbP};
+  } else {
+    const T=int('f-table');
+    if(T<1||T>N){document.getElementById('e-table').textContent='Choisir entre 1 et '+N;err('e-table',1);return;}
+    err('e-table',0);
+    const nbPaires=window._nbPairesConfig||N*2;
+    const impair=nbPaires%2!==0;
+    const phantomSim=(impair && sens==='NS' && relaisLigne==='NS')?buildPhantomSchedule(N,R,mode):null;
+    cfg={T,N,R,D,sens,mode,relaisLigne,impair,phantomSim};
+    sim=buildSim(T,N,R,mode,sens);
+  }
+  tourActuel=0;
+  saveState();
+  goTo('s-jeu');
+  render();
+}
+
+function render(){
+  if(!cfg||!cfg.R) return;
+  const t=tourActuel,n=t+1;
+  const {R,D,mode:m,N}=cfg;
+  const isHowell=['classique','heredia'].includes(m);
+
+  document.getElementById('d-tour').textContent=n;
+  document.getElementById('d-tour-sub').textContent='/ '+R;
+  document.getElementById('d-saut').style.visibility='hidden';
+  document.getElementById('d-guerid').style.visibility='hidden';
+  document.getElementById('d-relais').style.visibility='hidden';
+  // Cercle de progression
+  const circ=document.getElementById('prog-circle');
+  if(circ){ const pct=n/R; circ.style.strokeDashoffset=188.5*(1-pct); }
+
+  let donnes=[];
+  let mySens=null;
+  if(isHowell){
+    document.getElementById('d-label-table').textContent='Paire';
+    document.getElementById('d-label-sens').textContent='Sens';
+    const nbP=cfg.nbPaires||cfg.N*2;
+    const hkey=m+'_'+nbP+'_'+D;
+    const d=howellDonnes(hkey, cfg.paireHowell, t);
+    donnes=d||[];
+    document.getElementById('d-table').textContent='Paire '+cfg.paireHowell;
+    const sensH=howellSens(hkey, cfg.paireHowell, t);
+    mySens=sensH||null;
+    document.getElementById('d-sens').textContent=sensH?(sensH==='NS'?'N / S':'E / O'):'—';
+    document.getElementById('d-mode').textContent=MOUV_LABEL[m]||m;
+    document.getElementById('d-relais').style.visibility=d?'hidden':'visible';
+  } else {
+    document.getElementById('d-label-table').textContent='Table';
+    document.getElementById('d-label-sens').textContent='Sens';
+    const {sens:s,relaisLigne:rl,impair}=cfg;
+    mySens=s;
+    const etat=sim&&sim[t];
+    if(!etat) return;
+    const first=etat.blocIdx*D+1;
+    donnes=Array.from({length:D},(_,i)=>first+i);
+    document.getElementById('d-table').textContent=etat.tableAffichee;
+    document.getElementById('d-sens').textContent=s==='NS'?'N / S':'E / O';
+    document.getElementById('d-mode').textContent=m==='guerid'?'Guéridon':m==='saut'?'Mitchell à saut':'Mitchell';
+    document.getElementById('d-saut').style.visibility=(s==='EO'&&etat.estSaut)?'visible':'hidden';
+    document.getElementById('d-guerid').style.visibility=(m==='guerid'&&etat.tableAffichee.includes('&'))?'visible':'hidden';
+    // Relais : ligne relais = ligne complète (une paire par table, fixe). L'autre ligne est
+    // déficitaire d'une paire ; côté EO, la paire déficitaire tourne normalement et passe une
+    // fois par la table N (test direct). Côté NS, on compare la table fixe à la rotation
+    // "fantôme" de la ligne EO déficitaire, précalculée dans cfg.phantomSim.
+    const estRelais=!!(impair && s===rl && (s==='NS'
+      ? (cfg.phantomSim && cfg.phantomSim[t] && cfg.phantomSim[t].tableAffichee===String(cfg.T))
+      : etat.tableAffichee===String(N)));
+    document.getElementById('d-relais').style.visibility=estRelais?'visible':'hidden';
+  }
+  const container=document.getElementById('d-donnes');
+  container.innerHTML='';
+  const boardsCard=document.getElementById('boards-card-inner');
+
+  // Mode relais : fond violet + donnes en opacité réduite
+  const estRelaisRender=document.getElementById('d-relais').style.visibility==='visible';
+  if(boardsCard) boardsCard.style.background=estRelaisRender?'rgba(167,139,250,.07)':'';
+  const countEl=document.getElementById('d-donnes-count');
+  if(countEl){ countEl.textContent=donnes.length+' donne'+(donnes.length>1?'s':''); countEl.style.color=''; }
+  const boardsLabel=document.getElementById('boards-label-text');
+  if(boardsLabel){ boardsLabel.textContent=estRelaisRender?'Pas de jeu à ce tour':'Donnes à jouer'; boardsLabel.style.color=estRelaisRender?'#a78bfa':''; }
+  const chipsOpacity=estRelaisRender?'0.5':'1';
+  donnes.forEach(d=>{
+    const info=donnesData[d];
+    if(info){
+      const div=document.createElement('div');
+      div.className='chip-rich';
+      div.style.opacity=chipsOpacity;
+      const isEoMine=mySens==='EO';
+      const mineVal=isEoMine?info.eo:info.ns;
+      const otherVal=isEoMine?info.ns:info.eo;
+      const mineLabel=isEoMine?'EO':'NS';
+      const otherLabel=isEoMine?'NS':'EO';
+      // Notre ligne (vert) toujours à gauche ; l'autre ligne (rouge) toujours à droite
+      const mineHtml=mineVal?`<span class="chip-score-item chip-score-mine"><span class="chip-score-label">${mineLabel}</span>${mineVal}</span>`:'';
+      // Placeholder invisible si l'autre ligne a un PAR mais pas la nôtre, pour garder l'alignement à droite
+      const otherPlaceholder=(!mineVal && otherVal)?`<span class="chip-score-item chip-score-mine" style="visibility:hidden"><span class="chip-score-label">${mineLabel}</span>—</span>`:'';
+      const otherHtml=otherVal?`<span class="chip-score-item chip-score-other"><span class="chip-score-label">${otherLabel}</span>${otherVal}</span>`:'';
+      const noteHtml=info.note?`<div class="chip-note">${info.note}</div>`:'';
+      const clicAttr=hasGhToken()?`onclick="openVisu(${d})" style="cursor:pointer;"`:'';
+      div.innerHTML=`
+        <div class="chip-num" ${clicAttr}>${d}</div>
+        <div class="chip-info">
+          <div class="chip-scores">${mineHtml}${otherPlaceholder}${otherHtml}</div>
+          ${noteHtml}
+        </div>`;
+      container.appendChild(div);
+    } else {
+      const c=document.createElement('div');
+      c.className='chip';
+      c.style.opacity=chipsOpacity;
+      c.textContent=d;
+      if(hasGhToken()){
+        c.style.cursor='pointer';
+        c.onclick=()=>openVisu(d);
+      }
+      container.appendChild(c);
+    }
+  });
+  const estAvantSaut=!!(sim&&sim[t]&&sim[t].avantSaut);
+  if(estAvantSaut){
+    const sautChip=document.createElement('div');
+    sautChip.className='chip';
+    sautChip.style.background='rgba(251,191,36,.15)';
+    sautChip.style.color='#fbbf24';
+    sautChip.style.border='1.5px solid rgba(251,191,36,.4)';
+    sautChip.style.fontSize='16px';
+    sautChip.textContent='⤵ Saut';
+    container.appendChild(sautChip);
+  }
+  document.getElementById('btn-prev').disabled=t===0;
+  document.getElementById('btn-next').disabled=t===R-1;
+  document.getElementById('prog').style.width=Math.round(n/R*100)+'%';
+}
+
+let _rafPending=false;
+function go(d){
+  const next=Math.max(0,Math.min(cfg.R-1,tourActuel+d));
+  if(next===tourActuel) return;
+  tourActuel=next;
+  setTimeout(saveState, 0);
+  if(!_rafPending){
+    _rafPending=true;
+    requestAnimationFrame(()=>{ _rafPending=false; render(); });
+  }
+}
+
+function reset(){
+  localStorage.removeItem('bridge_state');
+  navHistory=[];
+  donnesData={};
+  window._donnesFichier=null;
+  window._nbPairesConfig=null;
+  window._nbPairesHowell=null;
+  try{ localStorage.removeItem('bridge_tournoi_list'); }catch(e){}
+  const btn=document.getElementById('btn-charger-donnes');
+  if(btn) btn.style.display=hasGhToken()?'':'none';
+  document.getElementById('tournoi-sub').textContent='Chargement...';
+  document.getElementById('tournoi-list').innerHTML='';
+  const current=['s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu','s-gen','s-delete','s-gen2','s-visu','s-liste-donnes'].find(s=>document.getElementById(s).classList.contains('active'));
+  if(current) document.getElementById(current).classList.remove('active');
+  document.getElementById('s-tournoi').classList.add('active');
+  initTournoi();
+}
+
+// ============================================================
+// SAUVEGARDE / RESTAURATION D'ÉTAT
+// ============================================================
+function saveState(){
+  try{
+    localStorage.setItem('bridge_state', JSON.stringify({
+      cfg, sim, tourActuel, mode, sens,
+      donnesFichier: window._donnesFichier||null,
+      ts: Date.now()
+    }));
+  }catch(e){}
+}
+
+function loadState(){
+  try{
+    const raw=localStorage.getItem('bridge_state');
+    if(!raw) return null;
+    const s=JSON.parse(raw);
+    // Expire après 24h
+    if(Date.now()-s.ts > 24*3600*1000){ localStorage.removeItem('bridge_state'); return null; }
+    return s;
+  }catch(e){ return null; }
+}
+
+function clearResume(){
+  localStorage.removeItem('bridge_state');
+  try{ localStorage.removeItem('bridge_tournoi_list'); }catch(e){}
+  document.getElementById('s-tournoi-resume').style.display='none';
+}
+
+async function resumeTournoi(){
+  const s=loadState();
+  if(!s) return;
+  _initRunning=false; // stopper tout chargement en cours
+  cfg=s.cfg; sim=s.sim; tourActuel=s.tourActuel; mode=s.mode; sens=s.sens||'NS'; relaisLigne=s.cfg.relaisLigne||'EO';
+  navHistory=[];
+  goTo('s-jeu');
+  // Recharger les donnes si un fichier était chargé
+  if(s.donnesFichier){
+    const hostname=window.location.hostname;
+    const onGithub=hostname.endsWith('github.io');
+    const base=onGithub?window.location.href.replace(/\/[^\/]*$/,'/'):'https://capgui13.github.io/MVT/';
+    await chargerTournoi(base+s.donnesFichier, s.donnesFichier, true);
+  }
+  render();
+}
+
+function modeLabel(m){
+  const l={mitchell:'Mitchell simple',saut:'Mitchell saut',guerid:'Guéridon',heredia:'Howell Hérédia',classique:'Howell Classique'};
+  return l[m]||m;
+}
+
+// ============================================================
+// SÉLECTION DU TOURNOI
+// ============================================================
+
+let _initRunning=false;
+async function initTournoi(){
+  applyTournoiTokenUI();
+  if(!hasGhToken()) return; // pas de token : on n'affiche/charge rien côté donnes
+  if(_initRunning) return;
+  _initRunning=true;
+  try{ await _initTournoiInner(); }finally{ _initRunning=false; }
+}
+
+async function _initTournoiInner(){
+  const saved=loadState();
+  if(saved){
+    const resume=document.getElementById('s-tournoi-resume');
+    const d=new Date(saved.ts);
+    const dateStr=d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
+    const timeStr=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('resume-desc').textContent=modeLabel(saved.mode)+' — Tour '+(saved.tourActuel+1)+'/'+saved.cfg.R;
+    document.getElementById('resume-sub').textContent='Sauvegardé le '+dateStr+' à '+timeStr;
+    resume.style.display='';
+  }
+
+  const hostname=window.location.hostname;
+  const onGithub=hostname.endsWith('github.io');
+  const base=onGithub
+    ? window.location.href.replace(/\/[^/]*$/,'/')
+    : 'https://capgui13.github.io/MVT/';
+  const list=document.getElementById('tournoi-list');
+  const sub=document.getElementById('tournoi-sub');
+
+  const CACHE_KEY='bridge_tournoi_list';
+
+  try{
+    const parts=hostname.split('.');
+    let user=null, repo=null;
+    if(parts.length>=3 && parts[1]==='github' && parts[2]==='io'){
+      user=parts[0];
+      repo=window.location.pathname.split('/').filter(Boolean)[0]||null;
+    }
+    if(!user||!repo){ user='capgui13'; repo='MVT'; }
+
+    // 1 seule requête : dernier commit du repo
+    const _tok=localStorage.getItem('gh_token')||'';
+    const commitRes=await fetch(`https://api.github.com/repos/${user}/${repo}/commits?per_page=1`,
+      {headers:{Accept:'application/vnd.github.v3+json',...(_tok?{Authorization:`token ${_tok}`}:{})}});
+    if(!commitRes.ok){
+      if(commitRes.status===403) throw new Error('Limite API atteinte');
+      throw new Error();
+    }
+    const commitData=await commitRes.json();
+    const currentSha=commitData[0]?.sha||null;
+
+    // Vérifier le cache
+    let cached=null;
+    try{ cached=JSON.parse(localStorage.getItem(CACHE_KEY)||'null'); }catch(e){}
+    if(cached && cached.sha && cached.sha===currentSha && cached.tous && cached.counts){
+      // Cache valide : affichage immediat, 0 requete supplementaire
+      renderTournoiList(list, sub, cached.tous, cached.counts, base, today=>today);
+checkForUpdate(currentSha);
+      return;
+    }
+
+    // Cache invalide ou absent → charger la liste complète
+    const res=await fetch(`https://api.github.com/repos/${user}/${repo}/contents/`,
+      {headers:{Accept:'application/vnd.github.v3+json',...(_tok?{Authorization:`token ${_tok}`}:{})}});
+    if(!res.ok){
+      if(res.status===403) throw new Error('Limite API atteinte');
+      throw new Error();
+    }
+    const files=await res.json();
+    const donneFichiers=files
+      .filter(f=>f.type==='file' && /^donnes[-_]?\d{4}.*\.json$/i.test(f.name))
+      .sort((a,b)=>b.name.localeCompare(a.name))
+      .map(f=>f.name);
+
+    if(!donneFichiers.length){ sub.textContent='Aucun fichier de donnes trouvé.'; return; }
+
+    const tous=donneFichiers.map(fname=>{
+      const match=fname.match(/(\d{4}-\d{2}-\d{2})/);
+      const date=match?new Date(match[1]+'T12:00:00'):null;
+      return {fname, date:date?date.toISOString():null};
+    });
+
+    // Afficher la liste avec "…" en attendant les comptages
+    const counts={};
+    renderTournoiList(list, sub, tous, counts, base, ()=>today);
+
+    // Charger les comptages en parallèle
+    await Promise.all(tous.map(({fname})=>
+      fetch(base+fname+'?t='+Date.now())
+        .then(r=>r.ok?r.json():null)
+        .then(data=>{
+          counts[fname]=data?Object.keys(data).filter(k=>!isNaN(parseInt(k))).length:null;
+          const safeId=fname.replace(/[^a-z0-9_-]/gi,'_');
+          const span=document.getElementById('count-'+safeId);
+          if(span) span.textContent=counts[fname]!=null?counts[fname]+' donnes':'';
+        })
+        .catch(()=>{ counts[fname]=null; })
+    ));
+
+    // Sauvegarder en cache avec le SHA actuel
+    try{ localStorage.setItem(CACHE_KEY, JSON.stringify({sha:currentSha, tous, counts})); }catch(e){}
+    checkForUpdate(currentSha);
+
+  }catch(e){
+    // Essayer d'afficher le cache même périmé en cas d'erreur réseau
+    let cached=null;
+    try{ cached=JSON.parse(localStorage.getItem(CACHE_KEY)||'null'); }catch(e2){}
+    if(cached && cached.tous){
+      renderTournoiList(list, sub, cached.tous, cached.counts||{}, base, ()=>new Date());
+      sub.textContent+=' (hors ligne)';
+      return;
+    }
+    if(e.message==='Limite API atteinte'){
+      sub.textContent='Limite API GitHub atteinte — réessaie dans une heure.';
+    } else {
+      sub.textContent='Impossible de charger la liste des tournois.';
+    }
+  }
+}
+
+function renderTournoiList(list, sub, tous, counts, base, getToday){
+  const today=new Date(); today.setHours(0,0,0,0);
+  // Retrier à l'affichage pour que futur/passé soit toujours correct
+  const futurs=tous.filter(x=>!x.date||new Date(x.date)>=today).sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
+  const passes=tous.filter(x=>x.date&&new Date(x.date)<today).sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+  const tries=[...futurs,...passes];
+  list.innerHTML='';
+  sub.textContent=tous.length+' tournoi'+(tous.length>1?'s':'')+' disponible'+(tous.length>1?'s':'');
+  tries.forEach(({fname,date})=>{
+    const btn=document.createElement('button');
+    btn.className='option-btn';
+    const d=date?new Date(date):null;
+    const passe=d&&d<today;
+    const match=fname.match(/(\d{4}-\d{2}-\d{2})/);
+    let label='Tournoi';
+    if(match){
+      const dd=new Date(match[1]+'T12:00:00');
+      label=dd.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+      label=label.charAt(0).toUpperCase()+label.slice(1);
+    }
+    const safeId=fname.replace(/[^a-z0-9_-]/gi,'_');
+    const countVal=counts[fname];
+    const countText=countVal!=null?countVal+' donnes':'…';
+    const countSpan=`<span id="count-${safeId}" style="font-style:italic;font-size:12px;color:var(--text2);margin-left:8px">${countText}</span>`;
+    if(passe) btn.style.opacity='0.4';
+    btn.innerHTML=`<div style="flex:1;display:flex;align-items:center"><div class="option-main">${label}</div>${countSpan}</div><span style="font-size:18px">→</span>`;
+    btn.onclick=()=>chargerTournoi(base+fname, fname);
+    list.appendChild(btn);
+  });
+}
+
+async function chargerTournoi(url, fichier, silencieux=false){
+  try{
+    const res=await fetch(url+'?t='+Date.now());
+    if(!res.ok) throw new Error();
+    donnesData=await res.json();
+    window._donnesFichier=fichier;
+    // Préchargement du PBN en arrière-plan
+    (async ()=>{
+      try{
+        const hostname=window.location.hostname;
+        const onGithub=hostname.endsWith('github.io');
+        const user=onGithub?hostname.split('.')[0]:'capgui13';
+        const repo=onGithub?(window.location.pathname.split('/').filter(Boolean)[0]||'MVT'):'MVT';
+        const base=onGithub?`https://${hostname}/${repo}/`:'https://capgui13.github.io/MVT/';
+        const pbnUrl=base+fichier.replace('.json','.pbn');
+        if(!_visuCache[pbnUrl]){
+          const buf=await (await fetch(pbnUrl)).arrayBuffer();
+          const bytes=new Uint8Array(buf);
+          let text=new TextDecoder('utf-8').decode(bytes);
+          if(text.includes('\uFFFD')) text=new TextDecoder('iso-8859-1').decode(bytes);
+          _visuCache[pbnUrl]=visuParsePBN(text);
+        }
+      }catch(e){}
+    })();
+    if(!silencieux){
+      const sub=document.getElementById('tournoi-sub');
+      sub.textContent='✓ '+Object.keys(donnesData).length+' donnes chargées';
+    }
+  }catch(e){
+    donnesData={};
+    if(!silencieux) alert('Impossible de charger '+url);
+  }
+  if(!silencieux){
+    // Masquer le bouton "charger les donnes" puisqu'elles sont déjà chargées
+    const btn=document.getElementById('btn-charger-donnes');
+    if(btn) btn.style.display='none';
+    updateListeDonnesBtn();
+    goTo('s-paires');
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+if('serviceWorker' in navigator){
+  const sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(clients.claim()));self.addEventListener('fetch',e=>{e.respondWith(caches.open('bridge-v6').then(cache=>cache.match(e.request).then(r=>r||fetch(e.request).then(res=>{cache.put(e.request,res.clone());return res;}))));});`;
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'})));
+}
+
+// Vérification de mise à jour via GitHub API
+async function checkForUpdate(repoSha){
+  try{
+    const hostname=window.location.hostname;
+    const parts=hostname.split('.');
+    if(parts.length<3||parts[1]!=='github'||parts[2]!=='io') return;
+    const user=parts[0];
+    const repo=window.location.pathname.split('/').filter(Boolean)[0];
+    const file=window.location.pathname.split('/').pop()||'index.html';
+    if(!user||!repo) return;
+
+    const CACHE_KEY='bridge_update_check';
+    const CACHE_TTL=60*60*1000;
+    let cached=null;
+    try{ cached=JSON.parse(localStorage.getItem(CACHE_KEY)||'null'); }catch(e){}
+
+    // Si le SHA repo n'a pas change depuis le dernier check ET TTL non expire : rien a faire
+    if(cached && cached.repoSha===repoSha && Date.now()-cached.ts < CACHE_TTL) return;
+
+    const res=await fetch(`https://api.github.com/repos/${user}/${repo}/commits?path=${file}&per_page=1`,
+      {headers:{Accept:'application/vnd.github.v3+json'}});
+    if(!res.ok) return;
+    const data=await res.json();
+    if(!data.length) return;
+
+    const lastCommit=data[0].sha;
+    const storedCommit=localStorage.getItem('bridge_commit');
+    try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), repoSha})); }catch(e){}
+
+    if(storedCommit && storedCommit!==lastCommit){
+      localStorage.setItem('bridge_commit', lastCommit);
+      if('caches' in window){
+        const keys=await caches.keys();
+        await Promise.all(keys.map(k=>caches.delete(k)));
+      }
+      showUpdateBanner();
+    } else {
+      localStorage.setItem('bridge_commit', lastCommit);
+    }
+  }catch(e){}
+}
+
+function showUpdateBanner(){
+  const banner=document.createElement('div');
+  banner.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#1d4ed8;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;z-index:999;font-family:inherit;padding-bottom:calc(14px + env(safe-area-inset-bottom))';
+  banner.innerHTML=`<span style="font-size:14px">🔄 Nouvelle version disponible</span><button onclick="location.reload(true)" style="background:#fff;color:#1d4ed8;border:none;border-radius:8px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer">Mettre à jour</button>`;
+  document.body.appendChild(banner);
+}
+
+setSens('NS');
+initTournoi();
+(function(){ const b=document.getElementById('btn-charger-donnes'); if(b) b.style.display=hasGhToken()?'':'none'; })();
+
+// touchend sur les boutons nav pour éviter le délai 300ms iOS
+function addNavListener(id, delta){
+  const btn=document.getElementById(id);
+  if(!btn) return;
+  btn.addEventListener('touchend', e=>{ e.preventDefault(); go(delta); }, {passive:false});
+  btn.addEventListener('click', e=>{ go(delta); }); // fallback desktop
+}
+addNavListener('btn-prev', -1);
+addNavListener('btn-next', 1);
+
+// ============================================================
+// GÉNÉRATEUR
+// ============================================================
+(function(){
+  const GH_OWNER_GEN = window.location.hostname.endsWith('github.io')
+    ? window.location.hostname.split('.')[0] : 'capgui13';
+  const GH_REPO_GEN = window.location.hostname.endsWith('github.io')
+    ? (window.location.pathname.split('/').filter(Boolean)[0]||'MVT') : 'MVT';
+  const GH_BRANCH_GEN = 'main';
+
+  // Afficher le repo cible
+  const rl = document.getElementById('gen-repo-label');
+  if(rl) rl.textContent = GH_OWNER_GEN+'/'+GH_REPO_GEN;
+
+  // Token
+  function getToken(){ return localStorage.getItem('gh_token')||''; }
+  function saveToken(t){ localStorage.setItem('gh_token',t.trim()); }
+
+  window.genRenderTokenStatus = function(){
+    const t=getToken();
+    const inp=document.getElementById('gen-token-input');
+    const st=document.getElementById('gen-token-status');
+    if(!inp||!st) return;
+    if(t){
+      inp.value='•'.repeat(12)+t.slice(-4);
+      st.innerHTML='<span class="gen-status ok">✓ Token enregistré</span>';
+    } else {
+      inp.value='';
+      st.innerHTML='';
+    }
+  };
+
+  window.genOnTokenInput = function(){
+    const v=document.getElementById('gen-token-input').value.trim();
+    if(!v||/^•+/.test(v)) return;
+    saveToken(v);
+    genRenderTokenStatus();
+  };
+
+  window.genClearToken = function(){
+    localStorage.removeItem('gh_token');
+    document.getElementById('gen-token-input').value='';
+    document.getElementById('gen-token-status').innerHTML='';
+  };
+
+  // Date
+  const JOUR_MAP={'di':0,'dim':0,'dimanche':0,'lu':1,'lun':1,'lundi':1,'ma':2,'mar':2,'mardi':2,'me':3,'mer':3,'mercredi':3,'je':4,'jeu':4,'jeudi':4,'ve':5,'ven':5,'vendredi':5,'sa':6,'sam':6,'samedi':6};
+  function detectDate(raw){
+    const tokens=raw.trim().split(/[\s\t\n]+/).filter(Boolean);
+    if(tokens.length<2) return null;
+    const jour=parseInt(tokens[1]);
+    if(isNaN(jour)||jour<1||jour>31) return null;
+    const key=(tokens[0]||'').toLowerCase().replace(/[^a-z]/g,'');
+    if(!(key in JOUR_MAP)) return null;
+    const jourSem=JOUR_MAP[key];
+    const today=new Date();
+    for(let offset=0;offset<=60;offset++){
+      const d=new Date(today.getFullYear(),today.getMonth(),today.getDate()+offset);
+      if(d.getDate()===jour) return d;
+    }
+    return null;
+  }
+  function dateToISO(d){
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function getFname(raw){ const d=detectDate(raw); return d?'donnes'+dateToISO(d)+'.json':'donnes.json'; }
+
+  // Parse
+  function parse(){
+    const raw=document.getElementById('gen-input').value;
+    const cNum=parseInt(document.getElementById('gen-col-num').value);
+    const cNs=parseInt(document.getElementById('gen-col-ns').value);
+    const cEo=parseInt(document.getElementById('gen-col-eo').value);
+    const cNote=parseInt(document.getElementById('gen-col-note').value);
+    const lines=raw.split('\n');
+    const result={};
+    let count=0,withScores=0,withNotes=0;
+    lines.forEach(line=>{
+      const cols=line.replace(/\u00a0/g,' ').split('\t');
+      if(cols.length<=cNum) return;
+      const numStr=(cols[cNum]||'').trim();
+      const num=parseInt(numStr);
+      if(!numStr||isNaN(num)) return;
+      const ns=(cols.length>cNs?cols[cNs]||'':'').trim();
+      const eo=(cols.length>cEo?cols[cEo]||'':'').trim();
+      const note=cNote>=0&&cols.length>cNote?(cols[cNote]||'').trim():'';
+      result[num]={ns,eo,note};
+      count++;
+      if(ns||eo) withScores++;
+      if(note) withNotes++;
+    });
+    const sorted={};
+    Object.keys(result).map(Number).sort((a,b)=>a-b).forEach(k=>{sorted[k]=result[k];});
+    return {sorted,count,withScores,withNotes};
+  }
+
+  window.genUpdatePreview = function(){
+    const raw=document.getElementById('gen-input').value.trim();
+    const rs=document.getElementById('gen-results');
+    if(!raw){rs.style.display='none';return;}
+    const {sorted,count,withScores,withNotes}=parse();
+    if(count===0){rs.style.display='none';return;}
+    const fname=getFname(raw);
+    document.getElementById('gen-preview').textContent=JSON.stringify(sorted,null,2);
+    document.getElementById('gen-preview-fname').textContent=fname;
+    document.getElementById('gen-s-total').textContent=count;
+    document.getElementById('gen-s-scores').textContent=withScores;
+    document.getElementById('gen-s-notes').textContent=withNotes;
+    const d=detectDate(raw);
+    const dc=document.getElementById('gen-date-chip');
+    if(d){
+      const label=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+      dc.textContent='📅 '+label.charAt(0).toUpperCase()+label.slice(1);
+      dc.style.display='inline-flex';
+    } else { dc.style.display='none'; }
+    rs.style.display='flex';
+  };
+
+  function showGenStatus(type,msg){
+    const el=document.getElementById('gen-status');
+    el.textContent=msg;
+    el.className='gen-status '+type;
+  }
+
+  async function uploadToGitHub(fname,jsonStr){
+    const token=getToken();
+    if(!token) return {ok:false,msg:'Token GitHub manquant'};
+    const apiUrl=`https://api.github.com/repos/${GH_OWNER_GEN}/${GH_REPO_GEN}/contents/${fname}`;
+    let sha;
+    try{
+      const check=await fetch(apiUrl,{headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json'}});
+      if(check.ok){const data=await check.json();sha=data.sha;}
+    }catch(e){}
+    const body={message:`Ajout donnes ${fname}`,content:btoa(unescape(encodeURIComponent(jsonStr))),branch:GH_BRANCH_GEN};
+    if(sha) body.sha=sha;
+    const res=await fetch(apiUrl,{method:'PUT',headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(res.ok) return {ok:true};
+    const err=await res.json().catch(()=>({}));
+    return {ok:false,msg:err.message||`Erreur ${res.status}`};
+  }
+
+  window.genGenerate = async function(){
+    const raw=document.getElementById('gen-input').value;
+    if(!raw.trim()){showGenStatus('err','✕  Colle des données d\'abord');return;}
+    const {sorted,count}=parse();
+    if(count===0){showGenStatus('err','✕  Aucune donne reconnue');return;}
+    const fname=getFname(raw.trim());
+    const json=JSON.stringify(sorted,null,2);
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=fname;a.click();
+    URL.revokeObjectURL(url);
+    const token=getToken();
+    if(token){
+      showGenStatus('ok','⏳  Upload vers GitHub…');
+      const btn=document.getElementById('gen-btn-generate');
+      btn.disabled=true;
+      const result=await uploadToGitHub(fname,json);
+      btn.disabled=false;
+      if(result.ok){
+        showGenStatus('ok',`✓  ${fname} publié sur ${GH_OWNER_GEN}/${GH_REPO_GEN}`);
+        try{localStorage.removeItem('bridge_tournoi_list');}catch(e){}
+      } else {
+        showGenStatus('err',`✓  Téléchargé, upload échoué : ${result.msg}`);
+      }
+    } else {
+      showGenStatus('ok',`✓  ${fname} téléchargé`);
+    }
+  };
+
+  window.genReset = function(){
+    document.getElementById('gen-input').value='';
+    document.getElementById('gen-status').style.display='none';
+    document.getElementById('gen-results').style.display='none';
+    document.getElementById('gen-date-chip').style.display='none';
+  };
+
+  // Init token au chargement
+  genRenderTokenStatus();
+})();
+
+
+// ── PAR des donnes (s-gen2) ──
+let donnes = {};
+let gameDate = '';
+let pbnFile = null; // raw PBN text
+const DAYS = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+// ─── Date ─────────────────────────────────────────────────────
+function setGameDate(isoDate) {
+  gameDate = isoDate;
+  const [y,m,d] = isoDate.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m-1, d));
+  document.getElementById('day-of-week').textContent = DAYS[dt.getUTCDay()];
+  document.getElementById('day-input').value = String(d).padStart(2,'0');
+  document.getElementById('month-display').textContent = MONTHS[m-1];
+}
+
+function shiftDate(delta) {
+  if (!gameDate) return;
+  const [y,m,d] = gameDate.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m-1, d));
+  dt.setUTCDate(dt.getUTCDate() + delta);
+  setGameDate(`${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,'0')}-${String(dt.getUTCDate()).padStart(2,'0')}`);
+}
+
+function onDayInput() {
+  const day = parseInt(document.getElementById('day-input').value);
+  if (isNaN(day) || day < 1 || day > 31) {
+    document.getElementById('day-of-week').textContent = '—';
+    document.getElementById('month-display').textContent = '—';
+    gameDate = ''; return;
+  }
+  const today = new Date();
+  let y = today.getFullYear(), m = today.getMonth();
+  let candidate = new Date(Date.UTC(y, m, day));
+  const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+  if (candidate < todayUTC) { m++; if(m>11){m=0;y++;} candidate = new Date(Date.UTC(y,m,day)); }
+  setGameDate(`${candidate.getUTCFullYear()}-${String(candidate.getUTCMonth()+1).padStart(2,'0')}-${String(candidate.getUTCDate()).padStart(2,'0')}`);
+}
+
+// ─── Data ─────────────────────────────────────────────────────
+function getDonne(n){ return donnes[n] || {ns:'',eo:'',note:''}; }
+function setDonne(n, field, val){
+  if(!donnes[n]) donnes[n]={ns:'',eo:'',note:''};
+  donnes[n][field]=val.trim();
+  if(!donnes[n].ns && !donnes[n].eo && !donnes[n].note) delete donnes[n];
+}
+
+// ─── Contract rendering ───────────────────────────────────────
+function contractWeight(part) {
+  const m = part.trim().match(/^(\d)([A-Z]+)/);
+  if (!m) return '';
+  const lv = parseInt(m[1]), suit = m[2];
+  if (lv >= 6) return 'w-chelem';
+  const isGame = (suit==='SA'&&lv>=3)||((['P','C'].includes(suit))&&lv>=4)||((['T','K'].includes(suit))&&lv>=5);
+  return isGame ? 'w-manche' : '';
+}
+
+function renderContract(val, col) {
+  // val: "3SA ; 2P" or "4C+1" etc.
+  // col: 'ns' or 'eo'
+  if (!val || !val.trim()) return '';
+  const colorClass = col === 'ns' ? 'c-ns' : 'c-eo';
+  const parts = val.split(';').map(p => p.trim());
+  return parts.map((p, idx) => {
+    const wClass = contractWeight(p); // weight applied to each part
+    const cls = ['c', colorClass, wClass].filter(Boolean).join(' ');
+    const sep = idx > 0 ? '<span style="color:var(--text3);font-weight:400;font-size:12px;"> ; </span>' : '';
+    return sep + `<span class="${cls}">${p}</span>`;
+  }).join('');
+}
+
+// ─── ContentEditable helpers ──────────────────────────────────
+function getCEText(el) {
+  // Get plain text from contenteditable, stripping HTML
+  return el.innerText.replace(/\n/g, '').trim();
+}
+
+function setCEValue(el, val, col) {
+  if (document.activeElement === el) return; // don't overwrite while editing
+  if (!val) {
+    el.innerHTML = '';
+  } else {
+    el.innerHTML = renderContract(val, col);
+  }
+}
+
+function onCEInput(el, n, field) {
+  const val = getCEText(el);
+  setDonne(n, field, val);
+  // While typing, just show plain text (don't re-render with spans mid-edit)
+}
+
+function onCEBlur(el, n, field, col) {
+  const val = getCEText(el);
+  setDonne(n, field, val);
+  // Re-render with styled spans
+  if (val) {
+    el.innerHTML = renderContract(val, col);
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+function onCEFocus(el) {
+  // Replace spans with plain text for editing
+  const text = getCEText(el);
+  el.textContent = text;
+  // Select all so typing replaces existing content
+  const range = document.createRange();
+  const sel = window.getSelection();
+  range.selectNodeContents(el);
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+function onCEKeydown(el, e) {
+  // Prevent newlines
+  if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+}
+
+// ─── Note (affichage mobile) ──────────────────────────────────
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function syncNoteRow(n, val){
+  const row = document.getElementById('noterow-'+n);
+  const mainRow = document.getElementById('tr-'+n);
+  val = (val||'').trim();
+  if(mainRow) mainRow.classList.toggle('has-note', !!val);
+  if(!row) return;
+  row.classList.toggle('has-note', !!val);
+  row.querySelector('td:last-child').innerHTML = val ? '💬 ' + escapeHtml(val) : '';
+}
+
+// ─── Table ────────────────────────────────────────────────────
+function buildTable() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  for (let i = 1; i <= 36; i++) {
+    const d = getDonne(i);
+    const tr = document.createElement('tr');
+    tr.id = 'tr-' + i;
+    if (i % 2 === 1 && i > 1) tr.classList.add('sep-thick');
+    if (d.note) tr.classList.add('has-note');
+
+    const nsHtml = d.ns ? renderContract(d.ns, 'ns') : '';
+    const eoHtml = d.eo ? renderContract(d.eo, 'eo') : '';
+
+    tr.innerHTML = `
+      <td class="num-cell">${i}</td>
+      <td><div class="ce col-ns" contenteditable="true" spellcheck="false"
+        data-n="${i}" data-field="ns" data-col="ns"
+        >${nsHtml}</div></td>
+      <td><div class="ce col-eo" contenteditable="true" spellcheck="false"
+        data-n="${i}" data-field="eo" data-col="eo"
+        >${eoHtml}</div></td>
+      <td class="note-input-cell"><input type="text" class="note-input" id="note-${i}" value="${d.note}" placeholder=""
+        autocomplete="off" autocorrect="off"
+        oninput="setDonne(${i},'note',this.value);syncNoteRow(${i},this.value)"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+        onfocus="this.select()"/></td>`;
+    tbody.appendChild(tr);
+    const noteTr = document.createElement('tr');
+    noteTr.className = 'note-display-row' + (d.note ? ' has-note' : '');
+    noteTr.id = 'noterow-' + i;
+    noteTr.innerHTML = `<td></td><td colspan="3">💬 ${escapeHtml(d.note)}</td>`;
+    tbody.appendChild(noteTr);
+  }
+  // Attach events to CE divs
+  tbody.querySelectorAll('.ce').forEach(el => {
+    const n = parseInt(el.dataset.n);
+    const field = el.dataset.field;
+    const col = el.dataset.col;
+    el.addEventListener('focus', () => onCEFocus(el));
+    el.addEventListener('blur', () => onCEBlur(el, n, field, col));
+    el.addEventListener('input', () => onCEInput(el, n, field));
+    el.addEventListener('keydown', (e) => onCEKeydown(el, e));
+  });
+}
+
+// ─── Import PBN ───────────────────────────────────────────────
+function importPBN(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    pbnFile = text;
+    const imported = parsePBN(text);
+    if (imported.count === 0) { toast('Aucun par trouvé dans ce fichier'); return; }
+    let filled = 0;
+    for (const [num, d] of Object.entries(imported.data)) {
+      const n = parseInt(num);
+      if (!donnes[n]) donnes[n] = {ns:'', eo:'', note:''};
+      let changed = false;
+      if (n > 36) continue;
+      if (d.ns && !donnes[n].ns) { donnes[n].ns = d.ns; changed = true; }
+      if (d.eo && !donnes[n].eo) { donnes[n].eo = d.eo; changed = true; }
+      if (changed) filled++;
+      if (!donnes[n].ns && !donnes[n].eo && !donnes[n].note) delete donnes[n];
+    }
+    const dateMatch = file.name.match(/(\d{4})(\d{2})(\d{2})/);
+    if (dateMatch) setGameDate(`${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`);
+    buildTable();
+updateTokenIndicator();
+    toast('✓ ' + filled + ' par(s) importé(s) depuis ' + file.name);
+    input.value = '';
+  };
+  reader.readAsText(file, 'latin-1');
+}
+
+// ─── Clear ────────────────────────────────────────────────────
+function clearAll() {
+  if (!confirm('Effacer toutes les donnes ?')) return;
+  donnes = {};
+  buildTable();
+  toast('Données effacées');
+}
+
+// ─── Toast ────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('par-toast');
+  if(!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ─── PBN parsing ──────────────────────────────────────────────
+function normalizeContract(c) {
+  // Convert "1SA+1" → "2SA" (express as max level without overtrick notation)
+  // Keep sacrifices (X-n) and plain contracts unchanged
+  const m = c.match(/^(\d)([A-Z]+)(\+\d+)$/);
+  if (!m) return c; // no +n modifier, or sacrifice: keep as-is
+  const lv = parseInt(m[1]);
+  const dn = m[2];
+  const ot = parseInt(m[3]); // e.g. +1 → 1
+  const newLv = Math.min(lv + ot, 7);
+  return `${newLv}${dn}`;
+}
+
+function normalizeStr(s) {
+  // Apply normalizeContract to each part, and lowercase X (contrat contré)
+  return s.split(' ; ').map(p => normalizeContract(p.trim()).replace('X', 'x')).join(' ; ');
+}
+
+function stripEq(s) {
+  return s.split(' ; ').map(p => p.endsWith('=') ? p.slice(0,-1) : p).join(' ; ');
+}
+
+function translatePart(c) {
+  let out='', i=0;
+  while(i<c.length){
+    const ch=c[i];
+    if(ch==='N'){ if(i+1<c.length&&c[i+1]==='T'){out+='SA';i+=2;}else{out+='SA';i++;} }
+    else if(ch==='S'){out+='P';i++;}
+    else if(ch==='H'){out+='C';i++;}
+    else if(ch==='D'){out+='K';i++;}
+    else if(ch==='C'){out+='T';i++;}
+    else{out+=ch;i++;}
+  }
+  return out;
+}
+
+function contractScore(lv, dn) {
+  const pts = dn==='NT' ? 40+Math.max(0,lv-1)*30 : ['S','H'].includes(dn) ? lv*30 : lv*20;
+  const isGame = (['S','H'].includes(dn)&&lv>=4)||((['D','C'].includes(dn))&&lv>=5)||(dn==='NT'&&lv>=3);
+  const bonus = lv===7?1500:lv===6?1000:isGame?300:50;
+  return pts+bonus;
+}
+
+function bestMakeable(tricks) {
+  let best=null, bs=-1;
+  for(const [d,t] of Object.entries(tricks)){
+    if(t<7)continue;
+    const lv=Math.min(t-6,7), sc=contractScore(lv,d);
+    if(sc>bs){bs=sc;best=[lv,d,sc];}
+  }
+  return best;
+}
+
+function suitCount(hands, side, suit) {
+  if(side==='NS') return (hands.N[suit]?.length||0)+(hands.S[suit]?.length||0);
+  return (hands.E[suit]?.length||0)+(hands.W[suit]?.length||0);
+}
+
+function computeParDisplay(tricks, hands, side) {
+  const denoms = ['NT','S','H','D','C'];
+  const info = {};
+  for (const dn of denoms) {
+    const t = tricks[dn] || 0;
+    if (t < 7) continue;
+    const level = Math.min(t - 6, 7);
+    const score = contractScore(level, dn);
+    const isFit = (dn === 'NT') ? false : suitCount(hands, side, dn) >= 8;
+    info[dn] = { level, score, isFit };
+  }
+  if (Object.keys(info).length === 0) return '';
+
+  const maxScore = Math.max(...Object.values(info).map(v => v.score));
+  const selected = new Set();
+  for (const [dn, v] of Object.entries(info)) {
+    if (v.score === maxScore) selected.add(dn);
+  }
+
+  // Règle : un vrai fit majeur (8+ cartes) est toujours affiché, quel que soit son palier
+  const majorFits = ['S','H'].filter(dn => info[dn] && info[dn].isFit);
+  for (const dn of majorFits) selected.add(dn);
+
+  // Règle : un vrai fit mineur (8+ cartes) n'est affiché que s'il atteint sa propre manche (palier 5+)
+  const minorFits = ['D','C'].filter(dn => info[dn] && info[dn].isFit);
+  for (const dn of minorFits) {
+    if (info[dn].level >= 5) selected.add(dn);
+  }
+
+  // Règle de secours : si le contrat le plus fort est une seule couleur SANS vrai fit
+  // (résultat "fragile"), on montre une alternative : le vrai fit mineur s'il existe
+  // (même sous la manche), sinon SA (s'il se réalise)
+  if (selected.size === 1) {
+    const only = [...selected][0];
+    if (only !== 'NT' && !info[only].isFit) {
+      if (minorFits.length > 0) {
+        for (const dn of minorFits) selected.add(dn);
+      } else if (majorFits.length === 0 && info['NT']) {
+        selected.add('NT');
+      }
+    }
+  }
+
+  // Règle : SA affiché en complément si un vrai fit mineur est montré et qu'aucun fit majeur n'existe
+  const hasGenuineMinorShown = minorFits.some(dn => selected.has(dn));
+  if (!selected.has('NT') && majorFits.length === 0 && hasGenuineMinorShown && info['NT'] && info['NT'].level >= 3) {
+    selected.add('NT');
+  }
+
+  const list = [...selected].map(dn => ({ score: info[dn].score, label: translatePart(`${info[dn].level}${dn}`) }));
+  list.sort((a,b) => b.score - a.score);
+  return list.map(c => c.label).join(' ; ');
+}
+
+function parseContract(s) {
+  const m=s.match(/^(\d)(NT|[SHDCN])(.*)/);
+  if(!m)return null;
+  let dn=m[2]; if(dn==='N')dn='NT';
+  return [parseInt(m[1]),dn,m[3]];
+}
+
+function parseDeal(dealStr) {
+  const [firstDir,rest]=dealStr.split(':');
+  const dirs=['N','E','S','W'], start=dirs.indexOf(firstDir);
+  const handStrs=rest.trim().split(' '), hands={};
+  handStrs.forEach((hs,i)=>{
+    const d=dirs[(start+i)%4], [s,h,di,c]=hs.split('.');
+    hands[d]={S:s||'',H:h||'',D:di||'',C:c||''};
+  });
+  return hands;
+}
+
+function parsePBN(text) {
+  const result={};
+  const boardRegex=/\[Board\s+"(\d+)"\]([\s\S]*?)(?=\[Board\s+"|$)/g;
+  let m;
+  while((m=boardRegex.exec(text))!==null){
+    const num=parseInt(m[1]), block=m[2];
+    const tableMatch=block.match(/\[OptimumResultTable[^\]]*\]\s*([\s\S]*?)(?=\[|$)/);
+    const nsTricks={}, ewTricks={};
+    if(tableMatch){
+      for(const line of tableMatch[1].trim().split('\n')){
+        const p=line.trim().split(/\s+/);
+        if(p.length<3)continue;
+        const[decl,denom,tricks]=[p[0],p[1],parseInt(p[2])];
+        if('NS'.includes(decl)&&decl.length===1) nsTricks[denom]=Math.max(nsTricks[denom]||0,tricks);
+        if('EW'.includes(decl)&&decl.length===1) ewTricks[denom]=Math.max(ewTricks[denom]||0,tricks);
+      }
+    }
+    const dealMatch=block.match(/\[Deal\s+"([^"]+)"\]/);
+    if(!dealMatch)continue;
+    const hands=parseDeal(dealMatch[1]);
+    const parMatch=block.match(/\[ParContract\s+"([^"]+)"\]/);
+    const parRaw=parMatch?parMatch[1].trim():'';
+    const parParts=parRaw.split(';').map(p=>p.trim()).filter(Boolean);
+    const nsParts=parParts.filter(p=>/^(NS|N|S)\s/.test(p));
+    const ewParts=parParts.filter(p=>/^(EW|E|W)\s/.test(p));
+    const isSac=/X-\d/.test(parRaw);
+    let ns='', eo='';
+    if(isSac){
+      if(nsParts.length>0){
+        ns=normalizeStr(translatePart(nsParts[0].split(' ').slice(1).join(' ')));
+        eo=computeParDisplay(ewTricks,hands,'EW');
+      } else {
+        ns=computeParDisplay(nsTricks,hands,'NS');
+        eo=ewParts.length>0?normalizeStr(translatePart(ewParts[0].split(' ').slice(1).join(' '))):'';
+      }
+    } else {
+      if(nsParts.length>0) ns=computeParDisplay(nsTricks,hands,'NS');
+      else if(ewParts.length>0) eo=computeParDisplay(ewTricks,hands,'EW');
+    }
+    result[num]={ns,eo,note:''};
+  }
+  return {data:result,count:Object.keys(result).length};
+}
+
+// ─── GitHub ───────────────────────────────────────────────────
+const GH_OWNER = window.location.hostname.endsWith('github.io')
+  ? window.location.hostname.split('.')[0] : 'capgui13';
+const GH_REPO = window.location.hostname.endsWith('github.io')
+  ? (window.location.pathname.split('/').filter(Boolean)[0]||'MVT') : 'MVT';
+const GH_BRANCH = 'main';
+
+function getToken(){ return localStorage.getItem('gh_token')||''; }
+function saveToken(t){ localStorage.setItem('gh_token', t.trim()); }
+
+function onTokenInput(v){
+  if(!v || /^•+/.test(v)) return;
+  saveToken(v);
+}
+
+async function ghUpload(fname, fileContent, isBinary=false){
+  const token = getToken();
+  if(!token) return {ok:false, msg:'Token manquant'};
+  const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${fname}`;
+  let sha;
+  try{
+    const check = await fetch(apiUrl,{headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json'}});
+    if(check.ok){ const data=await check.json(); sha=data.sha; }
+  }catch(e){}
+  const encoded = isBinary ? btoa(Array.from(fileContent).map(c=>c.charCodeAt(0)&0xff).map(b=>String.fromCharCode(b)).join('')) : btoa(unescape(encodeURIComponent(fileContent)));
+  const body = {message:`Ajout ${fname}`, content:encoded, branch:GH_BRANCH};
+  if(sha) body.sha = sha;
+  const res = await fetch(apiUrl,{method:'PUT',headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(res.ok) return {ok:true};
+  const err = await res.json().catch(()=>({}));
+  return {ok:false, msg:err.message||`Erreur ${res.status}`};
+}
+
+async function publish(){
+  if(Object.keys(donnes).length===0){ toast('Aucune donne saisie'); return; }
+  if(!getToken()){ toast('Token GitHub manquant — saisissez-le en bas'); return; }
+
+  const sorted={};
+  if(gameDate) sorted['date']=gameDate;
+  Object.keys(donnes).map(Number).sort((a,b)=>a-b).forEach(k=>{ sorted[k]=donnes[k]; });
+  const dateStr=gameDate||`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+  const jsonFname = `donnes${dateStr}.json`;
+  const jsonStr = JSON.stringify(sorted,null,2);
+
+  toast('⏳ Publication en cours…');
+
+  // Upload JSON
+  const jsonResult = await ghUpload(jsonFname, jsonStr);
+  if(!jsonResult.ok){ toast('✕ JSON : '+jsonResult.msg); return; }
+
+  // Upload PBN if available (same base name as JSON, .pbn extension)
+  if(pbnFile){
+    const pbnFname2 = jsonFname.replace('.json','.pbn');
+    const pbnResult = await ghUpload(pbnFname2, pbnFile, true);
+    if(!pbnResult.ok){ toast(`✓ JSON publié, ✕ PBN : ${pbnResult.msg}`); return; }
+    toast(`✓ ${jsonFname} + ${jsonFname.replace('.json','.pbn')} publiés`);
+  } else {
+    toast(`✓ ${jsonFname} publié sur ${GH_OWNER}/${GH_REPO}`);
+  }
+  try{ localStorage.removeItem('bridge_tournoi_list'); }catch(e){}
+}
+
+buildTable();
+
+// ── Gestion des fichiers ──
+async function loadDeleteList(){
+  const list=document.getElementById('delete-list');
+  const sub=document.getElementById('delete-sub');
+  list.innerHTML='';
+  const hostname=window.location.hostname;
+  const onGithub=hostname.endsWith('github.io');
+  const user=onGithub?hostname.split('.')[0]:'capgui13';
+  const repo=onGithub?(window.location.pathname.split('/').filter(Boolean)[0]||'MVT'):'MVT';
+  const token=localStorage.getItem('gh_token')||'';
+  sub.textContent='Chargement…';
+  try{
+    const res=await fetch(`https://api.github.com/repos/${user}/${repo}/contents/`,
+      {headers:{Accept:'application/vnd.github.v3+json',...(token?{Authorization:`token ${token}`}:{})}});
+    if(!res.ok) throw new Error(`Erreur ${res.status}`);
+    const files=await res.json();
+    const donneFiles=files
+      .filter(f=>f.type==='file'&&/^donnes[-_]?\d{4}.*\.(json|pbn)$/i.test(f.name))
+      .sort((a,b)=>b.name.localeCompare(a.name));
+    if(!donneFiles.length){sub.textContent='Aucun fichier trouvé.';return;}
+    sub.textContent=donneFiles.length+' fichier(s) sur '+user+'/'+repo;
+    const groups={};
+    donneFiles.forEach(f=>{
+      const base=f.name.replace(/\.(json|pbn)$/i,'');
+      if(!groups[base])groups[base]=[];
+      groups[base].push(f);
+    });
+    window._delMap={};
+    const today=new Date(); today.setHours(0,0,0,0);
+    const entries=Object.entries(groups).map(([base,gfiles])=>{
+      const dm=base.match(/(\d{4})-(\d{2})-(\d{2})/);
+      const date=dm?new Date(dm[1]+'-'+dm[2]+'-'+dm[3]+'T12:00:00'):null;
+      return {base,gfiles,date};
+    });
+    const futurs=entries.filter(x=>!x.date||x.date>=today).sort((a,b)=>(a.date||0)-(b.date||0));
+    const passes=entries.filter(x=>x.date&&x.date<today).sort((a,b)=>(b.date||0)-(a.date||0));
+    const tries=[...futurs,...passes];
+    let html='';
+    tries.forEach(({base,gfiles,date},i)=>{
+      let label=base;
+      if(date){
+        label=date.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+        label=label.charAt(0).toUpperCase()+label.slice(1);
+      }
+      const passe=date&&date<today;
+      const jsonFile = gfiles.find(f => /\.json$/i.test(f.name));
+      const fname = jsonFile ? jsonFile.name : null;
+      window._delMap['g'+i]={files:gfiles,token,user,repo,fname};
+      html+=`<div id="dg${i}" class="option-btn" style="justify-content:space-between;min-height:auto;cursor:pointer;${passe?'opacity:0.4;':''}" onclick="openGen2FromFile('g${i}')">
+        <div>
+          <div class="option-main">${label}</div>
+          <div class="option-detail">${gfiles.map(f=>f.name).join(' · ')}</div>
+        </div>
+        <button onclick="event.stopPropagation();delGroup('g${i}')" style="padding:8px 12px;border-radius:10px;border:1.5px solid #7f1d1d;background:#2d0a0a;color:#f87171;font-size:16px;cursor:pointer;margin-left:8px;">🗑</button>
+      </div>`;
+    });
+    list.innerHTML=html;
+  }catch(e){
+    sub.textContent='Erreur : '+e.message;
+  }
+}
+
+async function delGroup(id){
+  const g=window._delMap&&window._delMap[id];
+  if(!g)return;
+  const{files,token,user,repo}=g;
+  if(!token){alert('Token GitHub requis.');return;}
+  if(!confirm('Supprimer '+files.map(f=>f.name).join(' et ')+' ?'))return;
+  const el=document.getElementById('dg'+id.slice(1));
+  if(el)el.style.opacity='0.4';
+  let ok=true;
+  for(const f of files){
+    try{
+      const r=await fetch(`https://api.github.com/repos/${user}/${repo}/contents/${f.name}`,{
+        method:'DELETE',
+        headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},
+        body:JSON.stringify({message:`Suppression ${f.name}`,sha:f.sha,branch:'main'})
+      });
+      if(!r.ok)ok=false;
+    }catch(e){ok=false;}
+  }
+  if(ok){
+    document.getElementById('dg'+id.slice(1))?.remove();
+    delete window._delMap[id];
+    try{localStorage.removeItem('bridge_tournoi_list');}catch(e){}
+  }else{
+    if(el)el.style.opacity='1';
+    alert('Erreur lors de la suppression.');
+  }
+}
+
+function openGen2Fresh(){
+  donnes={};
+  pbnFile=null;
+  gameDate='';
+  document.getElementById('day-of-week').textContent='—';
+  document.getElementById('day-input').value='';
+  document.getElementById('month-display').textContent='—';
+  document.getElementById('s-gen2').classList.remove('compact-notes');
+  buildTable();
+  updateTokenIndicator();
+  goTo('s-gen2');
+}
+
+async function openGen2FromFile(id){
+  const g=window._delMap&&window._delMap[id];
+  if(!g||!g.fname)return;
+  const hostname=window.location.hostname;
+  const onGithub=hostname.endsWith('github.io');
+  const base=onGithub?window.location.href.replace(/\/[^\/]*$/,'/'):'https://capgui13.github.io/MVT/';
+  const url=base+g.fname+'?t='+Date.now();
+  try{
+    const res=await fetch(url);
+    if(!res.ok) throw new Error('Erreur '+res.status);
+    const data=await res.json();
+    // Réinitialiser les donnes
+    donnes={};
+    pbnFile=null;
+    Object.keys(data).forEach(k=>{
+      const n=parseInt(k);
+      if(!isNaN(n)&&n>=1&&n<=36){
+        const entry=data[k];
+        if(entry&&(entry.ns||entry.eo||entry.note)){
+          donnes[n]={ns:entry.ns||'',eo:entry.eo||'',note:entry.note||''};
+        }
+      }
+    });
+    // Extraire et appliquer la date depuis le nom du fichier
+    const dm=g.fname.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if(dm) setGameDate(`${dm[1]}-${dm[2]}-${dm[3]}`);
+    else { gameDate=''; document.getElementById('day-of-week').textContent='—'; document.getElementById('day-input').value=''; document.getElementById('month-display').textContent='—'; }
+    document.getElementById('s-gen2').classList.add('compact-notes');
+    buildTable();
+    updateTokenIndicator();
+    goTo('s-gen2');
+  }catch(e){
+    alert('Impossible de charger '+g.fname+' : '+e.message);
+  }
+}
+
+function openTokenModal(){
+  const t = localStorage.getItem('gh_token')||'';
+  const inp = document.getElementById('modal-token-input');
+  if(inp){ inp.value = t ? '•'.repeat(12)+t.slice(-4) : ''; inp.dataset.full = t; inp.type='password'; }
+  document.getElementById('token-modal').style.display='flex';
+  document._tokenEsc = function(e){ if(e.key==='Escape') closeTokenModal(); };
+  document.addEventListener('keydown', document._tokenEsc);
+}
+function closeTokenModal(){
+  document.getElementById('token-modal').style.display='none';
+  if(document._tokenEsc) document.removeEventListener('keydown', document._tokenEsc);
+  updateTokenIndicator();
+  applyTournoiTokenUI();
+  const btn=document.getElementById('btn-charger-donnes');
+  if(btn && document.getElementById('s-config').classList.contains('active')){
+    btn.style.display=hasGhToken()?'':'none';
+  }
+  if(hasGhToken() && document.getElementById('s-tournoi').classList.contains('active') && !document.getElementById('tournoi-list').children.length){
+    document.getElementById('tournoi-sub').textContent='Chargement...';
+    initTournoi();
+  }
+}
+function updateTokenIndicator(){
+  const btn = document.getElementById('btn-params');
+  if(!btn) return;
+  const hasToken = !!localStorage.getItem('gh_token');
+  btn.innerHTML = hasToken ? '⚙ Paramètres <span style="width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block;margin-left:2px;"></span>' : '⚙ Paramètres';
+}
+updateTokenIndicator();
+function saveModalToken(){
+  const inp = document.getElementById('modal-token-input');
+  const v = inp.value.trim();
+  // If value looks like our mask (starts with bullets), don't overwrite
+  if(v && !/^•/.test(v)) localStorage.setItem('gh_token', v);
+  closeTokenModal();
+}
+function clearModalToken(){
+  localStorage.removeItem('gh_token');
+  document.getElementById('modal-token-input').value='';
+  closeTokenModal();
+}
+
+async function uploadSelf(){
+  const token = localStorage.getItem('gh_token')||'';
+  if(!token){ openTokenModal(); return; }
+  const hostname = window.location.hostname;
+  const onGithub = hostname.endsWith('github.io');
+  const user = onGithub ? hostname.split('.')[0] : 'capgui13';
+  const repo = onGithub ? (window.location.pathname.split('/').filter(Boolean)[0]||'MVT') : 'MVT';
+  if(!confirm('Mettre à jour index.html sur '+user+'/'+repo+' ?')) return;
+  try{
+    let html;
+    if(location.protocol === 'file:'){
+      // En local : demander à l'utilisateur de sélectionner le fichier
+      html = await new Promise((resolve, reject) => {
+        const input = document.createElement('input');
+        input.type = 'file'; input.accept = '.html';
+        input.onchange = e => {
+          const file = e.target.files[0];
+          if(!file){ reject(new Error('Aucun fichier sélectionné')); return; }
+          const reader = new FileReader();
+          reader.onload = ev => resolve(ev.target.result);
+          reader.onerror = () => reject(new Error('Lecture impossible'));
+          reader.readAsText(file);
+        };
+        input.click();
+      });
+    } else {
+      const res = await fetch(location.href);
+      html = await res.text();
+    }
+    const encoded = btoa(unescape(encodeURIComponent(html)));
+    // Get current SHA
+    const apiUrl = `https://api.github.com/repos/${user}/${repo}/contents/index.html`;
+    const headers = {Authorization:`token ${token}`, Accept:'application/vnd.github.v3+json'};
+    let sha;
+    const check = await fetch(apiUrl, {headers});
+    if(check.ok){ const d = await check.json(); sha = d.sha; }
+    // Upload
+    const body = {message:'Mise à jour index.html', content:encoded, branch:'main'};
+    if(sha) body.sha = sha;
+    const put = await fetch(apiUrl, {method:'PUT', headers:{...headers,'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    if(put.ok) alert('✓ index.html mis à jour sur '+user+'/'+repo);
+    else { const e=await put.json(); alert('Erreur : '+(e.message||put.status)); }
+  }catch(e){
+    alert('Erreur : '+e.message);
+  }
+}
+
+// ── Visualiseur de donnes ──────────────────────────────────────────────
+const VISU_SUITS = ['S','H','D','C'];
+const VISU_SYM   = {S:'♠',H:'♥',D:'♦',C:'♣'};
+const VISU_SCLS  = {S:'vcs',H:'vch',D:'vcd',C:'vcc'};
+const VISU_CW    = ['N','E','S','W'];
+const VISU_FR    = {N:'Nord',S:'Sud',E:'Est',W:'Ouest'};
+const vEsc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+let visuDeals = [], visuIdx = 0;
+
+let _visuCache = {};
+
+async function openVisu(boardNum) {
+  const fname = window._donnesFichier;
+  if(!fname){ alert('Fichier PBN introuvable.'); return; }
+  const pbnFname = fname.replace('.json', '.pbn');
+  const hostname = window.location.hostname;
+  const onGithub = hostname.endsWith('github.io');
+  const user = onGithub ? hostname.split('.')[0] : 'capgui13';
+  const repo = onGithub ? (window.location.pathname.split('/').filter(Boolean)[0]||'MVT') : 'MVT';
+  const base = onGithub ? `https://${hostname}/${repo}/` : `https://capgui13.github.io/MVT/`;
+  const pbnUrl = base + pbnFname;
+
+  goTo('s-visu');
+
+  try {
+    // Use cache if available
+    if(_visuCache[pbnUrl]) {
+      visuDeals = _visuCache[pbnUrl];
+    } else {
+      document.getElementById('visu-content').innerHTML = '<div style="color:var(--text2);text-align:center;padding:2rem;">Chargement…</div>';
+      const buf = await (await fetch(pbnUrl)).arrayBuffer();
+      const bytes = new Uint8Array(buf);
+      let text = new TextDecoder('utf-8').decode(bytes);
+      if(text.includes('\uFFFD')) text = new TextDecoder('iso-8859-1').decode(bytes);
+      visuDeals = visuParsePBN(text);
+      _visuCache[pbnUrl] = visuDeals;
+    }
+    if(!visuDeals.length){ document.getElementById('visu-content').innerHTML = '<div style="color:#f87171;text-align:center;padding:2rem;">Aucune donne trouvée dans le PBN.</div>'; return; }
+    // Find the board
+    visuIdx = visuDeals.findIndex(d => parseInt(d.Board) === parseInt(boardNum));
+    if(visuIdx < 0) visuIdx = 0;
+    visuRender(visuIdx);
+  } catch(e) {
+    document.getElementById('visu-content').innerHTML = `<div style="color:#f87171;text-align:center;padding:2rem;">Erreur : ${vEsc(e.message)}</div>`;
+  }
+}
+
+function visuNav(dir) {
+  const n = visuIdx + dir;
+  if(n >= 0 && n < visuDeals.length){ visuIdx = n; visuRender(n); window.scrollTo(0,0); }
+}
+
+function visuRender(i) {
+  const d = visuDeals[i];
+  visuIdx = i;
+  const prev = document.getElementById('visu-prev');
+  const next = document.getElementById('visu-next');
+  const ctr  = document.getElementById('visu-ctr');
+  if(prev) prev.disabled = i === 0;
+  if(next) next.disabled = i === visuDeals.length - 1;
+  if(ctr)  ctr.textContent = `Donne ${i+1} / ${visuDeals.length}`;
+
+  const hands = visuParseDeal(d.Deal || '');
+  const dealer = d.Dealer || '?';
+  const vul    = d.Vulnerable || 'None';
+  const board  = d.Board || String(i+1);
+  const vulLabel = {None:'Vul. Pers.', NS:'Vul. N-S', EW:'Vul. E-O', All:'Vul. Tous'}[vul] || vul;
+  const vulCls   = vul === 'None' ? 'vbadge-nov' : 'vbadge-vul';
+
+  const html = `
+    <div class="board-hdr">
+      <div class="board-num">Donne ${vEsc(board)}</div>
+      <div class="board-badges">
+        <span class="vbadge">Donneur : ${vEsc(VISU_FR[dealer]||dealer)}</span>
+        <span class="vbadge ${vulCls}">${vEsc(vulLabel)}</span>
+      </div>
+    </div>
+    <div class="diag-card">${visuRenderDiag(hands, dealer, vul)}</div>`;
+
+  document.getElementById('visu-content').innerHTML = html;
+}
+
+function visuParsePBN(text) {
+  const out = [];
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  let cur = null;
+  for(const raw of lines) {
+    const line = raw.trim();
+    if(!line){ if(cur && cur.Deal) out.push({...cur}); cur = null; continue; }
+    const tm = line.match(/^\[(\w+)\s+"(.*)"\]$/);
+    if(tm){
+      if(!cur) cur = {};
+      cur[tm[1]] = tm[2];
+    }
+  }
+  if(cur && cur.Deal) out.push({...cur});
+  return out;
+}
+
+function visuParseDeal(str) {
+  if(!str) return null;
+  const m = str.match(/^([NSEWnsew]):(.+)$/);
+  if(!m) return null;
+  const first = m[1].toUpperCase();
+  const si = VISU_CW.indexOf(first);
+  if(si < 0) return null;
+  const dirs = [0,1,2,3].map(i => VISU_CW[(si+i)%4]);
+  const res = {};
+  m[2].trim().split(/\s+/).forEach((h,i) => {
+    if(i > 3) return;
+    const p = h.split('.');
+    while(p.length < 4) p.push('');
+    res[dirs[i]] = {S:p[0]==='-'?'':p[0], H:p[1]==='-'?'':p[1], D:p[2]==='-'?'':p[2], C:p[3]==='-'?'':p[3]};
+  });
+  return res;
+}
+
+function visuCalcHCP(hand) {
+  if(!hand) return 0;
+  let pts = 0;
+  for(const s of VISU_SUITS){
+    const h = (hand[s]||'').toUpperCase();
+    for(const c of h){ if(c==='A') pts+=4; else if(c==='K') pts+=3; else if(c==='Q') pts+=2; else if(c==='J') pts+=1; }
+  }
+  return pts;
+}
+
+function visuRenderHand(hand) {
+  if(!hand) return {suits:'<div class="vd">—</div>', hcp:0};
+  const hcp = visuCalcHCP(hand);
+  const suits = VISU_SUITS.map(s => {
+    const raw = hand[s] || '';
+    const k = VISU_SCLS[s];
+    if(!raw || raw==='-') return `<div class="sr"><span class="sym ${k}">${VISU_SYM[s]}</span><span class="vd">—</span></div>`;
+    const tokens = [];
+    for(let i=0;i<raw.length;i++){
+      const c=raw[i];
+      let fr;
+      if(c==='A') fr='A'; else if(c==='K') fr='R'; else if(c==='Q') fr='D';
+      else if(c==='J') fr='V'; else if(c==='T') fr='10';
+      else if(c==='1'&&raw[i+1]==='0'){fr='10';i++;} else fr=c;
+      tokens.push(fr);
+    }
+    return `<div class="sr"><span class="sym ${k}">${VISU_SYM[s]}</span><span class="cds">${tokens.join(' ')}</span></div>`;
+  }).join('');
+  return {suits, hcp};
+}
+
+function visuRenderDiag(hands, dealer, vul) {
+  const h = hands || {};
+  const vulDirs = {None:[],NS:['N','S'],EW:['E','W'],All:['N','S','E','W']}[vul]||[];
+  const lblCls = dir => vulDirs.includes(dir) ? 'lbl-vul' : 'lbl-nov';
+  const lbl = {N:'NORD',S:'SUD',E:'EST',W:'OUEST'};
+
+  const handLbl = dir => {
+    const isDealer = dealer && dir === dealer.toUpperCase();
+    return `<div class="hand-lbl ${lblCls(dir)}">
+      <span class="dealer-spacer"></span>
+      ${lbl[dir]}
+      ${isDealer ? '<span class="dealer-badge">D</span>' : '<span class="dealer-spacer"></span>'}
+    </div>`;
+  };
+
+  const handBox = (dir, ns) => {
+    const {suits, hcp} = visuRenderHand(h[dir]);
+    const cls = ns ? 'hand hand-ns' : 'hand';
+    return `<div class="${cls}">${handLbl(dir)}${suits}<div class="hcp-badge">${hcp} H</div></div>`;
+  };
+
+  return `<div class="diag-grid">
+    <div class="diag-row diag-row-ns">${handBox('N', true)}</div>
+    <div class="diag-row">
+      <div class="diag-col">${handBox('W', false)}</div>
+      <div class="compass-cell"><div class="compass">
+        <span class="cpt cpt-n">N</span><span class="cpt cpt-s">S</span>
+        <span class="cpt cpt-o">O</span><span class="cpt cpt-e">E</span>
+      </div></div>
+      <div class="diag-col">${handBox('E', false)}</div>
+    </div>
+    <div class="diag-row diag-row-ns">${handBox('S', true)}</div>
+  </div>`;
+}
+</script>
+
+<!-- Modal token -->
+
+<div id="token-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;" onclick="if(event.target===this)closeTokenModal();">
+  <div style="background:var(--bg2);border-radius:18px;width:100%;max-width:480px;padding:1.25rem;margin-bottom:15vh;">
+    <div style="width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto .75rem;"></div>
+    <p style="font-size:14px;font-weight:600;margin-bottom:.25rem;">Token GitHub</p>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:.75rem;">Permet 5000 req/heure au lieu de 60. Optionnel.</p>
+    <div style="position:relative;margin-bottom:.75rem;">
+      <input type="password" id="modal-token-input" placeholder="ghp_xxxxxxxxxxxx"
+        style="width:100%;padding:10px 40px 10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg3);color:var(--text);font-size:14px;font-family:monospace;outline:none;"/>
+      <button onclick="const i=document.getElementById('modal-token-input');if(i.type==='password'){i.type='text';if(i.dataset.full)i.value=i.dataset.full;}else{i.type='password';if(i.dataset.full)i.value='•'.repeat(12)+i.dataset.full.slice(-4);}" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;color:var(--text2);cursor:pointer;font-size:16px;padding:0;">👁</button>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="saveModalToken()" style="flex:1;padding:11px;border-radius:12px;background:var(--text);color:var(--bg);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:none;">Enregistrer</button>
+      <button onclick="closeTokenModal()" style="flex:.6;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit;">Fermer</button>
+      <button onclick="clearModalToken()" style="flex:.6;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:transparent;color:#f87171;font-size:13px;cursor:pointer;font-family:inherit;">Effacer</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
