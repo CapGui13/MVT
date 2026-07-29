@@ -1023,6 +1023,20 @@ function markGhTokenGood(){
 }
 function clearGhTokenBadFlag(){ try{ localStorage.removeItem('gh_token_bad'); }catch(e){} }
 
+// Un token peut être parfaitement valide sur GitHub mais appartenir à un autre compte.
+// On vérifie l'identité réelle du token (GET /user) et on la compare au propriétaire
+// attendu du dépôt (déduit du hostname *.github.io). Un token d'un autre compte est
+// traité exactement comme un token invalide : accès bloqué, diode rouge.
+async function verifyGhOwner(token, expectedOwner){
+  if(!token) return false;
+  try{
+    const res=await fetch('https://api.github.com/user',{headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json'}});
+    if(!res.ok) return false;
+    const data=await res.json();
+    return !!(data && data.login && String(data.login).toLowerCase()===String(expectedOwner).toLowerCase());
+  }catch(e){ return false; }
+}
+
 function lancerTournoiSansDonnes(){
   const b=document.getElementById('btn-charger-donnes');
   if(b) b.style.display=hasValidGhToken()?'':'none';
@@ -1620,6 +1634,10 @@ async function _initTournoiInner(){
 
     // 1 seule requête : dernier commit du repo
     const _tok=localStorage.getItem('gh_token')||'';
+    if(_tok){
+      const ownerOk=await verifyGhOwner(_tok, user);
+      if(!ownerOk){ markGhTokenBad(); return; }
+    }
     const commitRes=await fetch(`https://api.github.com/repos/${user}/${repo}/commits?per_page=1`,
       {headers:{Accept:'application/vnd.github.v3+json',...(_tok?{Authorization:`token ${_tok}`}:{})}});
     if(!commitRes.ok){
