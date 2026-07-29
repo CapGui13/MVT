@@ -1006,22 +1006,42 @@ function parseDonnes(){
 }
 // Token GitHub : présence contrôlant l'affichage de tout ce qui touche aux donnes (json/pbn)
 function hasGhToken(){ return !!(localStorage.getItem('gh_token')||'').trim(); }
-// Un token peut être présent mais invalide (rejeté par l'API GitHub, ex: 401).
-// Dans ce cas, l'affichage doit être identique à "pas de token", avec juste une diode rouge.
+// Un token peut être présent mais invalide (rejeté par l'API GitHub, ex: 401) ou
+// appartenir à un autre compte. Dans ce cas, l'affichage doit être identique à
+// "pas de token", avec juste une diode rouge.
 function isGhTokenBad(){ return localStorage.getItem('gh_token_bad')==='1'; }
-function hasValidGhToken(){ return hasGhToken() && !isGhTokenBad(); }
+// Un token n'est considéré "vérifié" que s'il a déjà été confirmé (identité + accès)
+// par un appel API réussi. Tant qu'il n'a pas été vérifié (ex: on vient de le saisir),
+// on ne montre RIEN qui dépende du token — pas de flash de contenu le temps de vérifier.
+function isGhTokenVerified(){
+  const t=(localStorage.getItem('gh_token')||'').trim();
+  if(!t) return false;
+  return localStorage.getItem('gh_token_verified_value')===t;
+}
+function hasValidGhToken(){ return hasGhToken() && !isGhTokenBad() && isGhTokenVerified(); }
 function markGhTokenBad(){
-  try{ localStorage.setItem('gh_token_bad','1'); }catch(e){}
+  try{
+    localStorage.setItem('gh_token_bad','1');
+    localStorage.removeItem('gh_token_verified_value');
+  }catch(e){}
   updateTokenIndicator();
   applyTournoiTokenUI();
 }
 function markGhTokenGood(){
-  if(!isGhTokenBad()) return;
-  try{ localStorage.removeItem('gh_token_bad'); }catch(e){}
+  const t=(localStorage.getItem('gh_token')||'').trim();
+  const wasBad=isGhTokenBad();
+  const wasVerified=isGhTokenVerified();
+  try{
+    localStorage.removeItem('gh_token_bad');
+    if(t) localStorage.setItem('gh_token_verified_value', t);
+  }catch(e){}
+  if(!wasBad && wasVerified) return; // rien n'a changé, pas besoin de re-render
   updateTokenIndicator();
   applyTournoiTokenUI();
 }
-function clearGhTokenBadFlag(){ try{ localStorage.removeItem('gh_token_bad'); }catch(e){} }
+function clearGhTokenBadFlag(){
+  try{ localStorage.removeItem('gh_token_bad'); localStorage.removeItem('gh_token_verified_value'); }catch(e){}
+}
 
 // Un token peut être parfaitement valide sur GitHub mais appartenir à un autre compte.
 // On vérifie l'identité réelle du token (GET /user) et on la compare au propriétaire
@@ -1594,8 +1614,8 @@ function modeLabel(m){
 
 let _initRunning=false;
 async function initTournoi(){
-  applyTournoiTokenUI();
-  if(!hasValidGhToken()) return; // pas de token (ou token invalide) : on n'affiche/charge rien côté donnes
+  applyTournoiTokenUI(); // masque tout ce qui dépend du token tant qu'il n'est pas vérifié
+  if(!hasGhToken()||isGhTokenBad()) return; // pas de token, ou déjà su mauvais : rien à vérifier
   if(_initRunning) return;
   _initRunning=true;
   try{ await _initTournoiInner(); }finally{ _initRunning=false; }
@@ -2679,7 +2699,7 @@ function closeTokenModal(){
   if(btn && document.getElementById('s-config').classList.contains('active')){
     btn.style.display=hasValidGhToken()?'':'none';
   }
-  if(hasValidGhToken() && document.getElementById('s-tournoi').classList.contains('active') && !document.getElementById('tournoi-list').children.length){
+  if(hasGhToken() && !isGhTokenBad() && document.getElementById('s-tournoi').classList.contains('active') && !document.getElementById('tournoi-list').children.length){
     document.getElementById('tournoi-sub').textContent='Chargement...';
     initTournoi();
   }
@@ -2690,7 +2710,7 @@ function updateTokenIndicator(){
   const hasToken = hasGhToken();
   let dot='';
   if(hasToken){
-    const color = isGhTokenBad() ? '#f87171' : '#4ade80';
+    const color = isGhTokenBad() ? '#f87171' : (isGhTokenVerified() ? '#4ade80' : '#999');
     dot = `<span style="width:7px;height:7px;border-radius:50%;background:${color};display:inline-block;margin-left:2px;"></span>`;
   }
   btn.innerHTML = '⚙ Paramètres'+dot;
