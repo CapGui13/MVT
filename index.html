@@ -299,7 +299,7 @@ tbody td input.note-input:focus{background:var(--bg4);box-shadow:inset 0 0 0 1.5
     <button onclick="openTokenModal();" id="btn-params" style="font-size:12px;padding:5px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text2);font-family:inherit;display:inline-flex;align-items:center;gap:5px;cursor:pointer;">⚙ Paramètres</button>
     <button onclick="goTo('s-delete');setTimeout(loadDeleteList,50);" id="btn-gerer-fichiers" style="font-size:12px;padding:5px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:#f87171;font-family:inherit;cursor:pointer;">🗑 Gérer les fichiers</button>
   </div>
-  <div style="margin-top:.6rem;">
+  <div style="margin-top:.6rem;" id="btn-maj-github">
     <button onclick="uploadSelf();" style="width:100%;padding:11px 14px;border-radius:10px;border:none;background:#1d4ed8;color:#fff;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;">
       <svg height="18" width="18" viewBox="0 0 16 16" fill="white"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
       Mise à jour GitHub
@@ -1006,23 +1006,41 @@ function parseDonnes(){
 }
 // Token GitHub : présence contrôlant l'affichage de tout ce qui touche aux donnes (json/pbn)
 function hasGhToken(){ return !!(localStorage.getItem('gh_token')||'').trim(); }
+// Un token peut être présent mais invalide (rejeté par l'API GitHub, ex: 401).
+// Dans ce cas, l'affichage doit être identique à "pas de token", avec juste une diode rouge.
+function isGhTokenBad(){ return localStorage.getItem('gh_token_bad')==='1'; }
+function hasValidGhToken(){ return hasGhToken() && !isGhTokenBad(); }
+function markGhTokenBad(){
+  try{ localStorage.setItem('gh_token_bad','1'); }catch(e){}
+  updateTokenIndicator();
+  applyTournoiTokenUI();
+}
+function markGhTokenGood(){
+  if(!isGhTokenBad()) return;
+  try{ localStorage.removeItem('gh_token_bad'); }catch(e){}
+  updateTokenIndicator();
+  applyTournoiTokenUI();
+}
+function clearGhTokenBadFlag(){ try{ localStorage.removeItem('gh_token_bad'); }catch(e){} }
 
 function lancerTournoiSansDonnes(){
   const b=document.getElementById('btn-charger-donnes');
-  if(b) b.style.display=hasGhToken()?'':'none';
+  if(b) b.style.display=hasValidGhToken()?'':'none';
   updateListeDonnesBtn();
   goTo('s-paires');
 }
 
 function applyTournoiTokenUI(){
-  const has=hasGhToken();
+  const has=hasValidGhToken();
   const withTok=document.getElementById('tournoi-token-section');
   const noTok=document.getElementById('tournoi-no-token-section');
   const gerer=document.getElementById('btn-gerer-fichiers');
+  const maj=document.getElementById('btn-maj-github');
   const resume=document.getElementById('s-tournoi-resume');
   if(withTok) withTok.style.display=has?'':'none';
   if(noTok) noTok.style.display=has?'none':'';
   if(gerer) gerer.style.display=has?'':'none';
+  if(maj) maj.style.display=has?'':'none';
   if(!has && resume) resume.style.display='none';
 }
 
@@ -1099,7 +1117,7 @@ function goBack(){
     window._nbPairesConfig=null;
     window._nbPairesHowell=null;
     const btn=document.getElementById('btn-charger-donnes');
-    if(btn) btn.style.display=hasGhToken()?'':'none';
+    if(btn) btn.style.display=hasValidGhToken()?'':'none';
     updateListeDonnesBtn();
     document.getElementById('tournoi-sub').textContent='Chargement...';
     document.getElementById('tournoi-list').innerHTML='';
@@ -1308,18 +1326,19 @@ function buildSim(T,N,R,mode,sens){
   let eoPos=T-1,eoTable=T;
   const tours=[];
   for(let t=0;t<R;t++){
-    let tableAffichee,blocIdx,estSaut=false,avantSaut=false;
+    let tableAffichee,blocIdx,estSaut=false,avantSaut=false,isMiroir=false;
     if(isGuerid){
       const tRef=sens==='NS'?T:eoTable;
       const slot=tToSlot(tRef,N);
       blocIdx=blocs[slot];
-      tableAffichee=(tRef===1||tRef===N)?'1 & '+N:String(tRef);
+      tableAffichee=String(tRef);
+      isMiroir=(tRef===1||tRef===N);
     }else{
       avantSaut=withSaut&&t===sautApres;
       if(sens==='NS'){blocIdx=blocs[T-1];tableAffichee=String(T);}
       else{blocIdx=blocs[eoPos];tableAffichee=String(eoPos+1);estSaut=withSaut&&t===sautApres+1;}
     }
-    tours.push({blocIdx,tableAffichee,estSaut,avantSaut});
+    tours.push({blocIdx,tableAffichee,estSaut,avantSaut,isMiroir});
     const nd=Array(N);
     if(isGuerid){for(let i=0;i<N;i++)nd[i]=blocs[(i+1)%N];}
     else{nd[N-1]=blocs[0];for(let i=0;i<N-1;i++)nd[i]=blocs[i+1];}
@@ -1398,7 +1417,7 @@ function render(){
     document.getElementById('d-sens').textContent=s==='NS'?'N / S':'E / O';
     document.getElementById('d-mode').textContent=m==='guerid'?'Guéridon':m==='saut'?'Mitchell à saut':'Mitchell';
     document.getElementById('d-saut').style.visibility=(s==='EO'&&etat.estSaut)?'visible':'hidden';
-    document.getElementById('d-guerid').style.visibility=(m==='guerid'&&etat.tableAffichee.includes('&'))?'visible':'hidden';
+    document.getElementById('d-guerid').style.visibility=(m==='guerid'&&etat.isMiroir)?'visible':'hidden';
     // Relais : ligne relais = ligne complète (une paire par table, fixe). L'autre ligne est
     // déficitaire d'une paire ; côté EO, la paire déficitaire tourne normalement et passe une
     // fois par la table N (test direct). Côté NS, on compare la table fixe à la rotation
@@ -1437,7 +1456,7 @@ function render(){
       const otherPlaceholder=(!mineVal && otherVal)?`<span class="chip-score-item chip-score-mine" style="visibility:hidden"><span class="chip-score-label">${mineLabel}</span>—</span>`:'';
       const otherHtml=otherVal?`<span class="chip-score-item chip-score-other"><span class="chip-score-label">${otherLabel}</span>${otherVal}</span>`:'';
       const noteHtml=info.note?`<div class="chip-note">${info.note}</div>`:'';
-      const clicAttr=hasGhToken()?`onclick="openVisu(${d})" style="cursor:pointer;"`:'';
+      const clicAttr=hasValidGhToken()?`onclick="openVisu(${d})" style="cursor:pointer;"`:'';
       div.innerHTML=`
         <div class="chip-num" ${clicAttr}>${d}</div>
         <div class="chip-info">
@@ -1450,7 +1469,7 @@ function render(){
       c.className='chip';
       c.style.opacity=chipsOpacity;
       c.textContent=d;
-      if(hasGhToken()){
+      if(hasValidGhToken()){
         c.style.cursor='pointer';
         c.onclick=()=>openVisu(d);
       }
@@ -1494,7 +1513,7 @@ function reset(){
   window._nbPairesHowell=null;
   try{ localStorage.removeItem('bridge_tournoi_list'); }catch(e){}
   const btn=document.getElementById('btn-charger-donnes');
-  if(btn) btn.style.display=hasGhToken()?'':'none';
+  if(btn) btn.style.display=hasValidGhToken()?'':'none';
   document.getElementById('tournoi-sub').textContent='Chargement...';
   document.getElementById('tournoi-list').innerHTML='';
   const current=['s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu','s-gen','s-delete','s-gen2','s-visu','s-liste-donnes'].find(s=>document.getElementById(s).classList.contains('active'));
@@ -1562,7 +1581,7 @@ function modeLabel(m){
 let _initRunning=false;
 async function initTournoi(){
   applyTournoiTokenUI();
-  if(!hasGhToken()) return; // pas de token : on n'affiche/charge rien côté donnes
+  if(!hasValidGhToken()) return; // pas de token (ou token invalide) : on n'affiche/charge rien côté donnes
   if(_initRunning) return;
   _initRunning=true;
   try{ await _initTournoiInner(); }finally{ _initRunning=false; }
@@ -1604,9 +1623,11 @@ async function _initTournoiInner(){
     const commitRes=await fetch(`https://api.github.com/repos/${user}/${repo}/commits?per_page=1`,
       {headers:{Accept:'application/vnd.github.v3+json',...(_tok?{Authorization:`token ${_tok}`}:{})}});
     if(!commitRes.ok){
+      if(commitRes.status===401){ markGhTokenBad(); return; }
       if(commitRes.status===403) throw new Error('Limite API atteinte');
       throw new Error();
     }
+    markGhTokenGood();
     const commitData=await commitRes.json();
     const currentSha=commitData[0]?.sha||null;
 
@@ -1624,6 +1645,7 @@ checkForUpdate(currentSha);
     const res=await fetch(`https://api.github.com/repos/${user}/${repo}/contents/`,
       {headers:{Accept:'application/vnd.github.v3+json',...(_tok?{Authorization:`token ${_tok}`}:{})}});
     if(!res.ok){
+      if(res.status===401){ markGhTokenBad(); return; }
       if(res.status===403) throw new Error('Limite API atteinte');
       throw new Error();
     }
@@ -1810,7 +1832,7 @@ function showUpdateBanner(){
 
 setSens('NS');
 initTournoi();
-(function(){ const b=document.getElementById('btn-charger-donnes'); if(b) b.style.display=hasGhToken()?'':'none'; })();
+(function(){ const b=document.getElementById('btn-charger-donnes'); if(b) b.style.display=hasValidGhToken()?'':'none'; })();
 
 // touchend sur les boutons nav pour éviter le délai 300ms iOS
 function addNavListener(id, delta){
@@ -1858,11 +1880,17 @@ addNavListener('btn-next', 1);
     const v=document.getElementById('gen-token-input').value.trim();
     if(!v||/^•+/.test(v)) return;
     saveToken(v);
+    clearGhTokenBadFlag();
+    updateTokenIndicator();
+    applyTournoiTokenUI();
     genRenderTokenStatus();
   };
 
   window.genClearToken = function(){
     localStorage.removeItem('gh_token');
+    clearGhTokenBadFlag();
+    updateTokenIndicator();
+    applyTournoiTokenUI();
     document.getElementById('gen-token-input').value='';
     document.getElementById('gen-token-status').innerHTML='';
   };
@@ -1954,11 +1982,13 @@ addNavListener('btn-next', 1);
     try{
       const check=await fetch(apiUrl,{headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json'}});
       if(check.ok){const data=await check.json();sha=data.sha;}
+      else if(check.status===401){ markGhTokenBad(); return {ok:false,msg:'Token GitHub invalide'}; }
     }catch(e){}
     const body={message:`Ajout donnes ${fname}`,content:btoa(unescape(encodeURIComponent(jsonStr))),branch:GH_BRANCH_GEN};
     if(sha) body.sha=sha;
     const res=await fetch(apiUrl,{method:'PUT',headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(res.ok) return {ok:true};
+    if(res.ok){ markGhTokenGood(); return {ok:true}; }
+    if(res.status===401){ markGhTokenBad(); return {ok:false,msg:'Token GitHub invalide'}; }
     const err=await res.json().catch(()=>({}));
     return {ok:false,msg:err.message||`Erreur ${res.status}`};
   }
@@ -2629,9 +2659,9 @@ function closeTokenModal(){
   applyTournoiTokenUI();
   const btn=document.getElementById('btn-charger-donnes');
   if(btn && document.getElementById('s-config').classList.contains('active')){
-    btn.style.display=hasGhToken()?'':'none';
+    btn.style.display=hasValidGhToken()?'':'none';
   }
-  if(hasGhToken() && document.getElementById('s-tournoi').classList.contains('active') && !document.getElementById('tournoi-list').children.length){
+  if(hasValidGhToken() && document.getElementById('s-tournoi').classList.contains('active') && !document.getElementById('tournoi-list').children.length){
     document.getElementById('tournoi-sub').textContent='Chargement...';
     initTournoi();
   }
@@ -2639,19 +2669,25 @@ function closeTokenModal(){
 function updateTokenIndicator(){
   const btn = document.getElementById('btn-params');
   if(!btn) return;
-  const hasToken = !!localStorage.getItem('gh_token');
-  btn.innerHTML = hasToken ? '⚙ Paramètres <span style="width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block;margin-left:2px;"></span>' : '⚙ Paramètres';
+  const hasToken = hasGhToken();
+  let dot='';
+  if(hasToken){
+    const color = isGhTokenBad() ? '#f87171' : '#4ade80';
+    dot = `<span style="width:7px;height:7px;border-radius:50%;background:${color};display:inline-block;margin-left:2px;"></span>`;
+  }
+  btn.innerHTML = '⚙ Paramètres'+dot;
 }
 updateTokenIndicator();
 function saveModalToken(){
   const inp = document.getElementById('modal-token-input');
   const v = inp.value.trim();
   // If value looks like our mask (starts with bullets), don't overwrite
-  if(v && !/^•/.test(v)) localStorage.setItem('gh_token', v);
+  if(v && !/^•/.test(v)){ localStorage.setItem('gh_token', v); clearGhTokenBadFlag(); }
   closeTokenModal();
 }
 function clearModalToken(){
   localStorage.removeItem('gh_token');
+  clearGhTokenBadFlag();
   document.getElementById('modal-token-input').value='';
   closeTokenModal();
 }
@@ -2692,11 +2728,13 @@ async function uploadSelf(){
     let sha;
     const check = await fetch(apiUrl, {headers});
     if(check.ok){ const d = await check.json(); sha = d.sha; }
+    else if(check.status===401){ markGhTokenBad(); alert('Token GitHub invalide.'); return; }
     // Upload
     const body = {message:'Mise à jour index.html', content:encoded, branch:'main'};
     if(sha) body.sha = sha;
     const put = await fetch(apiUrl, {method:'PUT', headers:{...headers,'Content-Type':'application/json'}, body:JSON.stringify(body)});
-    if(put.ok) alert('✓ index.html mis à jour sur '+user+'/'+repo);
+    if(put.ok){ markGhTokenGood(); alert('✓ index.html mis à jour sur '+user+'/'+repo); }
+    else if(put.status===401){ markGhTokenBad(); alert('Token GitHub invalide.'); }
     else { const e=await put.json(); alert('Erreur : '+(e.message||put.status)); }
   }catch(e){
     alert('Erreur : '+e.message);
