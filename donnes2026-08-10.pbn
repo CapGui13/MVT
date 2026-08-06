@@ -2,7 +2,7 @@
 % EXPORT
 %Content-type: text/x-pbn; charset=ISO-8859-1
 %Creator: BridgeComposer Version 5.105
-%Created: Thu Aug  6 18:26:12 2026 +0200
+%Created: Fri Aug  7 01:40:58 2026 +0200
 %BCOptions Center STBorder STShade ShowHCP
 %BidAndCardSpacing Asis
 %BoardsPerPage 1
@@ -33,7 +33,7 @@
 %PipFont "Symbol","Symbol",2,0xAA,0xA9,0xA8,0xA7
 %ScoreTableColors #e6e6e6,#000000
 %SectionSpacing 0,0,0
-%SelectedBoard 0
+%SelectedBoard 31
 %ShowBoardLabels 2
 %ShowCardTable 2
 %TSTCustomSortOrder Default
@@ -124,6 +124,10 @@ W  C 4
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{
+
+petit vers DK
+}
 [BCFlags "200001f"]
 [DoubleDummyTricks "44654456549878998789"]
 [OptimumScore "EW 400"]
@@ -165,6 +169,9 @@ W  C 9
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{DP en Nord\n
+entamer C
+}
 [BCFlags "200001f"]
 [DoubleDummyTricks "33635336358a6a7aa7a7"]
 [OptimumScore "EW 630"]
@@ -206,6 +213,8 @@ W  C  7
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{redemander ý 2SA en Nord, ne pas entamer P en E, passer le X
+}
 [BCFlags "200001f"]
 [DoubleDummyTricks "78979789794546445464"]
 [OptimumScore "NS 140"]
@@ -247,6 +256,8 @@ W  C 4
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{DC 2nde
+}
 [BCFlags "200001f"]
 [DoubleDummyTricks "c9accc9acc0420004200"]
 [OptimumScore "NS 1440"]
@@ -285,9 +296,10 @@ W  C  0
 [Vulnerable "EW"]
 [Deal "E:QJ95.63.A93.Q972 AK3.8542.KQ7.T43 8642.J97.842.KJ6 T7.AKQT.JT65.A85"]
 [Scoring ""]
-[Declarer ""]
-[Contract ""]
+[Declarer "N"]
+[Contract "4H"]
 [Result ""]
+{entame T}
 [BCFlags "200001f"]
 [DoubleDummyTricks "97aa897aa83623536235"]
 [OptimumScore "NS 420"]
@@ -452,6 +464,8 @@ W  C  8
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{6K est trouvable
+}
 [BCFlags "200001f"]
 [DoubleDummyTricks "2151321513bc8c9bc8c9"]
 [OptimumScore "EW 1430"]
@@ -575,6 +589,7 @@ W  C 7
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{jouer ý K}
 [BCFlags "200001f"]
 [DoubleDummyTricks "65447454377799677996"]
 [OptimumScore "EW 140"]
@@ -616,6 +631,7 @@ W  C 6
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{O doit X 4P}
 [BCFlags "200001f"]
 [DoubleDummyTricks "78763787635456a5456a"]
 [OptimumScore "EW 130"]
@@ -657,6 +673,8 @@ W  C 10
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{DK seconde en Sud, RT placý
+}
 [BCFlags "200001f"]
 [DoubleDummyTricks "3761237612866ba866ba"]
 [OptimumScore "EW 400"]
@@ -698,6 +716,7 @@ W  C 10
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{DP 2nde}
 [BCFlags "200001f"]
 [DoubleDummyTricks "3c3c23c3c22071a2081a"]
 [OptimumScore "EW -800"]
@@ -780,6 +799,7 @@ W  C  4
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{Mauvais 6SA, que par O}
 [BCFlags "200001f"]
 [DoubleDummyTricks "1111311113ccccabcbca"]
 [OptimumScore "EW 990"]
@@ -821,6 +841,7 @@ W  C 10
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{6K ý la con}
 [BCFlags "200001f"]
 [DoubleDummyTricks "8a8c68a8c65241752417"]
 [OptimumScore "NS 920"]
@@ -862,6 +883,7 @@ W  C  7
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{petit vers 9P, petit vers VT, C 33}
 [BCFlags "200001f"]
 [DoubleDummyTricks "bab9abab9a2323223232"]
 [OptimumScore "NS 660"]
@@ -985,6 +1007,7 @@ W  C  3
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{4P chute tjrs}
 [BCFlags "200001f"]
 [DoubleDummyTricks "98669996694467444674"]
 [OptimumScore "NS 600"]
@@ -1026,6 +1049,7 @@ W  C 4
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{3T contrat normal}
 [BCFlags "200001f"]
 [DoubleDummyTricks "58a5458a544437944379"]
 [OptimumScore "EW -300"]
@@ -1067,6 +1091,8 @@ W  C  9
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{entamer P
+}
 [BCFlags "200001f"]
 [DoubleDummyTricks "86b9b86b9b1714117141"]
 [OptimumScore "NS 450"]
@@ -1108,6 +1134,7 @@ W  C  1
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{entame P}
 [BCFlags "200001f"]
 [DoubleDummyTricks "76748767485559544594"]
 [OptimumScore "EW 110"]
@@ -1149,6 +1176,8 @@ W  C 4
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{pas nýcessaire d'ouvrir ouvrir 3T
+}
 [BCFlags "200001f"]
 [DoubleDummyTricks "46943469437548a7548a"]
 [OptimumScore "NS -100"]
@@ -1190,6 +1219,7 @@ W  C 10
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{annoncer les P en O}
 [BCFlags "200001f"]
 [DoubleDummyTricks "69684696847474874748"]
 [OptimumScore "NS 140"]
@@ -1272,6 +1302,7 @@ W  C  2
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{jouer 4C}
 [BCFlags "200001f"]
 [DoubleDummyTricks "272162721696bb796bb7"]
 [OptimumScore "EW 450"]
@@ -1313,6 +1344,8 @@ W  C  7
 [Declarer ""]
 [Contract ""]
 [Result ""]
+{DP 3e en O
+}
 [BCFlags "200001f"]
 [DoubleDummyTricks "57437574376589576896"]
 [OptimumScore "EW 110"]
