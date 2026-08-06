@@ -7,27 +7,27 @@
   "2": {
     "ns": "",
     "eo": "3SA",
-    "note": ""
+    "note": "petit vers DK"
   },
   "3": {
     "ns": "",
     "eo": "4SA",
-    "note": ""
+    "note": "DP en Nord / entamer C"
   },
   "4": {
     "ns": "3C ; 3T",
     "eo": "",
-    "note": ""
+    "note": "redemander à 2SA en Nord, ne pas entamer P en E, passer le X"
   },
   "5": {
     "ns": "6SA ; 6T",
     "eo": "",
-    "note": ""
+    "note": "DC 2nde"
   },
   "6": {
     "ns": "4C",
     "eo": "",
-    "note": ""
+    "note": "entame T"
   },
   "7": {
     "ns": "",
@@ -47,7 +47,7 @@
   "10": {
     "ns": "",
     "eo": "6P ; 6K ; 5SA",
-    "note": ""
+    "note": "6K est trouvable"
   },
   "11": {
     "ns": "5P",
@@ -62,22 +62,22 @@
   "13": {
     "ns": "",
     "eo": "3C ; 3K",
-    "note": ""
+    "note": "jouer à K"
   },
   "14": {
     "ns": "",
     "eo": "4T",
-    "note": ""
+    "note": "O doit X 4P"
   },
   "15": {
     "ns": "",
     "eo": "5K",
-    "note": ""
+    "note": "DK seconde en Sud, RT placé"
   },
   "16": {
     "ns": "6P ; 6K",
     "eo": "7Tx-3",
-    "note": ""
+    "note": "DP 2nde"
   },
   "17": {
     "ns": "5P",
@@ -87,17 +87,17 @@
   "18": {
     "ns": "",
     "eo": "6SA",
-    "note": ""
+    "note": "Mauvais 6SA, que par O"
   },
   "19": {
     "ns": "6K",
     "eo": "",
-    "note": ""
+    "note": "6K à la con"
   },
   "20": {
     "ns": "5SA",
     "eo": "",
-    "note": ""
+    "note": "petit vers 9P, petit vers VT, C 33"
   },
   "21": {
     "ns": "4C ; 3SA",
@@ -112,32 +112,32 @@
   "23": {
     "ns": "3SA ; 3P",
     "eo": "",
-    "note": ""
+    "note": "4P chute tjrs"
   },
   "24": {
     "ns": "4C",
     "eo": "5Tx-2",
-    "note": ""
+    "note": "3T contrat normal"
   },
   "25": {
     "ns": "5C",
     "eo": "",
-    "note": ""
+    "note": "entamer P"
   },
   "26": {
     "ns": "",
     "eo": "3K",
-    "note": ""
+    "note": "entame P"
   },
   "27": {
     "ns": "4Cx-1",
     "eo": "4T",
-    "note": ""
+    "note": "pas nécessaire d'ouvrir ouvrir 3T"
   },
   "28": {
     "ns": "3P",
     "eo": "",
-    "note": ""
+    "note": "annoncer les P en O"
   },
   "29": {
     "ns": "5C",
@@ -147,12 +147,12 @@
   "30": {
     "ns": "",
     "eo": "5C ; 5K ; 3SA",
-    "note": ""
+    "note": "jouer 4C"
   },
   "31": {
     "ns": "",
     "eo": "2C ; 3K",
-    "note": ""
+    "note": "DP 3e en O"
   },
   "32": {
     "ns": "5Kx-2",
