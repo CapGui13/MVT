@@ -18,6 +18,9 @@
   .screen{display:none}
   .screen.active{display:block;animation:screenIn 0.2s ease forwards}
   #s-jeu.active{animation:screenInFixed 0.2s ease forwards}
+  /* #s-gen2 contient des éléments position:fixed (barre "Publier", toast) : l'animation
+     screenIn standard laisse un transform résiduel qui casse leur ancrage au viewport. */
+  #s-gen2.active{animation:screenInFixed 0.2s ease forwards}
   @keyframes screenIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
   @keyframes screenInFixed{from{opacity:0}to{opacity:1}}
   #s-jeu{display:none;flex-direction:column}
@@ -160,16 +163,36 @@
 
 /* ── PAR des donnes (s-gen2) ── */
 
-#s-gen2{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',Helvetica,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overscroll-behavior:none;}
-
-#s-gen2 .par-app{display:flex;flex-direction:column;min-height:100dvh;max-width:520px;margin:0 auto;}
+/* Note technique : la div de classe "wrap" ouverte en tout début de body (max-width:480px)
+   n'est jamais refermée dans ce fichier (bug préexistant) : tous les écrans y restent donc
+   imbriqués. On sort explicitement #s-gen2 de cette contrainte pour l'élargir sur desktop,
+   sans toucher au comportement des autres écrans. */
+#s-gen2{
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',Helvetica,sans-serif;
+  background:var(--bg);color:var(--text);min-height:100dvh;overscroll-behavior:none;
+  width:100vw;margin-left:calc(50% - 50vw);box-sizing:border-box;
+  padding:0 1rem;
+}
+@media (min-width:701px){
+  #s-gen2{padding-left:calc((100vw - min(1150px,55vw)) / 2);padding-right:calc((100vw - min(1150px,55vw)) / 2);}
+  #s-gen2 table{table-layout:fixed;font-size:13px;}
+  #s-gen2 thead th{padding:9px 12px;}
+  #s-gen2 th:nth-child(1),#s-gen2 td:nth-child(1){width:44px;}
+  #s-gen2 th:nth-child(2),#s-gen2 td:nth-child(2){width:12%;}
+  #s-gen2 th:nth-child(3),#s-gen2 td:nth-child(3){width:12%;}
+  #s-gen2 th:nth-child(4),#s-gen2 td:nth-child(4){width:auto;}
+  #s-gen2 th:nth-child(5),#s-gen2 td:nth-child(5){width:auto;}
+  #s-gen2 tbody td.num-cell{padding:10px 12px;font-size:12px;}
+  #s-gen2 .ce{padding:10px 12px;font-size:13px;}
+  #s-gen2 tbody td input.note-input{padding:10px 12px;font-size:13px;}
+}
 #s-gen2 .par-topbar{padding:1rem 1.25rem .75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;background:var(--bg);}
 #s-gen2 .par-topbar-title{font-size:15px;font-weight:600;letter-spacing:-.01em}
 #s-gen2 .par-content{flex:1;overflow-y:auto;padding:1rem 1.25rem 6rem;}
 
 #s-gen2 .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r2);border:1px solid var(--border);}
 #s-gen2 table{width:100%;border-collapse:collapse;font-size:13px;}
-#s-gen2 thead th{background:var(--bg3);padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);}
+#s-gen2 thead th{background:var(--bg3);padding:8px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);}
 thead th:first-child{border-radius:var(--r2) 0 0 0}
 thead th:last-child{border-radius:0 var(--r2) 0 0}
 #s-gen2 tbody tr{border-top:1px solid var(--border);}
@@ -183,13 +206,17 @@ thead th:last-child{border-radius:0 var(--r2) 0 0}
 #s-gen2 tr.note-display-row{display:none;}
 @media (max-width:600px){
   #s-gen2.compact-notes tr.note-display-row.has-note{display:table-row;}
-  #s-gen2.compact-notes #th-note,
+  #s-gen2.compact-notes #th-note-ns,
+  #s-gen2.compact-notes #th-note-eo,
   #s-gen2.compact-notes tbody td.note-input-cell{display:none;}
 }
 #s-gen2 tr.note-display-row td{padding:2px 10px 9px;font-size:12px;color:var(--text2);font-style:italic;line-height:1.3;word-break:break-word;}
+#s-gen2 .note-tag{font-weight:700;font-size:10px;padding:1px 4px;border-radius:4px;margin-right:2px;}
+#s-gen2 .note-tag-ns{color:var(--ns);background:rgba(74,222,128,.12);}
+#s-gen2 .note-tag-eo{color:var(--eo);background:rgba(248,113,113,.12);}
 
 /* contenteditable cells */
-.ce{width:100%;padding:9px 10px;background:transparent;border:none;outline:none;min-width:60px;font-size:13px;font-family:inherit;font-weight:400;color:var(--text3);cursor:text;white-space:nowrap;overflow:hidden;}
+.ce{width:100%;padding:9px 10px;background:transparent;border:none;outline:none;min-width:60px;font-size:13px;font-family:inherit;font-weight:400;color:var(--text3);cursor:text;white-space:nowrap;overflow:hidden;text-align:center;}
 .ce:focus{background:var(--bg4);box-shadow:inset 0 0 0 1.5px var(--accent);color:var(--text);}
 .ce.col-ns{color:var(--text3);}
 .ce.col-eo{color:var(--text3);}
@@ -200,11 +227,13 @@ thead th:last-child{border-radius:0 var(--r2) 0 0}
 .ce span.w-manche{font-weight:700;font-size:14px;}
 .ce span.w-chelem{font-weight:900;font-size:14.5px;letter-spacing:.02em;}
 /* note input stays as input */
-tbody td input.note-input{width:100%;padding:9px 10px;background:transparent;border:none;color:var(--text);font-size:13px;font-family:inherit;font-weight:400;outline:none;}
+tbody td input.note-input{width:100%;padding:9px 10px;background:transparent;border:none;color:var(--text);font-size:13px;font-family:inherit;font-weight:400;outline:none;text-align:center;}
+tbody td input.note-input.col-ns{color:var(--ns);}
+tbody td input.note-input.col-eo{color:var(--eo);}
 tbody td input.note-input:focus{background:var(--bg4);box-shadow:inset 0 0 0 1.5px var(--accent);}
 
-#s-gen2 .par-bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--bg);border-top:1px solid var(--border);padding:.75rem 1.25rem calc(.75rem + env(safe-area-inset-bottom));display:flex;gap:8px;z-index:20;}
-#s-gen2 .par-btn{flex:1;padding:12px;border-radius:var(--r2);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:none;transition:all .15s;}
+#s-gen2 .par-bottom-bar{margin-top:.75rem;display:flex;justify-content:center;gap:8px;}
+#s-gen2 .par-btn{padding:12px 32px;border-radius:var(--r2);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:none;transition:all .15s;min-width:220px;}
 #s-gen2 .par-btn:active{transform:scale(.97);}
 #s-gen2 .par-btn-primary{background:var(--accent);color:#111;}
 
@@ -579,7 +608,7 @@ tbody td input.note-input:focus{background:var(--bg4);box-shadow:inset 0 0 0 1.5
 </div>
 
 <!-- ÉCRAN GEN2 : PAR DES DONNES -->
-<div class="screen" id="s-gen2" style="padding-bottom:80px;">
+<div class="screen" id="s-gen2">
   <button class="back-btn" onclick="goBack()">← Retour</button>
 
   <div style="padding:.75rem 0 .5rem;display:flex;align-items:center;justify-content:space-between;">
@@ -597,7 +626,7 @@ tbody td input.note-input:focus{background:var(--bg4);box-shadow:inset 0 0 0 1.5
       </div>
     </div>
   </div>
-  <div style="flex:1;padding:.5rem 0 5rem;">
+  <div style="flex:1;padding:.5rem 0 2rem;">
     <div class="stats-row">
       <div class="stat" onclick="document.getElementById('pbn-input').click()" style="cursor:pointer;border-color:#166534;background:#052e16;">
         <div class="stat-num" style="font-size:16px;color:#4ade80;">↑</div>
@@ -619,15 +648,16 @@ tbody td input.note-input:focus{background:var(--bg4);box-shadow:inset 0 0 0 1.5
           <th style="width:36px;text-align:center">#</th>
           <th>NS</th>
           <th>EO</th>
-          <th id="th-note">Note</th>
+          <th id="th-note-ns">Note NS</th>
+          <th id="th-note-eo">Note EO</th>
         </tr></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
+    <div class="par-bottom-bar">
+      <button class="par-btn par-btn-primary" style="background:#166534;color:#4ade80;white-space:nowrap;" onclick="publish()">↑ Publier</button>
+    </div>
   </div>
-<div class="par-bottom-bar">
-  <button class="par-btn par-btn-primary" style="background:#166534;color:#4ade80;flex:.5;white-space:nowrap;" onclick="publish()">↑ Publier</button>
-</div>
 
     
 <div class="par-toast" id="par-toast"></div>
@@ -1080,6 +1110,17 @@ function applyTournoiTokenUI(){
 
 let navHistory=[];
 
+// Combine noteNs/noteEo (nouveau format) avec repli sur l'ancien champ unique "note".
+// nsColor/eoColor : couleurs CSS à appliquer à chaque partie (pour matcher la couleur du camp).
+function formatChipNote(info, nsColor, eoColor){
+  const ns=info.noteNs||info.note||'';
+  const eo=info.noteEo||'';
+  const parts=[];
+  if(ns) parts.push('<span style="color:'+nsColor+'">NS : '+escapeHtml(ns)+'</span>');
+  if(eo) parts.push('<span style="color:'+eoColor+'">EO : '+escapeHtml(eo)+'</span>');
+  return parts.join(' &nbsp;·&nbsp; ');
+}
+
 function updateListeDonnesBtn(){
   const b=document.getElementById('btn-liste-donnes');
   if(b) b.style.display=Object.keys(donnesData).length?'':'none';
@@ -1099,7 +1140,7 @@ function renderListeDonnes(){
       const nsHtml=info.ns?`<span class="chip-score-item chip-score-ns"><span class="chip-score-label">NS</span>${info.ns}</span>`:'';
       const eoPlaceholder=(!info.ns && info.eo)?`<span class="chip-score-item chip-score-ns" style="visibility:hidden"><span class="chip-score-label">NS</span>—</span>`:'';
       const eoHtml=info.eo?`<span class="chip-score-item chip-score-eo"><span class="chip-score-label">EO</span>${info.eo}</span>`:'';
-      const noteHtml=info.note?`<div class="chip-note">${info.note}</div>`:'';
+      const noteHtml=formatChipNote(info,'#4ade80','#f87171')?`<div class="chip-note">${formatChipNote(info,'#4ade80','#f87171')}</div>`:'';
       div.innerHTML=`
         <div class="chip-num" onclick="openVisu(${d})" style="cursor:pointer;">${d}</div>
         <div class="chip-info">
@@ -1489,7 +1530,9 @@ function render(){
       // Placeholder invisible si l'autre ligne a un PAR mais pas la nôtre, pour garder l'alignement à droite
       const otherPlaceholder=(!mineVal && otherVal)?`<span class="chip-score-item chip-score-mine" style="visibility:hidden"><span class="chip-score-label">${mineLabel}</span>—</span>`:'';
       const otherHtml=otherVal?`<span class="chip-score-item chip-score-other"><span class="chip-score-label">${otherLabel}</span>${otherVal}</span>`:'';
-      const noteHtml=info.note?`<div class="chip-note">${info.note}</div>`:'';
+      const nsColor=isEoMine?'#f87171':'#4ade80';
+      const eoColor=isEoMine?'#4ade80':'#f87171';
+      const noteHtml=formatChipNote(info,nsColor,eoColor)?`<div class="chip-note">${formatChipNote(info,nsColor,eoColor)}</div>`:'';
       const clicAttr=hasValidGhToken()?`onclick="openVisu(${d})" style="cursor:pointer;"`:'';
       div.innerHTML=`
         <div class="chip-num" ${clicAttr}>${d}</div>
@@ -2114,11 +2157,11 @@ function onDayInput() {
 }
 
 // ─── Data ─────────────────────────────────────────────────────
-function getDonne(n){ return donnes[n] || {ns:'',eo:'',note:''}; }
+function getDonne(n){ return donnes[n] || {ns:'',eo:'',noteNs:'',noteEo:''}; }
 function setDonne(n, field, val){
-  if(!donnes[n]) donnes[n]={ns:'',eo:'',note:''};
+  if(!donnes[n]) donnes[n]={ns:'',eo:'',noteNs:'',noteEo:''};
   donnes[n][field]=val.trim();
-  if(!donnes[n].ns && !donnes[n].eo && !donnes[n].note) delete donnes[n];
+  if(!donnes[n].ns && !donnes[n].eo && !donnes[n].noteNs && !donnes[n].noteEo) delete donnes[n];
 }
 
 // ─── Contract rendering ───────────────────────────────────────
@@ -2198,14 +2241,21 @@ function onCEKeydown(el, e) {
 function escapeHtml(s){
   return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-function syncNoteRow(n, val){
+function renderNoteCombined(noteNs, noteEo){
+  const parts=[];
+  if(noteNs) parts.push('<span class="note-tag note-tag-ns">NS</span> '+escapeHtml(noteNs));
+  if(noteEo) parts.push('<span class="note-tag note-tag-eo">EO</span> '+escapeHtml(noteEo));
+  return parts.length ? '💬 ' + parts.join('&nbsp;&nbsp;·&nbsp;&nbsp;') : '';
+}
+function syncNoteRow(n){
+  const d = getDonne(n);
   const row = document.getElementById('noterow-'+n);
   const mainRow = document.getElementById('tr-'+n);
-  val = (val||'').trim();
-  if(mainRow) mainRow.classList.toggle('has-note', !!val);
+  const has = !!(d.noteNs || d.noteEo);
+  if(mainRow) mainRow.classList.toggle('has-note', has);
   if(!row) return;
-  row.classList.toggle('has-note', !!val);
-  row.querySelector('td:last-child').innerHTML = val ? '💬 ' + escapeHtml(val) : '';
+  row.classList.toggle('has-note', has);
+  row.querySelector('td:last-child').innerHTML = renderNoteCombined(d.noteNs, d.noteEo);
 }
 
 // ─── Table ────────────────────────────────────────────────────
@@ -2217,7 +2267,7 @@ function buildTable() {
     const tr = document.createElement('tr');
     tr.id = 'tr-' + i;
     if (i % 2 === 1 && i > 1) tr.classList.add('sep-thick');
-    if (d.note) tr.classList.add('has-note');
+    if (d.noteNs || d.noteEo) tr.classList.add('has-note');
 
     const nsHtml = d.ns ? renderContract(d.ns, 'ns') : '';
     const eoHtml = d.eo ? renderContract(d.eo, 'eo') : '';
@@ -2230,16 +2280,21 @@ function buildTable() {
       <td><div class="ce col-eo" contenteditable="true" spellcheck="false"
         data-n="${i}" data-field="eo" data-col="eo"
         >${eoHtml}</div></td>
-      <td class="note-input-cell"><input type="text" class="note-input" id="note-${i}" value="${d.note}" placeholder=""
+      <td class="note-input-cell"><input type="text" class="note-input col-ns" id="note-ns-${i}" value="${d.noteNs}" placeholder=""
         autocomplete="off" autocorrect="off"
-        oninput="setDonne(${i},'note',this.value);syncNoteRow(${i},this.value)"
+        oninput="setDonne(${i},'noteNs',this.value);syncNoteRow(${i})"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+        onfocus="this.select()"/></td>
+      <td class="note-input-cell"><input type="text" class="note-input col-eo" id="note-eo-${i}" value="${d.noteEo}" placeholder=""
+        autocomplete="off" autocorrect="off"
+        oninput="setDonne(${i},'noteEo',this.value);syncNoteRow(${i})"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         onfocus="this.select()"/></td>`;
     tbody.appendChild(tr);
     const noteTr = document.createElement('tr');
-    noteTr.className = 'note-display-row' + (d.note ? ' has-note' : '');
+    noteTr.className = 'note-display-row' + ((d.noteNs || d.noteEo) ? ' has-note' : '');
     noteTr.id = 'noterow-' + i;
-    noteTr.innerHTML = `<td></td><td colspan="3">💬 ${escapeHtml(d.note)}</td>`;
+    noteTr.innerHTML = `<td></td><td colspan="4">${renderNoteCombined(d.noteNs, d.noteEo)}</td>`;
     tbody.appendChild(noteTr);
   }
   // Attach events to CE divs
@@ -2267,13 +2322,13 @@ function importPBN(input) {
     let filled = 0;
     for (const [num, d] of Object.entries(imported.data)) {
       const n = parseInt(num);
-      if (!donnes[n]) donnes[n] = {ns:'', eo:'', note:''};
+      if (!donnes[n]) donnes[n] = {ns:'', eo:'', noteNs:'', noteEo:''};
       let changed = false;
       if (n > 36) continue;
       if (d.ns && !donnes[n].ns) { donnes[n].ns = d.ns; changed = true; }
       if (d.eo && !donnes[n].eo) { donnes[n].eo = d.eo; changed = true; }
       if (changed) filled++;
-      if (!donnes[n].ns && !donnes[n].eo && !donnes[n].note) delete donnes[n];
+      if (!donnes[n].ns && !donnes[n].eo && !donnes[n].noteNs && !donnes[n].noteEo) delete donnes[n];
     }
     const dateMatch = file.name.match(/(\d{4})(\d{2})(\d{2})/);
     if (dateMatch) setGameDate(`${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`);
@@ -2473,7 +2528,7 @@ function parsePBN(text) {
       if(nsParts.length>0) ns=computeParDisplay(nsTricks,hands,'NS');
       else if(ewParts.length>0) eo=computeParDisplay(ewTricks,hands,'EW');
     }
-    result[num]={ns,eo,note:''};
+    result[num]={ns,eo,noteNs:'',noteEo:''};
   }
   return {data:result,count:Object.keys(result).length};
 }
@@ -2664,8 +2719,8 @@ async function openGen2FromFile(id){
       const n=parseInt(k);
       if(!isNaN(n)&&n>=1&&n<=36){
         const entry=data[k];
-        if(entry&&(entry.ns||entry.eo||entry.note)){
-          donnes[n]={ns:entry.ns||'',eo:entry.eo||'',note:entry.note||''};
+        if(entry&&(entry.ns||entry.eo||entry.note||entry.noteNs||entry.noteEo)){
+          donnes[n]={ns:entry.ns||'',eo:entry.eo||'',noteNs:entry.noteNs||entry.note||'',noteEo:entry.noteEo||''};
         }
       }
     });
