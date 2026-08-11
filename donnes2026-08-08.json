@@ -1,38 +1,45 @@
 {
   "1": {
-    "ns": "a",
-    "eo": "a",
-    "note": ""
+    "ns": "6C",
+    "eo": "",
+    "noteNs": "",
+    "noteEo": ""
   },
   "2": {
     "ns": "4P ; 4C",
     "eo": "",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "3": {
     "ns": "2C ; 1SA",
     "eo": "",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "4": {
     "ns": "2P ; 3K",
     "eo": "",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "5": {
     "ns": "",
     "eo": "4K ; 2SA",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "6": {
     "ns": "",
     "eo": "6K ; 6T ; 5P",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "7": {
     "ns": "5T",
     "eo": "",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "date": "2026-08-08"
 }
