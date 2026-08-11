@@ -2,182 +2,218 @@
   "1": {
     "ns": "3P ; 3C",
     "eo": "",
-    "note": "s'arrêter à 3 par manque d'arrêt"
+    "noteNs": "s'arrêter à 3 par manque d'arrêt",
+    "noteEo": ""
   },
   "2": {
     "ns": "4K",
     "eo": "",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "3": {
     "ns": "3P ; 3C",
     "eo": "",
-    "note": "entame K"
+    "noteNs": "",
+    "noteEo": "entame K"
   },
   "4": {
     "ns": "",
     "eo": "4C",
-    "note": "impasses T & P"
+    "noteNs": "",
+    "noteEo": "impasses T & P"
   },
   "5": {
     "ns": "4P",
     "eo": "4SAx-2",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "6": {
     "ns": "3P ; 3K",
     "eo": "",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "7": {
     "ns": "6Px-4",
     "eo": "6K ; 6T ; 5C",
-    "note": "impasse T marche"
+    "noteNs": "",
+    "noteEo": "impasse T marche"
   },
   "8": {
     "ns": "4C",
     "eo": "4Px-2",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "9": {
     "ns": "2C",
     "eo": "",
-    "note": "petit vers DP"
+    "noteNs": "petit vers DP",
+    "noteEo": ""
   },
   "10": {
     "ns": "6Px-2",
     "eo": "5SA ; 5C",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "11": {
     "ns": "3P",
     "eo": "",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "12": {
     "ns": "",
     "eo": "3K",
-    "note": "aucune impasse ne marche"
+    "noteNs": "",
+    "noteEo": "aucune impasse ne marche"
   },
   "13": {
     "ns": "6SA",
     "eo": "",
-    "note": "DK en O"
+    "noteNs": "DK en O",
+    "noteEo": ""
   },
   "14": {
     "ns": "",
     "eo": "5SA ; 4C",
-    "note": "DK en S"
+    "noteNs": "",
+    "noteEo": "DK en S"
   },
   "15": {
     "ns": "4SA",
     "eo": "",
-    "note": "DK 2nde"
+    "noteNs": "DK 2nde",
+    "noteEo": ""
   },
   "16": {
     "ns": "4C",
     "eo": "",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "17": {
     "ns": "3SA ; 1P",
     "eo": "4Cx-1",
-    "note": "4P chute,"
+    "noteNs": "4P chute",
+    "noteEo": ""
   },
   "18": {
     "ns": "3SA ; 3C",
     "eo": "4Tx-2",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "19": {
     "ns": "2SA",
     "eo": "",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "20": {
     "ns": "",
     "eo": "4C",
-    "note": "jouer 3C et faire +1, impasse T, AT, T coupé ; après 2x atouts dont un cab"
+    "noteNs": "",
+    "noteEo": "jouer 3C et faire +1, impasse T, AT, T coupé ; après 2x atouts dont un cab"
   },
   "21": {
     "ns": "4C ; 5K",
     "eo": "5Px-3",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "22": {
     "ns": "6K ; 5C",
     "eo": "6Px-2",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "23": {
     "ns": "6P",
     "eo": "",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "24": {
     "ns": "",
     "eo": "4P",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "25": {
     "ns": "4SA",
     "eo": "",
-    "note": "petit vers XP"
+    "noteNs": "petit vers XP",
+    "noteEo": ""
   },
   "26": {
     "ns": "4P",
     "eo": "5Kx-2",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "27": {
     "ns": "",
     "eo": "5C",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "28": {
     "ns": "",
     "eo": "2P ; 3K",
-    "note": "X itv à 1SA"
+    "noteNs": "X itv à 1SA",
+    "noteEo": ""
   },
   "29": {
     "ns": "6C",
     "eo": "",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "30": {
     "ns": "2Px-1",
     "eo": "2C ; 2T",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "31": {
     "ns": "",
     "eo": "5SA ; 4C",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "32": {
     "ns": "3SA ; 3P ; 3C",
     "eo": "",
-    "note": "ouvrir les T pour faire chuter 4M"
+    "noteNs": "",
+    "noteEo": "ouvrir les T pour faire chuter 4M"
   },
   "33": {
     "ns": "",
     "eo": "4SA",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "34": {
     "ns": "",
     "eo": "6P ; 6C ; 6K",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "35": {
     "ns": "3Cx-1",
     "eo": "2SA ; 2P",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "36": {
     "ns": "4SA ; 5K",
     "eo": "",
-    "note": ""
+    "noteNs": "",
+    "noteEo": ""
   },
   "date": "2026-08-12"
 }
