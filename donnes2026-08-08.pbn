@@ -1,0 +1,429 @@
+% PBN 2.1
+% EXPORT
+%Content-type: text/x-pbn; charset=ISO-8859-1
+%Creator: BridgeComposer Version 5.105
+%Created: Sat Aug  8 16:34:42 2026 +0200
+%BCOptions Center STBorder STShade ShowHCP
+%BidAndCardSpacing Asis
+%BoardsPerPage 1
+%CardTableColors #008000,#ffffff,#aaaaaa
+%DDAFormat 0
+%DefaultPagination 1
+%Font:CardTable "Consolas",11,400,0
+%Font:Commentary "Times New Roman",10,400,0
+%Font:Diagram "Times New Roman",12,400,0
+%Font:Event "Consolas",12,400,0
+%Font:FixedPitch "Courier New",10,400,0
+%Font:HandRecord "Arial",11,400,0
+%GutterSize 500,500
+%HRTitleDate 0
+%HRTitleEvent "Table d'enchýres"
+%HRTitleSetID ""
+%HRTitleSetIDPrefix ""
+%HRTitleSite "capgui13.github.io/play"
+%HtmlClubs entity,"https://bridgecomposer.com/suitimg/c.gif"
+%HtmlDiamonds entity,"https://bridgecomposer.com/suitimg/d.gif"
+%HtmlHearts entity,"https://bridgecomposer.com/suitimg/h.gif"
+%HtmlNavBar 0.75,#cfe2f3
+%HtmlSpades entity,"https://bridgecomposer.com/suitimg/s.gif"
+%Margins 1000,1000,1000,1000
+%PaperSize 1,2159,2794,2
+%ParaIndent 0
+%PipColors #0000c0,#ff0000,#ff8000,#008012
+%PipFont "Symbol","Symbol",2,0xAA,0xA9,0xA8,0xA7
+%ScoreTableColors #e6e6e6,#000000
+%SectionSpacing 0,0,0
+%SelectedBoard 6
+%ShowBoardLabels 2
+%ShowCardTable 2
+%TSTCustomSortOrder Default
+%TSTReport List
+%TSTReportOrder ByNumber
+%TSTReportShade Yes
+%Translate "N-S" "N-S"
+%Translate "E-W" "E-O"
+%Translate "North-South" "Nord-Sud"
+%Translate "East-West" "Est-Ouest"
+%Translate "Lead" "Entame"
+%Translate "% Deals" "% Donneur"
+%Translate "% Vul" "% Vulnýrable"
+%Translate "North" "Nord"
+%Translate "East" "Est"
+%Translate "South" "Sud"
+%Translate "West" "Ouest"
+%Translate "None" "Personne"
+%Translate "Both" "Tous"
+%Translate "10" "X"
+%Translate "J" "V"
+%Translate "Q" "D"
+%Translate "K" "R"
+%Translate "A" "A"
+%Translate "N" "SA"
+%Translate "NT" "SA"
+%Translate "Pass" "Passe"
+%Translate "Dbl" "X"
+%Translate "Rdbl" "XX"
+%Translate "by" "par"
+%Translate "Trick" "Levýe"
+%Translate "2nd" "2e"
+%Translate "3rd" "3e"
+%Translate "4th" "4e"
+[Event "Table d'enchýres"]
+[Site "capgui13.github.io/play"]
+[Date ""]
+[Board "1"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "N"]
+[Vulnerable "None"]
+[Deal "N:9.AQ52.A87.J9865 Q62.J.Q92.KQT743 AKJT8.K9764.T54. 7543.T83.KJ63.A2"]
+[Scoring ""]
+[Declarer "E"]
+[Contract "4C"]
+[Result ""]
+{Aprýs que Est ait dit 2T, c'est maintenant sa couleur\n
+Donc 3T en Nord est un cue-bid
+
+Je ne comprends pas le X de Ouest sur 3C
+
+
+
+
+
+
+1T 2T 2P P\n
+2SA P 3C P\n
+4C P
+}
+[BCFlags "200001f"]
+[DoubleDummyTricks "9bc869bc862204622046"]
+[OptimumScore "NS 980"]
+[ParContract "NS 6H="]
+[Auction "N"]
+1C 2C 2S Pass
+3C Pass 3H X
+Pass 3S Pass 4C
+Pass Pass Pass
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N NT  9
+N  S 11
+N  H 12
+N  D  8
+N  C  6
+S NT  9
+S  S 11
+S  H 12
+S  D  8
+S  C  6
+E NT  2
+E  S  2
+E  H  0
+E  D  4
+E  C  6
+W NT  2
+W  S  2
+W  H  0
+W  D  4
+W  C  6
+
+[Event "Table d'enchýres"]
+[Site "capgui13.github.io/play"]
+[Date ""]
+[Board "2"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "S"]
+[Vulnerable "EW"]
+[Deal "N:T8764.KQT3.85.QT Q5.64.Q9642.9763 KJ.A982.KJ73.A54 A932.J75.AT.KJ82"]
+[Scoring ""]
+[Declarer "S"]
+[Contract "5NT"]
+[Result ""]
+{Pourquoi Nord ne fait plus un Texas ? En tout cas, Sud a toujours l'air de
+croire que c'est un Texas}
+[BCFlags "200001f"]
+[DoubleDummyTricks "99a779aa774336643356"]
+[OptimumScore "NS 420"]
+[ParContract "NS 4H=; S 4S="]
+[Auction "S"]
+1NT X 2S Pass
+3C Pass 3NT Pass
+5C Pass 5S Pass
+5NT Pass Pass Pass
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N NT  9
+N  S  9
+N  H 10
+N  D  7
+N  C  7
+E NT  4
+E  S  3
+E  H  3
+E  D  6
+E  C  6
+S NT  9
+S  S 10
+S  H 10
+S  D  7
+S  C  7
+W NT  4
+W  S  3
+W  H  3
+W  D  5
+W  C  6
+
+[Event "Table d'enchýres"]
+[Site "capgui13.github.io/play"]
+[Date ""]
+[Board "3"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "W"]
+[Vulnerable "All"]
+[Deal "N:KT743.4.KQ632.K9 J982.QJT6.T9.J85 6.AK9732.J7.QT43 AQ5.85.A854.A762"]
+[Scoring ""]
+[Declarer "S"]
+[Contract "5H"]
+[Result ""]
+{C'est absurde la maniýre dont chacun rýpýte sa couleur en boucle}
+[BCFlags "200001f"]
+[DoubleDummyTricks "77887778886554565545"]
+[OptimumScore "NS 110"]
+[ParContract "NS 1H+1"]
+[Auction "W"]
+1D 1S Pass 2H
+Pass 2S Pass 4H
+Pass 4S Pass 5H
+Pass Pass Pass
+[OptimumResultTable "Declarer;Denomination\2R;Result\1R"]
+N NT 7
+N  S 7
+N  H 8
+N  D 8
+N  C 7
+E NT 6
+E  S 5
+E  H 5
+E  D 4
+E  C 5
+S NT 7
+S  S 7
+S  H 8
+S  D 8
+S  C 8
+W NT 6
+W  S 5
+W  H 5
+W  D 4
+W  C 5
+
+[Event "Table d'enchýres"]
+[Site "capgui13.github.io/play"]
+[Date ""]
+[Board "4"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "E"]
+[Vulnerable "EW"]
+[Deal "N:AK6.KJ.QJT9.T953 93.AT865.A87.Q62 J842.9743.K632.A QT75.Q2.54.KJ874"]
+[Scoring ""]
+[Declarer "E"]
+[Contract "2H"]
+[Result ""]
+{Pourquoi Ouest rýveille par X ?\n
+Et pourquoi Est rýpond par 2T ???}
+[BCFlags "200001f"]
+[DoubleDummyTricks "78795787966553765537"]
+[OptimumScore "NS 110"]
+[ParContract "NS 1D+2; NS 1S+1"]
+[Auction "E"]
+Pass Pass Pass 1D
+1H 1S Pass 1NT
+Pass Pass X Pass
+2D Pass 2H Pass
+Pass Pass
+[OptimumResultTable "Declarer;Denomination\2R;Result\1R"]
+N NT 7
+N  S 8
+N  H 7
+N  D 9
+N  C 5
+E NT 6
+E  S 5
+E  H 5
+E  D 3
+E  C 7
+S NT 7
+S  S 8
+S  H 7
+S  D 9
+S  C 6
+W NT 6
+W  S 5
+W  H 5
+W  D 3
+W  C 7
+
+[Event "Table d'enchýres"]
+[Site "capgui13.github.io/play"]
+[Date ""]
+[Board "5"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "S"]
+[Vulnerable "EW"]
+[Deal "N:A75.875.T853.QJ8 KJ.JT3.KJ9764.32 942.K642.A2.AT65 QT863.AQ9.Q.K974"]
+[Scoring ""]
+[Declarer "E"]
+[Contract "4D"]
+[Result ""]
+{Sur 2P, Est qui a juste 11HL, devrait redemander ý 3K, enchýre non forcing
+(aprýs un 2/1, les seules enchýres non forcing du rýpondant sont la 2SA ou le
+retour dans sa couleur, pour montrer une main limite de 11HL, trop forte pour
+dire 1SA initialement, mais pas assez pour imposer la manche ; Si l'ouvreur a
+14H+ il met la manche, sinon il passe
+
+Chacun rýpýte sa couleur, un peu comme dans la donne 10\n
+Il faudrait trouver un mýcanisme pour qu'ils comprennent quand s'arrýter}
+[BCFlags "200001f"]
+[DoubleDummyTricks "5453555535888a7888a7"]
+[OptimumScore "EW 130"]
+[ParContract "EW 1D+3"]
+[Auction "S"]
+Pass 1S Pass 2D
+Pass 2S Pass 3D
+Pass 3S Pass 4D
+Pass Pass Pass
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N NT  5
+N  S  4
+N  H  5
+N  D  3
+N  C  5
+S NT  5
+S  S  5
+S  H  5
+S  D  3
+S  C  5
+E NT  8
+E  S  8
+E  H  8
+E  D 10
+E  C  7
+W NT  8
+W  S  8
+W  H  8
+W  D 10
+W  C  7
+
+[Event "Table d'enchýres"]
+[Site "capgui13.github.io/play"]
+[Date ""]
+[Board "6"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "N"]
+[Vulnerable "None"]
+[Deal "N:QT73.J98.9864.97 K54.K.AKQJ53.AK4 J.AQT654.72.J653 A9862.732.T.QT82"]
+[Scoring ""]
+[Declarer "E"]
+[Contract "6D"]
+[Result ""]
+{C'est un peu absurde que Est rýpýte ses K ý l'infini et aille au chelem alors
+que son p lui a juste promis un As non ?}
+[BCFlags "200001f"]
+[DoubleDummyTricks "12711127117b6cc7b6cc"]
+[OptimumScore "EW 920"]
+[ParContract "EW 6C=; EW 6D="]
+[Auction "N"]
+Pass 2D Pass 2S
+Pass 3D Pass 3NT
+Pass 4D Pass 4S
+Pass 5D Pass 5S
+Pass 6D Pass Pass
+Pass
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N NT  1
+N  S  2
+N  H  7
+N  D  1
+N  C  1
+E NT  7
+E  S 11
+E  H  6
+E  D 12
+E  C 12
+S NT  1
+S  S  2
+S  H  7
+S  D  1
+S  C  1
+W NT  7
+W  S 11
+W  H  6
+W  D 12
+W  C 12
+
+[Event "Table d'enchýres"]
+[Site "capgui13.github.io/play"]
+[Date ""]
+[Board "7"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "S"]
+[Vulnerable "All"]
+[Deal "N:T65.K6.K7.AK9864 QJ982.953.AT8.Q3 K.AJ87.Q963.T752 A743.QT42.J542.J"]
+[Scoring ""]
+[Declarer "N"]
+[Contract "4C"]
+[Result ""]
+{Sud doit X Spoutnik pour montrer ses 4 cartes ý C\n
+Et pourquoi passe-t-il sur 4T ?\n
+Mais aussi, pourquoi Nord dit-il 4T ? J'ai l'impression que les bots en
+sýquence ý 4 ont tendance ý enchýrir trýs haut dýs que l'espace est consommý
+par les adversaires, ce qui leur fait faire des enchýres bizarres (ce n'est pas
+forcýment le cas spýcifiquement dans cette donne, c'est une observation
+gýnýrale)}
+[BCFlags "200001f"]
+[DoubleDummyTricks "7477b7477b5866258662"]
+[OptimumScore "NS 600"]
+[ParContract "NS 5C="]
+[Auction "S"]
+Pass Pass 1C 1S
+2S 3S 4C Pass
+Pass Pass
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N NT  7
+N  S  4
+N  H  7
+N  D  7
+N  C 11
+E NT  5
+E  S  8
+E  H  6
+E  D  6
+E  C  2
+S NT  7
+S  S  4
+S  H  7
+S  D  7
+S  C 11
+W NT  5
+W  S  8
+W  H  6
+W  D  6
+W  C  2
