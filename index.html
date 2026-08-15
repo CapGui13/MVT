@@ -110,6 +110,8 @@
   .chip-score-other{background:rgba(248,113,113,.15);color:#f87171}
   .chip-score-label{font-size:9px;font-weight:800;opacity:.7;letter-spacing:.05em}
   .chip-note{font-size:11px;color:var(--text2);font-style:italic}
+  .chip-score-value,.chip-note-value{cursor:text}
+  .chip-score-value:hover,.chip-note-value:hover{text-decoration:underline dotted;text-underline-offset:2px}
   .chip-note-hidden{visibility:hidden;height:0;margin:0;padding:0}
 
   /* Nav */
@@ -1121,6 +1123,18 @@ function formatChipNote(info, nsColor, eoColor){
   return parts.join(' &nbsp;·&nbsp; ');
 }
 
+// Variante éditable (double-clic) de formatChipNote, utilisée uniquement dans "Liste des donnes".
+// Le champ historique "note" (sans distinction NS/EO) est traité comme "noteNs" à l'édition.
+function formatChipNoteEditable(d, info, nsColor, eoColor){
+  const ns=info.noteNs||info.note||'';
+  const eo=info.noteEo||'';
+  if(!ns && !eo) return '';
+  const parts=[];
+  if(ns) parts.push('<span style="color:'+nsColor+'">NS : <span class="chip-note-value" data-donne="'+d+'" data-field="noteNs" ondblclick="startEditListeChip(this)">'+escapeHtml(ns)+'</span></span>');
+  if(eo) parts.push('<span style="color:'+eoColor+'">EO : <span class="chip-note-value" data-donne="'+d+'" data-field="noteEo" ondblclick="startEditListeChip(this)">'+escapeHtml(eo)+'</span></span>');
+  return '<div class="chip-note">'+parts.join(' &nbsp;·&nbsp; ')+'</div>';
+}
+
 function updateListeDonnesBtn(){
   const b=document.getElementById('btn-liste-donnes');
   if(b) b.style.display=Object.keys(donnesData).length?'':'none';
@@ -1137,10 +1151,10 @@ function renderListeDonnes(){
     if(info){
       const div=document.createElement('div');
       div.className='chip-rich';
-      const nsHtml=info.ns?`<span class="chip-score-item chip-score-ns"><span class="chip-score-label">NS</span>${info.ns}</span>`:'';
+      const nsHtml=info.ns?`<span class="chip-score-item chip-score-ns"><span class="chip-score-label">NS</span><span class="chip-score-value" data-donne="${d}" data-field="ns" ondblclick="startEditListeChip(this)">${info.ns}</span></span>`:'';
       const eoPlaceholder=(!info.ns && info.eo)?`<span class="chip-score-item chip-score-ns" style="visibility:hidden"><span class="chip-score-label">NS</span>—</span>`:'';
-      const eoHtml=info.eo?`<span class="chip-score-item chip-score-eo"><span class="chip-score-label">EO</span>${info.eo}</span>`:'';
-      const noteHtml=formatChipNote(info,'#4ade80','#f87171')?`<div class="chip-note">${formatChipNote(info,'#4ade80','#f87171')}</div>`:'';
+      const eoHtml=info.eo?`<span class="chip-score-item chip-score-eo"><span class="chip-score-label">EO</span><span class="chip-score-value" data-donne="${d}" data-field="eo" ondblclick="startEditListeChip(this)">${info.eo}</span></span>`:'';
+      const noteHtml=formatChipNoteEditable(d,info,'#4ade80','#f87171');
       div.innerHTML=`
         <div class="chip-num" onclick="openVisu(${d})" style="cursor:pointer;">${d}</div>
         <div class="chip-info">
@@ -1157,6 +1171,79 @@ function renderListeDonnes(){
       container.appendChild(c);
     }
   });
+}
+
+// ─── Édition inline (double-clic, desktop) dans "Liste des donnes" ──
+function startEditListeChip(el){
+  if(el.classList.contains('editing')) return;
+  const num=parseInt(el.dataset.donne);
+  const field=el.dataset.field;
+  const orig=el.textContent.trim();
+  el.dataset.orig=orig;
+  el.classList.add('editing');
+  el.setAttribute('contenteditable','true');
+  el.spellcheck=false;
+  el.style.outline='1px solid var(--accent, #4ade80)';
+  el.style.borderRadius='4px';
+  el.style.padding='0 3px';
+
+  el.focus();
+  const range=document.createRange();
+  range.selectNodeContents(el);
+  const sel=window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+
+  const cleanup=()=>{
+    el.removeAttribute('contenteditable');
+    el.classList.remove('editing');
+    el.style.outline='';
+    el.style.padding='';
+    el.removeEventListener('blur', onBlur);
+    el.removeEventListener('keydown', onKeydown);
+  };
+  const onBlur=()=>{
+    cleanup();
+    const val=el.textContent.trim();
+    if(val!==orig) saveListeDonneChip(num, field, val, el);
+    else el.textContent=orig;
+  };
+  const onKeydown=(e)=>{
+    if(e.key==='Enter'){ e.preventDefault(); el.blur(); }
+    else if(e.key==='Escape'){ e.preventDefault(); el.textContent=orig; cleanup(); }
+  };
+  el.addEventListener('blur', onBlur);
+  el.addEventListener('keydown', onKeydown);
+}
+
+async function saveListeDonneChip(num, field, val, el){
+  if(!hasValidGhToken()){ alert('Token GitHub manquant ou invalide — impossible d\'enregistrer.'); el.textContent=el.dataset.orig||''; return; }
+  const fname=window._donnesFichier;
+  if(!fname){ alert('Fichier introuvable pour cette séance.'); el.textContent=el.dataset.orig||''; return; }
+
+  if(!donnesData[num]) donnesData[num]={ns:'',eo:'',noteNs:'',noteEo:''};
+  donnesData[num][field]=val;
+  if(field==='noteNs' && donnesData[num].note) delete donnesData[num].note; // migre l'ancien champ unique vers noteNs
+
+  el.style.opacity='0.5';
+  // Reconstruit le JSON dans le même format que publish() (clé "date" + une entrée par donne)
+  const sorted={};
+  if(donnesData.date) sorted.date=donnesData.date;
+  Object.keys(donnesData).map(Number).filter(n=>!isNaN(n)).sort((a,b)=>a-b).forEach(n=>{
+    const dd=donnesData[n];
+    if(dd && (dd.ns||dd.eo||dd.noteNs||dd.noteEo||dd.note)) sorted[n]=dd;
+  });
+
+  const result=await ghUpload(fname, JSON.stringify(sorted,null,2));
+  el.style.opacity='';
+  if(!result.ok){
+    if(result.msg && /401|bad credentials/i.test(result.msg)) markGhTokenBad();
+    alert('Erreur lors de l\'enregistrement : '+result.msg);
+    el.textContent=el.dataset.orig||'';
+    return;
+  }
+  try{ localStorage.removeItem('bridge_tournoi_list'); }catch(e){}
+  renderListeDonnes();
 }
 
 function showScreen(to, from){
@@ -2273,7 +2360,7 @@ function buildTable() {
     const eoHtml = d.eo ? renderContract(d.eo, 'eo') : '';
 
     tr.innerHTML = `
-      <td class="num-cell">${i}</td>
+      <td class="num-cell" style="cursor:pointer;" onclick="openVisu(${i})">${i}</td>
       <td><div class="ce col-ns" contenteditable="true" spellcheck="false"
         data-n="${i}" data-field="ns" data-col="ns"
         >${nsHtml}</div></td>
@@ -2317,6 +2404,7 @@ function importPBN(input) {
   reader.onload = function(e) {
     const text = e.target.result;
     pbnFile = text;
+    window._donnesFichier = null; // priorité au PBN local fraîchement importé
     const imported = parsePBN(text);
     if (imported.count === 0) { toast('Aucun par trouvé dans ce fichier'); return; }
     let filled = 0;
@@ -2327,6 +2415,8 @@ function importPBN(input) {
       if (n > 36) continue;
       if (d.ns && !donnes[n].ns) { donnes[n].ns = d.ns; changed = true; }
       if (d.eo && !donnes[n].eo) { donnes[n].eo = d.eo; changed = true; }
+      if (d.noteNs && !donnes[n].noteNs) { donnes[n].noteNs = d.noteNs; changed = true; }
+      if (d.noteEo && !donnes[n].noteEo) { donnes[n].noteEo = d.noteEo; changed = true; }
       if (changed) filled++;
       if (!donnes[n].ns && !donnes[n].eo && !donnes[n].noteNs && !donnes[n].noteEo) delete donnes[n];
     }
@@ -2489,6 +2579,113 @@ function parseDeal(dealStr) {
   return hands;
 }
 
+// ─── Détection automatique de singletons/doublons notables et d'honneurs manquants localisables ──
+const HAND_FEAT_SUIT_FR = {S:'P', H:'C', D:'K', C:'T'};
+const HAND_FEAT_DIR_FR = {N:'N', E:'E', S:'S', W:'O'};
+const HAND_FEAT_RANK_ORDER = {A:0, R:1, D:2};
+
+// "sec" (1), "2nd" (2), "3e" (3), "4e" (4), etc.
+function handFeatLenWord(n) {
+  if(n===1) return 'sec';
+  if(n===2) return '2nd';
+  return n+'e';
+}
+
+// Renvoie, pour chaque camp ayant un contrat par :
+//  1) les honneurs courts (As/Roi secs, Dame sèche/2nde) détectés CHEZ L'ADVERSAIRE
+//  2) si le déclarant possède AD/ADV dans une couleur sans le Roi : la position du Roi adverse
+//  3) si le déclarant possède RV/RVX dans une couleur sans l'As ni la Dame : la position de l'As et de la Dame adverses
+function detectHandFeatures(hands) {
+  const SUIT_KEYS = ['S','H','D','C'];
+
+  // Honneurs courts "de base", indépendants du contrat, classés par main détentrice
+  const baseByDir = {N:[], E:[], S:[], W:[]};
+  ['N','E','S','W'].forEach(dir => {
+    const hand = hands[dir];
+    if(!hand) return;
+    const dirFr = HAND_FEAT_DIR_FR[dir];
+    SUIT_KEYS.forEach(suit => {
+      const cards = hand[suit] || '';
+      const suitFr = HAND_FEAT_SUIT_FR[suit];
+      if(cards.length === 1) {
+        const c = cards[0];
+        if(c === 'A') baseByDir[dir].push({rank:'A', text:`A${suitFr} sec en ${dirFr}`});
+        else if(c === 'K') baseByDir[dir].push({rank:'R', text:`R${suitFr} sec en ${dirFr}`});
+        else if(c === 'Q') baseByDir[dir].push({rank:'D', text:`D${suitFr} sec en ${dirFr}`});
+      } else if(cards.length === 2 && cards.includes('Q') && !cards.includes('A') && !cards.includes('K')) {
+        baseByDir[dir].push({rank:'D', text:`D${suitFr} 2nd en ${dirFr}`});
+      }
+    });
+  });
+
+  // Construit le commentaire d'un camp déclarant (declDirs) vis-à-vis de son adversaire (oppDirs)
+  function buildSideNote(declDirs, oppDirs) {
+    const seen = new Set();
+
+    // 1) Honneurs courts chez l'adversaire, triés As > Roi > Dame
+    const shortEntries = [];
+    oppDirs.forEach(dir => baseByDir[dir].forEach(e => shortEntries.push(e)));
+    shortEntries.sort((a,b) => HAND_FEAT_RANK_ORDER[a.rank]-HAND_FEAT_RANK_ORDER[b.rank]);
+    const shortTexts = [];
+    shortEntries.forEach(e => { if(!seen.has(e.text)){ seen.add(e.text); shortTexts.push(e.text); } });
+
+    const missingKing = [];   // Cas 1 : AD/ADV sans le Roi
+    const missingAQ = [];     // Cas 2 : RV/RVX sans As ni Dame
+
+    SUIT_KEYS.forEach(suit => {
+      const suitFr = HAND_FEAT_SUIT_FR[suit];
+      const declCards = declDirs.map(d => (hands[d] && hands[d][suit]) || '').join('');
+      const hasA = declCards.includes('A'), hasK = declCards.includes('K');
+      const hasQ = declCards.includes('Q'), hasJ = declCards.includes('J');
+
+      // Cas 1 : déclarant a AD ou ADV, sans le Roi → localiser le Roi chez l'adversaire (seulement si sec ou 2nd)
+      if(hasA && hasQ && !hasK) {
+        for(const dir of oppDirs) {
+          const cards = (hands[dir] && hands[dir][suit]) || '';
+          if(cards.includes('K')) {
+            if(cards.length <= 2) {
+              const text = `R${suitFr} ${handFeatLenWord(cards.length)} en ${HAND_FEAT_DIR_FR[dir]}`;
+              if(!seen.has(text)) { seen.add(text); missingKing.push(text); }
+            }
+            break;
+          }
+        }
+      }
+
+      // Cas 2 : déclarant a RV ou RVX, sans As ni Dame → localiser As et Dame chez l'adversaire
+      if(hasK && hasJ && !hasA && !hasQ) {
+        let aDir=null, aCards='', dDir=null, dCards='';
+        for(const dir of oppDirs) {
+          const cards = (hands[dir] && hands[dir][suit]) || '';
+          if(cards.includes('A')) { aDir=dir; aCards=cards; }
+          if(cards.includes('Q')) { dDir=dir; dCards=cards; }
+        }
+        if(aDir && dDir) {
+          if(aDir === dDir) {
+            // Honneurs collés dans la même main → initiale de couleur en minuscule, sans indication de longueur
+            const text = `AD${suitFr.toLowerCase()} en ${HAND_FEAT_DIR_FR[aDir]}`;
+            if(!seen.has(text)) { seen.add(text); missingAQ.push(text); }
+          } else {
+            const aText = `A${suitFr} ${handFeatLenWord(aCards.length)} en ${HAND_FEAT_DIR_FR[aDir]}`;
+            const dText = `D${suitFr} ${handFeatLenWord(dCards.length)} en ${HAND_FEAT_DIR_FR[dDir]}`;
+            const parts = [];
+            if(!seen.has(aText)) { seen.add(aText); parts.push(aText); }
+            if(!seen.has(dText)) { seen.add(dText); parts.push(dText); }
+            if(parts.length) missingAQ.push(parts.join(', '));
+          }
+        }
+      }
+    });
+
+    return [...shortTexts, ...missingKing, ...missingAQ].join(' ; ');
+  }
+
+  return {
+    noteNs: buildSideNote(['N','S'], ['E','W']),
+    noteEo: buildSideNote(['E','W'], ['N','S'])
+  };
+}
+
 function parsePBN(text) {
   const result={};
   const boardRegex=/\[Board\s+"(\d+)"\]([\s\S]*?)(?=\[Board\s+"|$)/g;
@@ -2529,6 +2726,11 @@ function parsePBN(text) {
       else if(ewParts.length>0) eo=computeParDisplay(ewTricks,hands,'EW');
     }
     result[num]={ns,eo,noteNs:'',noteEo:''};
+    if(ns || eo){
+      const features=detectHandFeatures(hands);
+      if(ns && features.noteNs) result[num].noteNs=features.noteNs;
+      if(eo && features.noteEo) result[num].noteEo=features.noteEo;
+    }
   }
   return {data:result,count:Object.keys(result).length};
 }
@@ -2691,6 +2893,7 @@ async function delGroup(id){
 function openGen2Fresh(){
   donnes={};
   pbnFile=null;
+  window._donnesFichier=null;
   gameDate='';
   document.getElementById('day-of-week').textContent='—';
   document.getElementById('day-input').value='';
@@ -2715,6 +2918,8 @@ async function openGen2FromFile(id){
     // Réinitialiser les donnes
     donnes={};
     pbnFile=null;
+    // Le PBN correspondant partage le même nom de base que le JSON (donnesYYYY-MM-DD.pbn)
+    window._donnesFichier=g.fname;
     Object.keys(data).forEach(k=>{
       const n=parseInt(k);
       if(!isNaN(n)&&n>=1&&n<=36){
@@ -2848,29 +3053,38 @@ let _visuCache = {};
 
 async function openVisu(boardNum) {
   const fname = window._donnesFichier;
-  if(!fname){ alert('Fichier PBN introuvable.'); return; }
-  const pbnFname = fname.replace('.json', '.pbn');
-  const hostname = window.location.hostname;
-  const onGithub = hostname.endsWith('github.io');
-  const user = onGithub ? hostname.split('.')[0] : 'capgui13';
-  const repo = onGithub ? (window.location.pathname.split('/').filter(Boolean)[0]||'MVT') : 'MVT';
-  const base = onGithub ? `https://${hostname}/${repo}/` : `https://capgui13.github.io/MVT/`;
-  const pbnUrl = base + pbnFname;
 
   goTo('s-visu');
 
   try {
-    // Use cache if available
-    if(_visuCache[pbnUrl]) {
-      visuDeals = _visuCache[pbnUrl];
+    if(fname) {
+      // Cas normal : donnes chargées depuis un tournoi en ligne (json+pbn sur GitHub Pages)
+      const pbnFname = fname.replace('.json', '.pbn');
+      const hostname = window.location.hostname;
+      const onGithub = hostname.endsWith('github.io');
+      const user = onGithub ? hostname.split('.')[0] : 'capgui13';
+      const repo = onGithub ? (window.location.pathname.split('/').filter(Boolean)[0]||'MVT') : 'MVT';
+      const base = onGithub ? `https://${hostname}/${repo}/` : `https://capgui13.github.io/MVT/`;
+      const pbnUrl = base + pbnFname;
+
+      // Use cache if available
+      if(_visuCache[pbnUrl]) {
+        visuDeals = _visuCache[pbnUrl];
+      } else {
+        document.getElementById('visu-content').innerHTML = '<div style="color:var(--text2);text-align:center;padding:2rem;">Chargement…</div>';
+        const buf = await (await fetch(pbnUrl)).arrayBuffer();
+        const bytes = new Uint8Array(buf);
+        let text = new TextDecoder('utf-8').decode(bytes);
+        if(text.includes('\uFFFD')) text = new TextDecoder('iso-8859-1').decode(bytes);
+        visuDeals = visuParsePBN(text);
+        _visuCache[pbnUrl] = visuDeals;
+      }
+    } else if(pbnFile) {
+      // Cas "PAR des donnes" : PBN importé localement depuis le PC, déjà en mémoire
+      visuDeals = visuParsePBN(pbnFile);
     } else {
-      document.getElementById('visu-content').innerHTML = '<div style="color:var(--text2);text-align:center;padding:2rem;">Chargement…</div>';
-      const buf = await (await fetch(pbnUrl)).arrayBuffer();
-      const bytes = new Uint8Array(buf);
-      let text = new TextDecoder('utf-8').decode(bytes);
-      if(text.includes('\uFFFD')) text = new TextDecoder('iso-8859-1').decode(bytes);
-      visuDeals = visuParsePBN(text);
-      _visuCache[pbnUrl] = visuDeals;
+      alert('Fichier PBN introuvable.');
+      return;
     }
     if(!visuDeals.length){ document.getElementById('visu-content').innerHTML = '<div style="color:#f87171;text-align:center;padding:2rem;">Aucune donne trouvée dans le PBN.</div>'; return; }
     // Find the board
