@@ -1001,11 +1001,6 @@ function howellDonnes(key, paire, tour) {
   }
 }
 
-// Clé Howell pour la config actuelle
-function howellKey(mouvement, nbPaires, dpt) {
-  return mouvement+'_'+nbPaires+'_'+dpt;
-}
-
 function parseDonnes(){
   const raw=document.getElementById('donnes-input').value;
   const status=document.getElementById('donnes-status');
@@ -1036,6 +1031,21 @@ function parseDonnes(){
     status.textContent=count+' donne'+(count>1?'s':'')+' chargée'+(count>1?'s':'')+' ✓';
   }
 }
+// ─── Contexte GitHub Pages (owner/repo/URL de base) ────────────
+// Point unique de calcul, utilisé par toutes les fonctions qui parlent à GitHub
+// (au lieu de recalculer hostname/owner/repo indépendamment à chaque endroit).
+// Sur *.github.io : owner = sous-domaine, repo = 1er segment du chemin.
+// Sinon (file://, dev local...) : repli sur capgui13/MVT.
+function getGhContext(){
+  const hostname = window.location.hostname;
+  const parts = hostname.split('.');
+  const onGithub = parts.length>=3 && parts[1]==='github' && parts[2]==='io';
+  const owner = onGithub ? parts[0] : 'capgui13';
+  const repo = onGithub ? (window.location.pathname.split('/').filter(Boolean)[0]||'MVT') : 'MVT';
+  const base = onGithub ? `https://${hostname}/${repo}/` : `https://capgui13.github.io/MVT/`;
+  return { owner, repo, base, onGithub };
+}
+
 // Token GitHub : présence contrôlant l'affichage de tout ce qui touche aux donnes (json/pbn)
 function hasGhToken(){ return !!(localStorage.getItem('gh_token')||'').trim(); }
 // Un token peut être présent mais invalide (rejeté par l'API GitHub, ex: 401) ou
@@ -1151,9 +1161,9 @@ function renderListeDonnes(){
     if(info){
       const div=document.createElement('div');
       div.className='chip-rich';
-      const nsHtml=info.ns?`<span class="chip-score-item chip-score-ns"><span class="chip-score-label">NS</span><span class="chip-score-value" data-donne="${d}" data-field="ns" ondblclick="startEditListeChip(this)">${info.ns}</span></span>`:'';
+      const nsHtml=info.ns?`<span class="chip-score-item chip-score-ns"><span class="chip-score-label">NS</span><span class="chip-score-value" data-donne="${d}" data-field="ns" ondblclick="startEditListeChip(this)">${escapeHtml(info.ns)}</span></span>`:'';
       const eoPlaceholder=(!info.ns && info.eo)?`<span class="chip-score-item chip-score-ns" style="visibility:hidden"><span class="chip-score-label">NS</span>—</span>`:'';
-      const eoHtml=info.eo?`<span class="chip-score-item chip-score-eo"><span class="chip-score-label">EO</span><span class="chip-score-value" data-donne="${d}" data-field="eo" ondblclick="startEditListeChip(this)">${info.eo}</span></span>`:'';
+      const eoHtml=info.eo?`<span class="chip-score-item chip-score-eo"><span class="chip-score-label">EO</span><span class="chip-score-value" data-donne="${d}" data-field="eo" ondblclick="startEditListeChip(this)">${escapeHtml(info.eo)}</span></span>`:'';
       const noteHtml=formatChipNoteEditable(d,info,'#4ade80','#f87171');
       div.innerHTML=`
         <div class="chip-num" onclick="openVisu(${d})" style="cursor:pointer;">${d}</div>
@@ -1412,7 +1422,6 @@ function applyConfig(mv,tables,tours,dpt,nbPaires){
 }
 
 function setRelais(r){relaisLigne=r;applyStyle(document.getElementById('btn-relais-ns'),r==='NS'?GREEN:OFF);applyStyle(document.getElementById('btn-relais-eo'),r==='EO'?RED:OFF);updateEvents();}
-function setMode(m){mode=m;applyStyle(document.getElementById('btn-mitchell'),m==='mitchell'?BLUE:OFF);applyStyle(document.getElementById('btn-guerid'),m==='guerid'?BLUE:OFF);}
 function setSens(s){sens=s;applyStyle(document.getElementById('btn-ns'),s==='NS'?GREEN:OFF);applyStyle(document.getElementById('btn-eo'),s==='EO'?RED:OFF);updateEvents();}
 
 function updateEvents(){
@@ -1725,9 +1734,7 @@ async function resumeTournoi(){
   goTo('s-jeu');
   // Recharger les donnes si un fichier était chargé
   if(s.donnesFichier){
-    const hostname=window.location.hostname;
-    const onGithub=hostname.endsWith('github.io');
-    const base=onGithub?window.location.href.replace(/\/[^\/]*$/,'/'):'https://capgui13.github.io/MVT/';
+    const {base}=getGhContext();
     await chargerTournoi(base+s.donnesFichier, s.donnesFichier, true);
   }
   render();
@@ -1763,25 +1770,13 @@ async function _initTournoiInner(){
     resume.style.display='';
   }
 
-  const hostname=window.location.hostname;
-  const onGithub=hostname.endsWith('github.io');
-  const base=onGithub
-    ? window.location.href.replace(/\/[^/]*$/,'/')
-    : 'https://capgui13.github.io/MVT/';
+  const {owner:user, repo, base}=getGhContext();
   const list=document.getElementById('tournoi-list');
   const sub=document.getElementById('tournoi-sub');
 
   const CACHE_KEY='bridge_tournoi_list';
 
   try{
-    const parts=hostname.split('.');
-    let user=null, repo=null;
-    if(parts.length>=3 && parts[1]==='github' && parts[2]==='io'){
-      user=parts[0];
-      repo=window.location.pathname.split('/').filter(Boolean)[0]||null;
-    }
-    if(!user||!repo){ user='capgui13'; repo='MVT'; }
-
     // 1 seule requête : dernier commit du repo
     const _tok=localStorage.getItem('gh_token')||'';
     if(_tok){
@@ -1909,11 +1904,7 @@ async function chargerTournoi(url, fichier, silencieux=false){
     // Préchargement du PBN en arrière-plan
     (async ()=>{
       try{
-        const hostname=window.location.hostname;
-        const onGithub=hostname.endsWith('github.io');
-        const user=onGithub?hostname.split('.')[0]:'capgui13';
-        const repo=onGithub?(window.location.pathname.split('/').filter(Boolean)[0]||'MVT'):'MVT';
-        const base=onGithub?`https://${hostname}/${repo}/`:'https://capgui13.github.io/MVT/';
+        const {base}=getGhContext();
         const pbnUrl=base+fichier.replace('.json','.pbn');
         if(!_visuCache[pbnUrl]){
           const buf=await (await fetch(pbnUrl)).arrayBuffer();
@@ -1952,13 +1943,9 @@ if('serviceWorker' in navigator){
 // Vérification de mise à jour via GitHub API
 async function checkForUpdate(repoSha){
   try{
-    const hostname=window.location.hostname;
-    const parts=hostname.split('.');
-    if(parts.length<3||parts[1]!=='github'||parts[2]!=='io') return;
-    const user=parts[0];
-    const repo=window.location.pathname.split('/').filter(Boolean)[0];
+    const {owner:user, repo, onGithub}=getGhContext();
+    if(!onGithub) return;
     const file=window.location.pathname.split('/').pop()||'index.html';
-    if(!user||!repo) return;
 
     const CACHE_KEY='bridge_update_check';
     const CACHE_TTL=60*60*1000;
@@ -2016,10 +2003,7 @@ addNavListener('btn-next', 1);
 // GÉNÉRATEUR
 // ============================================================
 (function(){
-  const GH_OWNER_GEN = window.location.hostname.endsWith('github.io')
-    ? window.location.hostname.split('.')[0] : 'capgui13';
-  const GH_REPO_GEN = window.location.hostname.endsWith('github.io')
-    ? (window.location.pathname.split('/').filter(Boolean)[0]||'MVT') : 'MVT';
+  const {owner:GH_OWNER_GEN, repo:GH_REPO_GEN}=getGhContext();
   const GH_BRANCH_GEN = 'main';
 
   // Afficher le repo cible
@@ -2271,7 +2255,7 @@ function renderContract(val, col) {
     const wClass = contractWeight(p); // weight applied to each part
     const cls = ['c', colorClass, wClass].filter(Boolean).join(' ');
     const sep = idx > 0 ? '<span style="color:var(--text3);font-weight:400;font-size:12px;"> ; </span>' : '';
-    return sep + `<span class="${cls}">${p}</span>`;
+    return sep + `<span class="${cls}">${escapeHtml(p)}</span>`;
   }).join('');
 }
 
@@ -2279,15 +2263,6 @@ function renderContract(val, col) {
 function getCEText(el) {
   // Get plain text from contenteditable, stripping HTML
   return el.innerText.replace(/\n/g, '').trim();
-}
-
-function setCEValue(el, val, col) {
-  if (document.activeElement === el) return; // don't overwrite while editing
-  if (!val) {
-    el.innerHTML = '';
-  } else {
-    el.innerHTML = renderContract(val, col);
-  }
 }
 
 function onCEInput(el, n, field) {
@@ -2367,12 +2342,12 @@ function buildTable() {
       <td><div class="ce col-eo" contenteditable="true" spellcheck="false"
         data-n="${i}" data-field="eo" data-col="eo"
         >${eoHtml}</div></td>
-      <td class="note-input-cell"><input type="text" class="note-input col-ns" id="note-ns-${i}" value="${d.noteNs}" placeholder=""
+      <td class="note-input-cell"><input type="text" class="note-input col-ns" id="note-ns-${i}" value="${escapeHtml(d.noteNs)}" placeholder=""
         autocomplete="off" autocorrect="off"
         oninput="setDonne(${i},'noteNs',this.value);syncNoteRow(${i})"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         onfocus="this.select()"/></td>
-      <td class="note-input-cell"><input type="text" class="note-input col-eo" id="note-eo-${i}" value="${d.noteEo}" placeholder=""
+      <td class="note-input-cell"><input type="text" class="note-input col-eo" id="note-eo-${i}" value="${escapeHtml(d.noteEo)}" placeholder=""
         autocomplete="off" autocorrect="off"
         oninput="setDonne(${i},'noteEo',this.value);syncNoteRow(${i})"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
@@ -2467,10 +2442,6 @@ function normalizeStr(s) {
   return s.split(' ; ').map(p => normalizeContract(p.trim()).replace('X', 'x')).join(' ; ');
 }
 
-function stripEq(s) {
-  return s.split(' ; ').map(p => p.endsWith('=') ? p.slice(0,-1) : p).join(' ; ');
-}
-
 function translatePart(c) {
   let out='', i=0;
   while(i<c.length){
@@ -2490,16 +2461,6 @@ function contractScore(lv, dn) {
   const isGame = (['S','H'].includes(dn)&&lv>=4)||((['D','C'].includes(dn))&&lv>=5)||(dn==='NT'&&lv>=3);
   const bonus = lv===7?1500:lv===6?1000:isGame?300:50;
   return pts+bonus;
-}
-
-function bestMakeable(tricks) {
-  let best=null, bs=-1;
-  for(const [d,t] of Object.entries(tricks)){
-    if(t<7)continue;
-    const lv=Math.min(t-6,7), sc=contractScore(lv,d);
-    if(sc>bs){bs=sc;best=[lv,d,sc];}
-  }
-  return best;
 }
 
 function suitCount(hands, side, suit) {
@@ -2559,13 +2520,6 @@ function computeParDisplay(tricks, hands, side) {
   const list = [...selected].map(dn => ({ score: info[dn].score, label: translatePart(`${info[dn].level}${dn}`) }));
   list.sort((a,b) => b.score - a.score);
   return list.map(c => c.label).join(' ; ');
-}
-
-function parseContract(s) {
-  const m=s.match(/^(\d)(NT|[SHDCN])(.*)/);
-  if(!m)return null;
-  let dn=m[2]; if(dn==='N')dn='NT';
-  return [parseInt(m[1]),dn,m[3]];
 }
 
 function parseDeal(dealStr) {
@@ -2736,19 +2690,11 @@ function parsePBN(text) {
 }
 
 // ─── GitHub ───────────────────────────────────────────────────
-const GH_OWNER = window.location.hostname.endsWith('github.io')
-  ? window.location.hostname.split('.')[0] : 'capgui13';
-const GH_REPO = window.location.hostname.endsWith('github.io')
-  ? (window.location.pathname.split('/').filter(Boolean)[0]||'MVT') : 'MVT';
+const {owner:GH_OWNER, repo:GH_REPO}=getGhContext();
 const GH_BRANCH = 'main';
 
 function getToken(){ return localStorage.getItem('gh_token')||''; }
 function saveToken(t){ localStorage.setItem('gh_token', t.trim()); }
-
-function onTokenInput(v){
-  if(!v || /^•+/.test(v)) return;
-  saveToken(v);
-}
 
 async function ghUpload(fname, fileContent, isBinary=false){
   const token = getToken();
@@ -2804,10 +2750,7 @@ async function loadDeleteList(){
   const list=document.getElementById('delete-list');
   const sub=document.getElementById('delete-sub');
   list.innerHTML='';
-  const hostname=window.location.hostname;
-  const onGithub=hostname.endsWith('github.io');
-  const user=onGithub?hostname.split('.')[0]:'capgui13';
-  const repo=onGithub?(window.location.pathname.split('/').filter(Boolean)[0]||'MVT'):'MVT';
+  const {owner:user, repo}=getGhContext();
   const token=localStorage.getItem('gh_token')||'';
   sub.textContent='Chargement…';
   try{
@@ -2845,19 +2788,58 @@ async function loadDeleteList(){
       }
       const passe=date&&date<today;
       const jsonFile = gfiles.find(f => /\.json$/i.test(f.name));
+      const pbnFile = gfiles.find(f => /\.pbn$/i.test(f.name));
       const fname = jsonFile ? jsonFile.name : null;
       window._delMap['g'+i]={files:gfiles,token,user,repo,fname};
+      const downloadBtn = pbnFile
+        ? `<button onclick="event.stopPropagation();downloadPbn('g${i}')" title="Télécharger le PBN" style="padding:8px 12px;border-radius:10px;border:1.5px solid #1e3a5f;background:#0a1a2d;color:#60a5fa;font-size:16px;cursor:pointer;margin-left:8px;">⬇️</button>`
+        : '';
       html+=`<div id="dg${i}" class="option-btn" style="justify-content:space-between;min-height:auto;cursor:pointer;${passe?'opacity:0.4;':''}" onclick="openGen2FromFile('g${i}')">
         <div>
           <div class="option-main">${label}</div>
           <div class="option-detail">${gfiles.map(f=>f.name).join(' · ')}</div>
         </div>
-        <button onclick="event.stopPropagation();delGroup('g${i}')" style="padding:8px 12px;border-radius:10px;border:1.5px solid #7f1d1d;background:#2d0a0a;color:#f87171;font-size:16px;cursor:pointer;margin-left:8px;">🗑</button>
+        <div style="display:flex;align-items:center;">
+          ${downloadBtn}
+          <button onclick="event.stopPropagation();delGroup('g${i}')" style="padding:8px 12px;border-radius:10px;border:1.5px solid #7f1d1d;background:#2d0a0a;color:#f87171;font-size:16px;cursor:pointer;margin-left:8px;">🗑</button>
+        </div>
       </div>`;
     });
     list.innerHTML=html;
   }catch(e){
     sub.textContent='Erreur : '+e.message;
+  }
+}
+
+async function downloadPbn(id){
+  const g=window._delMap&&window._delMap[id];
+  if(!g)return;
+  const pbnFile=g.files.find(f=>/\.pbn$/i.test(f.name));
+  if(!pbnFile){ alert('Aucun fichier PBN pour cette séance.'); return; }
+  try{
+    let blob;
+    try{
+      // Repo public : download_url (raw.githubusercontent.com) sans Authorization,
+      // sinon le header déclenche un preflight CORS que ce domaine rejette ("Failed to fetch").
+      const res=await fetch(pbnFile.download_url);
+      if(!res.ok) throw new Error('Erreur '+res.status);
+      blob=await res.blob();
+    }catch(e1){
+      // Repli : repo privé ou download_url inaccessible → API GitHub (contenu en base64), avec token.
+      if(!g.token) throw e1;
+      const res2=await fetch(pbnFile.url, {headers:{Authorization:`token ${g.token}`,Accept:'application/vnd.github.v3+json'}});
+      if(!res2.ok) throw new Error('Erreur '+res2.status);
+      const data=await res2.json();
+      const bytes=Uint8Array.from(atob(data.content.replace(/\n/g,'')), c=>c.charCodeAt(0));
+      blob=new Blob([bytes]);
+    }
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=pbnFile.name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  }catch(e){
+    alert('Erreur lors du téléchargement : '+e.message);
   }
 }
 
@@ -2907,9 +2889,7 @@ function openGen2Fresh(){
 async function openGen2FromFile(id){
   const g=window._delMap&&window._delMap[id];
   if(!g||!g.fname)return;
-  const hostname=window.location.hostname;
-  const onGithub=hostname.endsWith('github.io');
-  const base=onGithub?window.location.href.replace(/\/[^\/]*$/,'/'):'https://capgui13.github.io/MVT/';
+  const {base}=getGhContext();
   const url=base+g.fname+'?t='+Date.now();
   try{
     const res=await fetch(url);
@@ -2993,10 +2973,7 @@ function clearModalToken(){
 async function uploadSelf(){
   const token = localStorage.getItem('gh_token')||'';
   if(!token){ openTokenModal(); return; }
-  const hostname = window.location.hostname;
-  const onGithub = hostname.endsWith('github.io');
-  const user = onGithub ? hostname.split('.')[0] : 'capgui13';
-  const repo = onGithub ? (window.location.pathname.split('/').filter(Boolean)[0]||'MVT') : 'MVT';
+  const {owner:user, repo}=getGhContext();
   if(!confirm('Mettre à jour index.html sur '+user+'/'+repo+' ?')) return;
   try{
     let html;
@@ -3060,11 +3037,7 @@ async function openVisu(boardNum) {
     if(fname) {
       // Cas normal : donnes chargées depuis un tournoi en ligne (json+pbn sur GitHub Pages)
       const pbnFname = fname.replace('.json', '.pbn');
-      const hostname = window.location.hostname;
-      const onGithub = hostname.endsWith('github.io');
-      const user = onGithub ? hostname.split('.')[0] : 'capgui13';
-      const repo = onGithub ? (window.location.pathname.split('/').filter(Boolean)[0]||'MVT') : 'MVT';
-      const base = onGithub ? `https://${hostname}/${repo}/` : `https://capgui13.github.io/MVT/`;
+      const {base} = getGhContext();
       const pbnUrl = base + pbnFname;
 
       // Use cache if available
