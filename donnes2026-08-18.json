@@ -44,7 +44,7 @@
   "8": {
     "ns": "6P ; 6C",
     "eo": "",
-    "noteNs": "DC 2nde",
+    "noteNs": "DC 2nde TTTTTTTTTTTT",
     "noteEo": ""
   },
   "9": {
@@ -212,30 +212,6 @@
   "36": {
     "ns": "7Tx-4",
     "eo": "6C ; 5K",
-    "noteNs": "",
-    "noteEo": ""
-  },
-  "37": {
-    "ns": "",
-    "eo": "",
-    "noteNs": "",
-    "noteEo": ""
-  },
-  "38": {
-    "ns": "",
-    "eo": "",
-    "noteNs": "",
-    "noteEo": ""
-  },
-  "39": {
-    "ns": "",
-    "eo": "",
-    "noteNs": "",
-    "noteEo": ""
-  },
-  "40": {
-    "ns": "",
-    "eo": "",
     "noteNs": "",
     "noteEo": ""
   },
