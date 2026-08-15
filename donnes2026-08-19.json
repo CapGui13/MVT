@@ -1,0 +1,243 @@
+{
+  "1": {
+    "ns": "4P",
+    "eo": "",
+    "noteNs": "AK 3e en O, DK 3e en E",
+    "noteEo": ""
+  },
+  "2": {
+    "ns": "5P ; 5C",
+    "eo": "",
+    "noteNs": "RP sec en O ; DP 2nd en E ; ADk en E",
+    "noteEo": ""
+  },
+  "3": {
+    "ns": "4Px-2",
+    "eo": "3SA",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "4": {
+    "ns": "",
+    "eo": "3P",
+    "noteNs": "",
+    "noteEo": "RP sec en N"
+  },
+  "5": {
+    "ns": "4C",
+    "eo": "5Tx-2",
+    "noteNs": "DP 2nd en E",
+    "noteEo": ""
+  },
+  "6": {
+    "ns": "",
+    "eo": "4SA",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "7": {
+    "ns": "",
+    "eo": "4SA ; 4P",
+    "noteNs": "",
+    "noteEo": "RK 2nd en N"
+  },
+  "8": {
+    "ns": "6K ; 5C",
+    "eo": "",
+    "noteNs": "DK 2nd en E",
+    "noteEo": ""
+  },
+  "9": {
+    "ns": "",
+    "eo": "4C",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "10": {
+    "ns": "3K ; 3T",
+    "eo": "",
+    "noteNs": "RT 2nd en E",
+    "noteEo": ""
+  },
+  "11": {
+    "ns": "2SA",
+    "eo": "",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "12": {
+    "ns": "2SA",
+    "eo": "",
+    "noteNs": "ADp en O",
+    "noteEo": ""
+  },
+  "13": {
+    "ns": "",
+    "eo": "4T",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "14": {
+    "ns": "",
+    "eo": "2P",
+    "noteNs": "",
+    "noteEo": "DC 2nd en S"
+  },
+  "15": {
+    "ns": "3SA",
+    "eo": "",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "16": {
+    "ns": "",
+    "eo": "4P",
+    "noteNs": "",
+    "noteEo": "DP 2nd en S"
+  },
+  "17": {
+    "ns": "2C",
+    "eo": "2SAx-1",
+    "noteNs": "",
+    "noteEo": "AP 3e en S, DP 3e en N"
+  },
+  "18": {
+    "ns": "4K ; 4T",
+    "eo": "",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "19": {
+    "ns": "1SA",
+    "eo": "",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "20": {
+    "ns": "5SA ; 5T",
+    "eo": "",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "21": {
+    "ns": "",
+    "eo": "4SA ; 4P",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "22": {
+    "ns": "",
+    "eo": "6P",
+    "noteNs": "",
+    "noteEo": "RP sec en S ; DC sec en N"
+  },
+  "23": {
+    "ns": "6P ; 6K ; 6T ; 5SA",
+    "eo": "",
+    "noteNs": "DT 2nd en O",
+    "noteEo": ""
+  },
+  "24": {
+    "ns": "7P",
+    "eo": "",
+    "noteNs": "RC 2nd en E",
+    "noteEo": ""
+  },
+  "25": {
+    "ns": "3SA",
+    "eo": "",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "26": {
+    "ns": "4C",
+    "eo": "",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "27": {
+    "ns": "",
+    "eo": "3P ; 3C",
+    "noteNs": "",
+    "noteEo": "RC 2nd en S"
+  },
+  "28": {
+    "ns": "3C",
+    "eo": "",
+    "noteNs": "AT 2nd en O, DT 3e en E",
+    "noteEo": ""
+  },
+  "29": {
+    "ns": "3SA",
+    "eo": "",
+    "noteNs": "DC 2nd en O",
+    "noteEo": ""
+  },
+  "30": {
+    "ns": "4C",
+    "eo": "",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "31": {
+    "ns": "",
+    "eo": "4K",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "32": {
+    "ns": "",
+    "eo": "7SA ; 7P ; 7K",
+    "noteNs": "",
+    "noteEo": "DP sec en S"
+  },
+  "33": {
+    "ns": "5C ; 5K",
+    "eo": "",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "34": {
+    "ns": "2SA",
+    "eo": "",
+    "noteNs": "ADc en O",
+    "noteEo": ""
+  },
+  "35": {
+    "ns": "",
+    "eo": "2SA",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "36": {
+    "ns": "6SA",
+    "eo": "",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "37": {
+    "ns": "",
+    "eo": "",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "38": {
+    "ns": "",
+    "eo": "",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "39": {
+    "ns": "",
+    "eo": "",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "40": {
+    "ns": "",
+    "eo": "",
+    "noteNs": "",
+    "noteEo": ""
+  },
+  "date": "2026-08-19"
+}
