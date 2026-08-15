@@ -1622,10 +1622,10 @@ function render(){
       const mineLabel=isEoMine?'EO':'NS';
       const otherLabel=isEoMine?'NS':'EO';
       // Notre ligne (vert) toujours à gauche ; l'autre ligne (rouge) toujours à droite
-      const mineHtml=mineVal?`<span class="chip-score-item chip-score-mine"><span class="chip-score-label">${mineLabel}</span>${mineVal}</span>`:'';
+      const mineHtml=mineVal?`<span class="chip-score-item chip-score-mine"><span class="chip-score-label">${mineLabel}</span>${escapeHtml(mineVal)}</span>`:'';
       // Placeholder invisible si l'autre ligne a un PAR mais pas la nôtre, pour garder l'alignement à droite
       const otherPlaceholder=(!mineVal && otherVal)?`<span class="chip-score-item chip-score-mine" style="visibility:hidden"><span class="chip-score-label">${mineLabel}</span>—</span>`:'';
-      const otherHtml=otherVal?`<span class="chip-score-item chip-score-other"><span class="chip-score-label">${otherLabel}</span>${otherVal}</span>`:'';
+      const otherHtml=otherVal?`<span class="chip-score-item chip-score-other"><span class="chip-score-label">${otherLabel}</span>${escapeHtml(otherVal)}</span>`:'';
       const nsColor=isEoMine?'#f87171':'#4ade80';
       const eoColor=isEoMine?'#4ade80':'#f87171';
       const noteHtml=formatChipNote(info,nsColor,eoColor)?`<div class="chip-note">${formatChipNote(info,nsColor,eoColor)}</div>`:'';
@@ -2796,8 +2796,8 @@ async function loadDeleteList(){
         : '';
       html+=`<div id="dg${i}" class="option-btn" style="justify-content:space-between;min-height:auto;cursor:pointer;${passe?'opacity:0.4;':''}" onclick="openGen2FromFile('g${i}')">
         <div>
-          <div class="option-main">${label}</div>
-          <div class="option-detail">${gfiles.map(f=>f.name).join(' · ')}</div>
+          <div class="option-main">${escapeHtml(label)}</div>
+          <div class="option-detail">${escapeHtml(gfiles.map(f=>f.name).join(' · '))}</div>
         </div>
         <div style="display:flex;align-items:center;">
           ${downloadBtn}
