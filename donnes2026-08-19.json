@@ -97,9 +97,9 @@
   },
   "17": {
     "ns": "2C",
-    "eo": "2SAx-1",
+    "eo": "",
     "noteNs": "",
-    "noteEo": "AP 3e en S, DP 3e en N"
+    "noteEo": ""
   },
   "18": {
     "ns": "4K ; 4T",
@@ -111,7 +111,7 @@
     "ns": "1SA",
     "eo": "",
     "noteNs": "",
-    "noteEo": ""
+    "noteEo": "itv à 2T"
   },
   "20": {
     "ns": "5SA ; 5T",
@@ -127,12 +127,12 @@
   },
   "22": {
     "ns": "",
-    "eo": "6P",
+    "eo": "4P+2",
     "noteNs": "",
-    "noteEo": "RP sec en S ; DC sec en N"
+    "noteEo": ""
   },
   "23": {
-    "ns": "6P ; 6K ; 6T ; 5SA",
+    "ns": "6m ; 5SA",
     "eo": "",
     "noteNs": "DT 2nd en O",
     "noteEo": ""
