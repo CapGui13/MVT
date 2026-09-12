@@ -152,6 +152,7 @@
   .gen-status{display:none;font-size:12px;font-weight:500;padding:7px 12px;border-radius:10px}
   .gen-status.ok{display:inline-flex;background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.3)}
   .gen-status.err{display:inline-flex;background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.3)}
+  .gen-status.pending{display:inline-flex;background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
   .gen-chip{display:none;font-size:12px;font-weight:500;padding:7px 12px;border-radius:10px;background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.3)}
   .gen-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:.75rem}
   .gen-stat{background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:.85rem 1rem}
@@ -1152,6 +1153,50 @@ async function verifyGhOwner(token, expectedOwner){
   }catch(e){ return false; }
 }
 
+// Point unique de validation du token, utilisé par Paramètres et le Générateur.
+// Un token n'ouvre le mode arbitre qu'après vérification de l'identité ET de
+// l'accès effectif au dépôt privé MVT-Private.
+async function validateStoredGhToken(){
+  const token=(localStorage.getItem('gh_token')||'').trim();
+  if(!token) return false;
+  const {owner,repo}=getGhContext();
+  const ownerOk=await verifyGhOwner(token, owner);
+  if(!ownerOk){ markGhTokenBad(); return false; }
+  try{
+    const res=await fetch(`https://api.github.com/repos/${owner}/${repo}`,{
+      headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json'}
+    });
+    if(!res.ok){
+      // 401 = token invalide ; 404 = pas d'accès au dépôt privé attendu.
+      // Un 403 peut aussi être une limite API : ne pas condamner le token dans ce cas.
+      if(res.status===401 || res.status===404) markGhTokenBad();
+      return false;
+    }
+  }catch(e){
+    // Erreur réseau : ne pas accorder l'accès, mais ne pas marquer définitivement
+    // un token comme mauvais pour une simple coupure de connexion.
+    return false;
+  }
+  markGhTokenGood();
+  return true;
+}
+
+async function setAndValidateGhToken(raw){
+  const v=String(raw||'').trim();
+  if(!v || /^•+/.test(v)) return hasValidGhToken();
+  localStorage.setItem('gh_token',v);
+  clearGhTokenBadFlag();
+  updateTokenIndicator();
+  applyTournoiTokenUI();
+  syncHomeToAccess();
+  const ok=await validateStoredGhToken();
+  if(ok){
+    _initRunning=false;
+    await initTournoi();
+  }
+  return ok;
+}
+
 function lancerTournoiSansDonnes(){
   const b=document.getElementById('btn-charger-donnes');
   if(b) b.style.display=hasValidGhToken()?'':'none';
@@ -2142,9 +2187,9 @@ addNavListener('btn-next', 1);
   const rl = document.getElementById('gen-repo-label');
   if(rl) rl.textContent = GH_OWNER_GEN+'/'+GH_REPO_GEN;
 
-  // Token
+  // Token — même mécanisme de validation/effacement que Paramètres.
   function getToken(){ return localStorage.getItem('gh_token')||''; }
-  function saveToken(t){ localStorage.setItem('gh_token',t.trim()); }
+  let _genTokenValidateTimer=null;
 
   window.genRenderTokenStatus = function(){
     const t=getToken();
@@ -2153,7 +2198,9 @@ addNavListener('btn-next', 1);
     if(!inp||!st) return;
     if(t){
       inp.value='•'.repeat(12)+t.slice(-4);
-      st.innerHTML='<span class="gen-status ok">✓ Token enregistré</span>';
+      if(isGhTokenBad()) st.innerHTML='<span class="gen-status err">✕ Token invalide</span>';
+      else if(hasValidGhToken()) st.innerHTML='<span class="gen-status ok">✓ Token enregistré</span>';
+      else st.innerHTML='<span class="gen-status pending">Vérification…</span>';
     } else {
       inp.value='';
       st.innerHTML='';
@@ -2161,22 +2208,24 @@ addNavListener('btn-next', 1);
   };
 
   window.genOnTokenInput = function(){
-    const v=document.getElementById('gen-token-input').value.trim();
+    const inp=document.getElementById('gen-token-input');
+    const v=inp?inp.value.trim():'';
     if(!v||/^•+/.test(v)) return;
-    saveToken(v);
-    clearGhTokenBadFlag();
-    updateTokenIndicator();
-    applyTournoiTokenUI();
-    genRenderTokenStatus();
+    if(_genTokenValidateTimer) clearTimeout(_genTokenValidateTimer);
+    const st=document.getElementById('gen-token-status');
+    if(st) st.innerHTML='<span class="gen-status pending">Vérification…</span>';
+    _genTokenValidateTimer=setTimeout(async()=>{
+      await setAndValidateGhToken(v);
+      genRenderTokenStatus();
+    },500);
   };
 
   window.genClearToken = function(){
-    localStorage.removeItem('gh_token');
-    clearGhTokenBadFlag();
-    updateTokenIndicator();
-    applyTournoiTokenUI();
-    document.getElementById('gen-token-input').value='';
-    document.getElementById('gen-token-status').innerHTML='';
+    clearGhTokenAccess();
+    const inp=document.getElementById('gen-token-input');
+    const st=document.getElementById('gen-token-status');
+    if(inp) inp.value='';
+    if(st) st.innerHTML='';
   };
 
   // Date
@@ -2910,6 +2959,11 @@ async function loadDeleteList(){
   const list=document.getElementById('delete-list');
   const sub=document.getElementById('delete-sub');
   list.innerHTML='';
+  if(!hasValidGhToken()){
+    sub.textContent='Accès arbitre requis.';
+    syncHomeToAccess();
+    return;
+  }
   const {owner:user, repo}=getGhContext();
   const token=localStorage.getItem('gh_token')||'';
   sub.textContent='Chargement…';
@@ -3103,16 +3157,20 @@ function updateTokenIndicator(){
   });
 }
 updateTokenIndicator();
-function saveModalToken(){
+async function saveModalToken(){
   const inp = document.getElementById('modal-token-input');
   const v = inp.value.trim();
-  // If value looks like our mask (starts with bullets), don't overwrite
-  if(v && !/^•/.test(v)){ localStorage.setItem('gh_token', v); clearGhTokenBadFlag(); }
-  closeTokenModal();
-  if(hasGhToken() && !isGhTokenBad()){
-    _initRunning=false;
-    initTournoi();
+  // Si la valeur est notre masque, conserver le token déjà stocké.
+  if(v && !/^•/.test(v)){
+    await setAndValidateGhToken(v);
+  } else if(hasGhToken() && !hasValidGhToken()){
+    await validateStoredGhToken();
+    if(hasValidGhToken()){
+      _initRunning=false;
+      await initTournoi();
+    }
   }
+  closeTokenModal();
 }
 function clearPrivateSessionData(){
   // Effacer les caches et états privés en mémoire/localStorage.
@@ -3151,16 +3209,25 @@ function clearPrivateSessionData(){
   updateListeDonnesBtn();
 }
 
-function clearModalToken(){
+function clearGhTokenAccess(){
   localStorage.removeItem('gh_token');
   clearGhTokenBadFlag();
   clearPrivateSessionData();
-  document.getElementById('modal-token-input').value='';
-  // Retour immédiat à l'interface publique.
+  // Retour immédiat à l'interface publique, quel que soit l'écran depuis lequel
+  // le token a été supprimé (Paramètres ou Générateur).
   appScreens.forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('active'); });
   const home=document.getElementById('s-public'); if(home) home.classList.add('active');
   navHistory=[];
   updatePublicOptions();
+  updateTokenIndicator();
+  applyTournoiTokenUI();
+  syncHomeToAccess();
+}
+
+function clearModalToken(){
+  clearGhTokenAccess();
+  const inp=document.getElementById('modal-token-input');
+  if(inp) inp.value='';
   closeTokenModal();
 }
 
