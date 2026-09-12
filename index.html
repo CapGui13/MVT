@@ -47,6 +47,7 @@
   .options-list{display:flex;flex-direction:column;gap:8px}
   .option-btn{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;font-family:inherit;cursor:pointer;text-align:left;transition:all 0.15s;display:flex;justify-content:space-between;align-items:center;min-height:64px}
   .option-btn:active{transform:scale(0.98);opacity:0.8}
+  .option-static{cursor:default;pointer-events:none}
   .option-main{font-weight:600;font-size:14px}
   .option-detail{font-size:12px;color:var(--text2);margin-top:2px}
   .option-badge{font-size:11px;padding:3px 8px;border-radius:999px;font-weight:600;flex-shrink:0;margin-left:8px}
@@ -295,7 +296,19 @@ tbody td input.note-input:focus{background:var(--bg4);box-shadow:inset 0 0 0 1.5
 <div class="wrap">
 
 <!-- ÉCRAN 1 : CHOIX DU TOURNOI -->
-<div class="screen active" id="s-tournoi">
+<div class="screen active" id="s-public">
+  <p class="section-title" style="margin-bottom:.3rem">Nombre de paires</p>
+  <div class="field">
+    <input type="number" id="f-paires-public" min="6" max="36" value="" step="1" inputmode="numeric" oninput="updatePublicOptions()" onfocus="this.select()"/>
+    <p class="err" id="e-paires-public">Entre 6 et 36 paires</p>
+  </div>
+  <div class="options-list" id="public-options-list"></div>
+  <div style="margin-top:1.25rem;border-top:1px solid var(--border);padding-top:.75rem;">
+    <button onclick="openTokenModal();" id="btn-public-params" style="font-size:12px;padding:5px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text2);font-family:inherit;display:inline-flex;align-items:center;gap:5px;cursor:pointer;">⚙ Paramètres</button>
+  </div>
+</div>
+
+<div class="screen" id="s-tournoi">
   <div id="s-tournoi-resume" style="display:none">
     <p class="section-title">Tournoi en cours</p>
     <div id="resume-card" style="background:var(--bg2);border:1.5px solid var(--blue);border-radius:12px;padding:14px;margin-bottom:1rem;cursor:pointer" onclick="resumeTournoi()">
@@ -1031,16 +1044,26 @@ function parseDonnes(){
     status.textContent=count+' donne'+(count>1?'s':'')+' chargée'+(count>1?'s':'')+' ✓';
   }
 }
-// ─── Contexte GitHub ──────────────────────────────────────────
-// Le site public peut être hébergé ailleurs (ex. Vercel), mais les donnes restent
-// dans le dépôt GitHub privé MVT-Private. Elles sont lues UNIQUEMENT via l'API GitHub authentifiée.
-// Le dépôt public MVT ne sert que de redirection GitHub Pages vers Vercel.
+// ─── Contextes GitHub ─────────────────────────────────────────
+// Le dépôt public MVT héberge l'application (index.html) via GitHub Pages.
+// Le dépôt privé MVT-Private contient uniquement les donnes et reste inaccessible sans token.
 function getGhContext(){
+  // Contexte des DONNES privées.
   const hostname = window.location.hostname;
   const parts = hostname.split('.');
   const onGithub = parts.length>=3 && parts[1]==='github' && parts[2]==='io';
   const owner = onGithub ? parts[0] : 'capgui13';
   const repo = 'MVT-Private';
+  return { owner, repo, onGithub };
+}
+
+function getAppGhContext(){
+  // Contexte de l'APPLICATION publique (auto-mise à jour de index.html).
+  const hostname = window.location.hostname;
+  const parts = hostname.split('.');
+  const onGithub = parts.length>=3 && parts[1]==='github' && parts[2]==='io';
+  const owner = onGithub ? parts[0] : 'capgui13';
+  const repo = 'MVT';
   return { owner, repo, onGithub };
 }
 
@@ -1096,6 +1119,7 @@ function markGhTokenBad(){
   try{ clearPrivateSessionData(); }catch(e){}
   updateTokenIndicator();
   applyTournoiTokenUI();
+  syncHomeToAccess();
 }
 function markGhTokenGood(){
   const t=(localStorage.getItem('gh_token')||'').trim();
@@ -1105,9 +1129,10 @@ function markGhTokenGood(){
     localStorage.removeItem('gh_token_bad');
     if(t) localStorage.setItem('gh_token_verified_value', t);
   }catch(e){}
-  if(!wasBad && wasVerified) return; // rien n'a changé, pas besoin de re-render
+  if(!wasBad && wasVerified){ syncHomeToAccess(); return; } // rien n'a changé, pas besoin de re-render
   updateTokenIndicator();
   applyTournoiTokenUI();
+  syncHomeToAccess();
 }
 function clearGhTokenBadFlag(){
   try{ localStorage.removeItem('gh_token_bad'); localStorage.removeItem('gh_token_verified_value'); }catch(e){}
@@ -1290,12 +1315,33 @@ function showScreen(to, from){
 }
 
 const screenScrollPos={};
+const appScreens=['s-public','s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu','s-gen','s-delete','s-gen2','s-visu','s-liste-donnes'];
 const privateScreens=new Set(['s-donnes','s-gen','s-delete','s-gen2','s-visu','s-liste-donnes']);
+const refereeScreens=new Set(appScreens.filter(id=>id!=='s-public'));
+
+function syncHomeToAccess(){
+  const has=hasValidGhToken();
+  const current=appScreens.find(id=>{ const el=document.getElementById(id); return el&&el.classList.contains('active'); });
+  if(has){
+    if(!current || current==='s-public'){
+      appScreens.forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('active'); });
+      const home=document.getElementById('s-tournoi');
+      if(home) home.classList.add('active');
+      navHistory=[];
+    }
+  }else if(current!=='s-public'){
+    appScreens.forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('active'); });
+    const pub=document.getElementById('s-public');
+    if(pub) pub.classList.add('active');
+    navHistory=[];
+    updatePublicOptions();
+  }
+}
 
 function goTo(to){
-  // Les écrans contenant/traitant des donnes sont réservés au mode arbitre.
-  if(privateScreens.has(to) && !hasValidGhToken()) return;
-  const screens=['s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu','s-gen','s-delete','s-gen2','s-visu','s-liste-donnes'];
+  // Sans token valide, l'utilisateur reste sur l'écran public d'information.
+  if(refereeScreens.has(to) && !hasValidGhToken()){ syncHomeToAccess(); return; }
+  const screens=appScreens;
   const current=screens.find(s=>document.getElementById(s).classList.contains('active'));
   if(current){
     screenScrollPos[current]=window.scrollY;
@@ -1307,7 +1353,7 @@ function goTo(to){
 
 function goBack(){
   if(!navHistory.length) return;
-  const current=['s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu','s-gen','s-delete','s-gen2','s-visu','s-liste-donnes'].find(s=>document.getElementById(s).classList.contains('active'));
+  const current=appScreens.find(s=>document.getElementById(s).classList.contains('active'));
   if(current) document.getElementById(current).classList.remove('active');
   const prev=navHistory.pop();
   document.getElementById(prev).classList.add('active');
@@ -1391,6 +1437,54 @@ function updateOptions(){
   if(howellGroups.length){
     const sep=document.createElement('p');sep.className='section-sep';sep.textContent='Howell';el.appendChild(sep);
     howellGroups.forEach(g=>renderOptionBtn(el,g,false));
+  }
+}
+
+function renderPublicOption(el,g,best){
+  const card=document.createElement('div');
+  card.className='option-btn option-static';
+  const dc=g.options[0].donnesCirc;
+  const defStyle=g.deficient?'visibility:visible':'visibility:hidden';
+  const bestStyle=best?'visibility:visible':'visibility:hidden';
+  const toursLabel=g.options.length===1?g.options[0].tours+'x'+g.options[0].dpt:g.options.map(o=>o.tours+'x'+o.dpt).join(' ou ');
+  card.innerHTML=`
+    <div style="flex:1">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="option-main" style="line-height:1">${MOUV_LABEL[g.mouvement]}</span>
+        <span style="font-size:11px;line-height:1;position:relative;top:-1px;${bestStyle}">⭐</span>
+        <span style="font-size:11px;color:#f87171;font-weight:600;line-height:1;position:relative;top:-1px;${defStyle}">déficient</span>
+      </div>
+      <div class="option-detail">${g.tables} tables · ${toursLabel} donnes · ${dc} en circulation</div>
+    </div>
+    <span class="option-badge ${MOUV_BADGE[g.mouvement]}">${MOUV_SHORT[g.mouvement]}</span>`;
+  el.appendChild(card);
+}
+
+function updatePublicOptions(){
+  const input=document.getElementById('f-paires-public');
+  const el=document.getElementById('public-options-list');
+  const errEl=document.getElementById('e-paires-public');
+  if(!input||!el||!errEl) return;
+  const raw=input.value.trim();
+  const p=parseInt(raw)||0;
+  if(!raw){ errEl.style.display='none'; el.innerHTML=''; return; }
+  if(p<6||p>36){errEl.style.display='block';el.innerHTML='';return;}
+  errEl.style.display='none';
+
+  const mitchellGroups=getGrouped(p,DB);
+  const howellGroups=getGrouped(p,DB_HOWELL);
+  const allGroups=[...mitchellGroups,...howellGroups];
+  el.innerHTML='';
+  if(!allGroups.length){el.innerHTML='<p class="no-options">Aucun mouvement disponible</p>';return;}
+
+  if(mitchellGroups.length){
+    const sep=document.createElement('p');sep.className='section-sep';sep.textContent='Mitchell';el.appendChild(sep);
+    const hasAlt=mitchellGroups.some(g=>!g.deficient)&&mitchellGroups.some(g=>g.deficient);
+    mitchellGroups.forEach(g=>renderPublicOption(el,g,hasAlt&&!g.deficient));
+  }
+  if(howellGroups.length){
+    const sep=document.createElement('p');sep.className='section-sep';sep.textContent='Howell';el.appendChild(sep);
+    howellGroups.forEach(g=>renderPublicOption(el,g,false));
   }
 }
 
@@ -1720,7 +1814,7 @@ function reset(){
   if(btn) btn.style.display=hasValidGhToken()?'':'none';
   document.getElementById('tournoi-sub').textContent='Chargement...';
   document.getElementById('tournoi-list').innerHTML='';
-  const current=['s-tournoi','s-paires','s-tours','s-config','s-donnes','s-jeu','s-gen','s-delete','s-gen2','s-visu','s-liste-donnes'].find(s=>document.getElementById(s).classList.contains('active'));
+  const current=appScreens.find(s=>document.getElementById(s).classList.contains('active'));
   if(current) document.getElementById(current).classList.remove('active');
   document.getElementById('s-tournoi').classList.add('active');
   initTournoi();
@@ -1978,7 +2072,7 @@ try{
 async function checkForUpdate(repoSha){
   try{
     if(!hasValidGhToken()) return;
-    const {owner:user, repo}=getGhContext();
+    const {owner:user, repo}=getAppGhContext();
     const file='index.html';
     const token=(localStorage.getItem('gh_token')||'').trim();
 
@@ -2021,6 +2115,8 @@ function showUpdateBanner(){
 }
 
 setSens('NS');
+updatePublicOptions();
+syncHomeToAccess();
 initTournoi();
 (function(){ const b=document.getElementById('btn-charger-donnes'); if(b) b.style.display=hasValidGhToken()?'':'none'; })();
 
@@ -2983,6 +3079,7 @@ function closeTokenModal(){
   if(document._tokenEsc) document.removeEventListener('keydown', document._tokenEsc);
   updateTokenIndicator();
   applyTournoiTokenUI();
+  syncHomeToAccess();
   const btn=document.getElementById('btn-charger-donnes');
   if(btn && document.getElementById('s-config').classList.contains('active')){
     btn.style.display=hasValidGhToken()?'':'none';
@@ -2993,15 +3090,16 @@ function closeTokenModal(){
   }
 }
 function updateTokenIndicator(){
-  const btn = document.getElementById('btn-params');
-  if(!btn) return;
   const hasToken = hasGhToken();
   let dot='';
   if(hasToken){
     const color = isGhTokenBad() ? '#f87171' : (isGhTokenVerified() ? '#4ade80' : '#999');
     dot = `<span style="width:7px;height:7px;border-radius:50%;background:${color};display:inline-block;margin-left:2px;"></span>`;
   }
-  btn.innerHTML = '⚙ Paramètres'+dot;
+  ['btn-params','btn-public-params'].forEach(id=>{
+    const btn=document.getElementById(id);
+    if(btn) btn.innerHTML='⚙ Paramètres'+dot;
+  });
 }
 updateTokenIndicator();
 function saveModalToken(){
@@ -3010,6 +3108,10 @@ function saveModalToken(){
   // If value looks like our mask (starts with bullets), don't overwrite
   if(v && !/^•/.test(v)){ localStorage.setItem('gh_token', v); clearGhTokenBadFlag(); }
   closeTokenModal();
+  if(hasGhToken() && !isGhTokenBad()){
+    _initRunning=false;
+    initTournoi();
+  }
 }
 function clearPrivateSessionData(){
   try{ localStorage.removeItem('bridge_tournoi_list'); }catch(e){}
@@ -3027,17 +3129,18 @@ function clearModalToken(){
   clearGhTokenBadFlag();
   clearPrivateSessionData();
   document.getElementById('modal-token-input').value='';
-  // Si on était sur un écran privé, retour immédiat à l'accueil public.
-  privateScreens.forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('active'); });
-  const home=document.getElementById('s-tournoi'); if(home) home.classList.add('active');
+  // Retour immédiat à l'interface publique.
+  appScreens.forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('active'); });
+  const home=document.getElementById('s-public'); if(home) home.classList.add('active');
   navHistory=[];
+  updatePublicOptions();
   closeTokenModal();
 }
 
 async function uploadSelf(){
   const token = localStorage.getItem('gh_token')||'';
   if(!token){ openTokenModal(); return; }
-  const {owner:user, repo}=getGhContext();
+  const {owner:user, repo}=getAppGhContext();
   if(!confirm('Mettre à jour index.html sur '+user+'/'+repo+' ?')) return;
   try{
     let html;
