@@ -1924,7 +1924,7 @@ async function _initTournoiInner(){
     if(cached && cached.sha && cached.sha===currentSha && cached.tous && cached.counts){
       // Cache valide : affichage immediat, 0 requete supplementaire
       renderTournoiList(list, sub, cached.tous, cached.counts, today=>today);
-checkForUpdate(currentSha);
+checkForUpdate();
       return;
     }
 
@@ -1969,7 +1969,7 @@ checkForUpdate(currentSha);
 
     // Sauvegarder en cache avec le SHA actuel
     try{ localStorage.setItem(CACHE_KEY, JSON.stringify({sha:currentSha, tous, counts})); }catch(e){}
-    checkForUpdate(currentSha);
+    checkForUpdate();
 
   }catch(e){
     // Essayer d'afficher le cache même périmé en cas d'erreur réseau
@@ -2069,7 +2069,7 @@ try{
 }catch(e){}
 
 // Vérification de mise à jour via GitHub API
-async function checkForUpdate(repoSha){
+async function checkForUpdate(){
   try{
     if(!hasValidGhToken()) return;
     const {owner:user, repo}=getAppGhContext();
@@ -2081,8 +2081,9 @@ async function checkForUpdate(repoSha){
     let cached=null;
     try{ cached=JSON.parse(localStorage.getItem(CACHE_KEY)||'null'); }catch(e){}
 
-    // Si le SHA repo n'a pas change depuis le dernier check ET TTL non expire : rien a faire
-    if(cached && cached.repoSha===repoSha && Date.now()-cached.ts < CACHE_TTL) return;
+    // Cette vérification concerne uniquement l'application publique MVT.
+    // Elle est volontairement indépendante du SHA du dépôt privé MVT-Private.
+    if(cached && Date.now()-cached.ts < CACHE_TTL) return;
 
     const res=await fetch(`https://api.github.com/repos/${user}/${repo}/commits?path=${file}&per_page=1`,
       {headers:{Accept:'application/vnd.github.v3+json',Authorization:`token ${token}`}});
@@ -2092,7 +2093,7 @@ async function checkForUpdate(repoSha){
 
     const lastCommit=data[0].sha;
     const storedCommit=localStorage.getItem('bridge_commit');
-    try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), repoSha})); }catch(e){}
+    try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), appCommit:lastCommit})); }catch(e){}
 
     if(storedCommit && storedCommit!==lastCommit){
       localStorage.setItem('bridge_commit', lastCommit);
@@ -2117,7 +2118,7 @@ function showUpdateBanner(){
 setSens('NS');
 updatePublicOptions();
 syncHomeToAccess();
-initTournoi();
+if(hasGhToken() && !isGhTokenBad()) initTournoi();
 (function(){ const b=document.getElementById('btn-charger-donnes'); if(b) b.style.display=hasValidGhToken()?'':'none'; })();
 
 // touchend sur les boutons nav pour éviter le délai 300ms iOS
@@ -2259,7 +2260,7 @@ addNavListener('btn-next', 1);
 
   async function uploadToGitHub(fname,jsonStr){
     const token=getToken();
-    if(!token) return {ok:false,msg:'Token GitHub manquant'};
+    if(!token || !hasValidGhToken()) return {ok:false,msg:'Accès arbitre requis'};
     const apiUrl=`https://api.github.com/repos/${GH_OWNER_GEN}/${GH_REPO_GEN}/contents/${fname}`;
     let sha;
     try{
@@ -2857,7 +2858,7 @@ function saveToken(t){ localStorage.setItem('gh_token', t.trim()); }
 
 async function ghUpload(fname, fileContent, isBinary=false){
   const token = getToken();
-  if(!token) return {ok:false, msg:'Token manquant'};
+  if(!token || !hasValidGhToken()) return {ok:false, msg:'Accès arbitre requis'};
   const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${fname}`;
   let sha;
   try{
@@ -2875,7 +2876,7 @@ async function ghUpload(fname, fileContent, isBinary=false){
 
 async function publish(){
   if(Object.keys(donnes).length===0){ toast('Aucune donne saisie'); return; }
-  if(!getToken()){ toast('Token GitHub manquant — saisissez-le en bas'); return; }
+  if(!hasValidGhToken()){ toast('Accès arbitre requis'); return; }
 
   const sorted={};
   if(gameDate) sorted['date']=gameDate;
@@ -2993,7 +2994,7 @@ async function delGroup(id){
   const g=window._delMap&&window._delMap[id];
   if(!g)return;
   const{files,token,user,repo}=g;
-  if(!token){alert('Token GitHub requis.');return;}
+  if(!token || !hasValidGhToken()){alert('Accès arbitre requis.');return;}
   if(!confirm('Supprimer '+files.map(f=>f.name).join(' et ')+' ?'))return;
   const el=document.getElementById('dg'+id.slice(1));
   if(el)el.style.opacity='0.4';
@@ -3114,13 +3115,39 @@ function saveModalToken(){
   }
 }
 function clearPrivateSessionData(){
+  // Effacer les caches et états privés en mémoire/localStorage.
   try{ localStorage.removeItem('bridge_tournoi_list'); }catch(e){}
   try{ localStorage.removeItem('bridge_state'); }catch(e){}
   try{ localStorage.removeItem('bridge_update_check'); }catch(e){}
   donnesData={};
   window._donnesFichier=null;
+  window._delMap={};
   try{ _visuCache={}; }catch(e){}
   try{ donnes={}; pbnFile=null; }catch(e){}
+  try{ visuDeals=[]; visuIdx=0; }catch(e){}
+
+  // Effacer aussi tout contenu privé déjà rendu dans le DOM. Ainsi, après retrait
+  // ou invalidation du token, rien de précédemment affiché ne reste récupérable
+  // simplement en réaffichant un écran via les DevTools.
+  const emptyHtmlIds=[
+    'tournoi-list','delete-list','liste-donnes-chips','visu-content',
+    'gen-preview','events-list'
+  ];
+  emptyHtmlIds.forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=''; });
+  const emptyTextIds=[
+    'tournoi-sub','delete-sub','liste-donnes-count','visu-ctr',
+    'gen-status','donnes-status'
+  ];
+  emptyTextIds.forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=''; });
+  const resume=document.getElementById('s-tournoi-resume');
+  if(resume) resume.style.display='none';
+  ['resume-desc','resume-sub'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=''; });
+  const genResults=document.getElementById('gen-results'); if(genResults) genResults.style.display='none';
+  const genInput=document.getElementById('gen-input'); if(genInput) genInput.value='';
+  const donnesInput=document.getElementById('donnes-input'); if(donnesInput) donnesInput.value='';
+  const pbnInput=document.getElementById('pbn-input'); if(pbnInput) pbnInput.value='';
+  try{ gameDate=''; }catch(e){}
+  try{ buildTable(); }catch(e){}
   updateListeDonnesBtn();
 }
 
@@ -3139,7 +3166,7 @@ function clearModalToken(){
 
 async function uploadSelf(){
   const token = localStorage.getItem('gh_token')||'';
-  if(!token){ openTokenModal(); return; }
+  if(!token || !hasValidGhToken()){ openTokenModal(); return; }
   const {owner:user, repo}=getAppGhContext();
   if(!confirm('Mettre à jour index.html sur '+user+'/'+repo+' ?')) return;
   try{
