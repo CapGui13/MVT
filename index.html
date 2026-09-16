@@ -2371,7 +2371,23 @@ addNavListener('btn-next', 1);
 // ── PAR des donnes (s-gen2) ──
 let donnes = {};
 let gameDate = '';
-let pbnFile = null; // raw PBN text
+let pbnFile = null; // PBN décodé (texte) utilisé par le parseur/visualiseur
+let pbnBytes = null; // octets originaux du PBN, conservés pour un upload fidèle
+let pbnSelectedName = '';
+let pbnImportPromise = null;
+let pbnImportPending = false;
+let pbnImportError = '';
+let publishRunning = false;
+
+function resetLocalPbn(){
+  pbnFile = null;
+  pbnBytes = null;
+  pbnSelectedName = '';
+  pbnImportPromise = null;
+  pbnImportPending = false;
+  pbnImportError = '';
+}
+
 const DAYS = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
@@ -2556,34 +2572,72 @@ function buildTable() {
 function importPBN(input) {
   const file = input.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const text = e.target.result;
-    pbnFile = text;
-    window._donnesFichier = null; // priorité au PBN local fraîchement importé
-    const imported = parsePBN(text);
-    if (imported.count === 0) { toast('Aucun par trouvé dans ce fichier'); return; }
-    let filled = 0;
-    for (const [num, d] of Object.entries(imported.data)) {
-      const n = parseInt(num);
-      if (!donnes[n]) donnes[n] = {ns:'', eo:'', noteNs:'', noteEo:''};
-      let changed = false;
-      if (n > 36) continue;
-      if (d.ns && !donnes[n].ns) { donnes[n].ns = d.ns; changed = true; }
-      if (d.eo && !donnes[n].eo) { donnes[n].eo = d.eo; changed = true; }
-      if (d.noteNs && !donnes[n].noteNs) { donnes[n].noteNs = d.noteNs; changed = true; }
-      if (d.noteEo && !donnes[n].noteEo) { donnes[n].noteEo = d.noteEo; changed = true; }
-      if (changed) filled++;
-      if (!donnes[n].ns && !donnes[n].eo && !donnes[n].noteNs && !donnes[n].noteEo) delete donnes[n];
+
+  // Marquer le PBN comme attendu immédiatement : un clic très rapide sur
+  // « Publier » attendra cette lecture au lieu de publier le JSON seul.
+  pbnSelectedName = file.name;
+  pbnFile = null;
+  pbnBytes = null;
+  pbnImportError = '';
+  pbnImportPending = true;
+
+  pbnImportPromise = (async () => {
+    try {
+      const buffer = await file.arrayBuffer();
+      pbnBytes = new Uint8Array(buffer);
+
+      // Le PBN est historiquement lu en latin-1 dans MVT. On garde les octets
+      // originaux séparément afin que l'upload soit strictement identique au fichier.
+      let text;
+      try {
+        text = new TextDecoder('iso-8859-1').decode(pbnBytes);
+      } catch(e) {
+        // Secours pour les navigateurs anciens.
+        let bin = '';
+        for(let i=0;i<pbnBytes.length;i++) bin += String.fromCharCode(pbnBytes[i]);
+        text = bin;
+      }
+      pbnFile = text;
+      window._donnesFichier = null; // priorité au PBN local fraîchement importé
+
+      const imported = parsePBN(text);
+      if (imported.count === 0) {
+        pbnImportError = 'Aucun par trouvé dans ce fichier';
+        toast(pbnImportError);
+        return false;
+      }
+
+      let filled = 0;
+      for (const [num, d] of Object.entries(imported.data)) {
+        const n = parseInt(num);
+        if (!donnes[n]) donnes[n] = {ns:'', eo:'', noteNs:'', noteEo:''};
+        let changed = false;
+        if (n > 36) continue;
+        if (d.ns && !donnes[n].ns) { donnes[n].ns = d.ns; changed = true; }
+        if (d.eo && !donnes[n].eo) { donnes[n].eo = d.eo; changed = true; }
+        if (d.noteNs && !donnes[n].noteNs) { donnes[n].noteNs = d.noteNs; changed = true; }
+        if (d.noteEo && !donnes[n].noteEo) { donnes[n].noteEo = d.noteEo; changed = true; }
+        if (changed) filled++;
+        if (!donnes[n].ns && !donnes[n].eo && !donnes[n].noteNs && !donnes[n].noteEo) delete donnes[n];
+      }
+
+      const dateMatch = file.name.match(/(\d{4})(\d{2})(\d{2})/);
+      if (dateMatch) setGameDate(`${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`);
+      buildTable();
+      updateTokenIndicator();
+      toast('✓ ' + filled + ' par(s) importé(s) depuis ' + file.name);
+      return true;
+    } catch(e) {
+      pbnFile = null;
+      pbnBytes = null;
+      pbnImportError = e && e.message ? e.message : 'Lecture du PBN impossible';
+      toast('✕ PBN : ' + pbnImportError);
+      return false;
+    } finally {
+      pbnImportPending = false;
+      input.value = '';
     }
-    const dateMatch = file.name.match(/(\d{4})(\d{2})(\d{2})/);
-    if (dateMatch) setGameDate(`${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`);
-    buildTable();
-updateTokenIndicator();
-    toast('✓ ' + filled + ' par(s) importé(s) depuis ' + file.name);
-    input.value = '';
-  };
-  reader.readAsText(file, 'latin-1');
+  })();
 }
 
 // ─── Clear ────────────────────────────────────────────────────
@@ -2905,51 +2959,151 @@ const GH_BRANCH = 'main';
 function getToken(){ return localStorage.getItem('gh_token')||''; }
 function saveToken(t){ localStorage.setItem('gh_token', t.trim()); }
 
+function bytesToBase64(bytes){
+  const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
+  const CHUNK = 0x8000;
+  let binary = '';
+  for(let i=0;i<arr.length;i+=CHUNK){
+    binary += String.fromCharCode(...arr.subarray(i, i+CHUNK));
+  }
+  return btoa(binary);
+}
+
 async function ghUpload(fname, fileContent, isBinary=false){
   const token = getToken();
   if(!token || !hasValidGhToken()) return {ok:false, msg:'Accès arbitre requis'};
-  const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${fname}`;
+  const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${ghPath(fname)}`;
   let sha;
   try{
-    const check = await fetch(apiUrl,{headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json'}});
+    const check = await fetch(apiUrl,{headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'}});
     if(check.ok){ const data=await check.json(); sha=data.sha; }
-  }catch(e){}
-  const encoded = isBinary ? btoa(Array.from(fileContent).map(c=>c.charCodeAt(0)&0xff).map(b=>String.fromCharCode(b)).join('')) : btoa(unescape(encodeURIComponent(fileContent)));
+    else if(check.status===401){ markGhTokenBad(); return {ok:false,msg:'Token GitHub invalide'}; }
+  }catch(e){
+    return {ok:false,msg:'Connexion GitHub impossible'};
+  }
+
+  let encoded;
+  try{
+    encoded = isBinary
+      ? bytesToBase64(fileContent)
+      : btoa(unescape(encodeURIComponent(String(fileContent))));
+  }catch(e){
+    return {ok:false,msg:'Encodage du fichier impossible'};
+  }
+
   const body = {message:`Ajout ${fname}`, content:encoded, branch:GH_BRANCH};
   if(sha) body.sha = sha;
-  const res = await fetch(apiUrl,{method:'PUT',headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
-  if(res.ok) return {ok:true};
-  const err = await res.json().catch(()=>({}));
-  return {ok:false, msg:err.message||`Erreur ${res.status}`};
+  try{
+    const res = await fetch(apiUrl,{method:'PUT',headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(res.ok){
+      const data=await res.json().catch(()=>({}));
+      return {ok:true, sha:data?.content?.sha||null, path:data?.content?.path||fname};
+    }
+    if(res.status===401){ markGhTokenBad(); return {ok:false,msg:'Token GitHub invalide'}; }
+    const err = await res.json().catch(()=>({}));
+    return {ok:false, msg:err.message||`Erreur ${res.status}`};
+  }catch(e){
+    return {ok:false,msg:'Connexion GitHub interrompue'};
+  }
+}
+
+async function ghVerifyFile(fname){
+  const token=getToken();
+  if(!token || !hasValidGhToken()) return {ok:false,msg:'Accès arbitre requis'};
+  const url=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${ghPath(fname)}?ref=${encodeURIComponent(GH_BRANCH)}&t=${Date.now()}`;
+  try{
+    const res=await fetch(url,{headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'}});
+    if(res.ok) return {ok:true};
+    if(res.status===401){ markGhTokenBad(); return {ok:false,msg:'Token GitHub invalide'}; }
+    if(res.status===404) return {ok:false,msg:`${fname} absent sur GitHub`};
+    return {ok:false,msg:`Vérification GitHub : erreur ${res.status}`};
+  }catch(e){
+    return {ok:false,msg:'Vérification GitHub impossible'};
+  }
+}
+
+async function ghVerifyFiles(fnames){
+  // Deux petites tentatives évitent qu'un éventuel cache API juste après le PUT
+  // transforme une publication réussie en faux négatif.
+  let last=[];
+  for(let attempt=0;attempt<2;attempt++){
+    last=[];
+    let allOk=true;
+    for(const fname of fnames){
+      const r=await ghVerifyFile(fname);
+      last.push({fname,...r});
+      if(!r.ok) allOk=false;
+    }
+    if(allOk) return {ok:true};
+    if(attempt===0) await new Promise(r=>setTimeout(r,450));
+  }
+  const bad=last.find(x=>!x.ok);
+  return {ok:false,msg:bad?.msg||'Vérification GitHub échouée'};
 }
 
 async function publish(){
-  if(Object.keys(donnes).length===0){ toast('Aucune donne saisie'); return; }
-  if(!hasValidGhToken()){ toast('Accès arbitre requis'); return; }
+  if(publishRunning){ toast('Publication déjà en cours…'); return; }
+  publishRunning=true;
+  try{
+    // Si un PBN vient d'être choisi, attendre explicitement la fin de sa lecture.
+    // C'est le garde-fou principal contre le couple JSON présent / PBN absent.
+    if(pbnImportPromise){
+      if(pbnImportPending) toast('⏳ Lecture du PBN…');
+      const importedOk=await pbnImportPromise;
+      if(!importedOk || !pbnFile || !pbnBytes || !pbnBytes.length){
+        toast('✕ PBN non prêt : publication annulée');
+        return;
+      }
+    }
 
-  const sorted={};
-  if(gameDate) sorted['date']=gameDate;
-  Object.keys(donnes).map(Number).sort((a,b)=>a-b).forEach(k=>{ sorted[k]=donnes[k]; });
-  const dateStr=gameDate||`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
-  const jsonFname = `donnes${dateStr}.json`;
-  const jsonStr = JSON.stringify(sorted,null,2);
+    if(Object.keys(donnes).length===0){ toast('Aucune donne saisie'); return; }
+    if(!hasValidGhToken()){ toast('Accès arbitre requis'); return; }
 
-  toast('⏳ Publication en cours…');
+    // Si un fichier a été sélectionné dans cette séance, il est obligatoire :
+    // on ne retombe jamais silencieusement sur une publication JSON seule.
+    if(pbnSelectedName && (!pbnFile || !pbnBytes || !pbnBytes.length)){
+      toast('✕ PBN sélectionné mais non chargé : publication annulée');
+      return;
+    }
 
-  // Upload JSON
-  const jsonResult = await ghUpload(jsonFname, jsonStr);
-  if(!jsonResult.ok){ toast('✕ JSON : '+jsonResult.msg); return; }
+    const sorted={};
+    if(gameDate) sorted['date']=gameDate;
+    Object.keys(donnes).map(Number).sort((a,b)=>a-b).forEach(k=>{ sorted[k]=donnes[k]; });
+    const dateStr=gameDate||`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+    const jsonFname = `donnes${dateStr}.json`;
+    const pbnFname = jsonFname.replace('.json','.pbn');
+    const jsonStr = JSON.stringify(sorted,null,2);
+    const hasLocalPbn = !!(pbnFile && pbnBytes && pbnBytes.length);
 
-  // Upload PBN if available (same base name as JSON, .pbn extension)
-  if(pbnFile){
-    const pbnFname2 = jsonFname.replace('.json','.pbn');
-    const pbnResult = await ghUpload(pbnFname2, pbnFile, true);
-    if(!pbnResult.ok){ toast(`✓ JSON publié, ✕ PBN : ${pbnResult.msg}`); return; }
-    toast(`✓ ${jsonFname} + ${jsonFname.replace('.json','.pbn')} publiés`);
-  } else {
-    toast(`✓ ${jsonFname} publié sur ${GH_OWNER}/${GH_REPO}`);
+    toast('⏳ Publication en cours…');
+
+    // Quand un PBN est disponible, l'envoyer AVANT le JSON. Ainsi une panne sur
+    // l'upload PBN ne peut plus laisser derrière elle un nouveau JSON orphelin.
+    if(hasLocalPbn){
+      const pbnResult = await ghUpload(pbnFname, pbnBytes, true);
+      if(!pbnResult.ok){ toast(`✕ PBN : ${pbnResult.msg} — JSON non publié`); return; }
+    }
+
+    const jsonResult = await ghUpload(jsonFname, jsonStr);
+    if(!jsonResult.ok){
+      toast(hasLocalPbn ? `✓ PBN publié, ✕ JSON : ${jsonResult.msg}` : `✕ JSON : ${jsonResult.msg}`);
+      return;
+    }
+
+    const expected = hasLocalPbn ? [jsonFname,pbnFname] : [jsonFname];
+    const verify = await ghVerifyFiles(expected);
+    if(!verify.ok){
+      toast('✕ Publication non confirmée : '+verify.msg);
+      return;
+    }
+
+    if(hasLocalPbn) toast(`✓ ${jsonFname} + ${pbnFname} publiés et vérifiés`);
+    else toast(`✓ ${jsonFname} publié et vérifié sur ${GH_OWNER}/${GH_REPO}`);
+
+    try{ localStorage.removeItem('bridge_tournoi_list'); }catch(e){}
+  } finally {
+    publishRunning=false;
   }
-  try{ localStorage.removeItem('bridge_tournoi_list'); }catch(e){}
 }
 
 buildTable();
@@ -3076,7 +3230,7 @@ async function delGroup(id){
 function openGen2Fresh(){
   if(!hasValidGhToken()) return;
   donnes={};
-  pbnFile=null;
+  resetLocalPbn();
   window._donnesFichier=null;
   gameDate='';
   document.getElementById('day-of-week').textContent='—';
@@ -3096,7 +3250,7 @@ async function openGen2FromFile(id){
     const data=await ghReadJsonFile(g.fname);
     // Réinitialiser les donnes
     donnes={};
-    pbnFile=null;
+    resetLocalPbn();
     // Le PBN correspondant partage le même nom de base que le JSON (donnesYYYY-MM-DD.pbn)
     window._donnesFichier=g.fname;
     Object.keys(data).forEach(k=>{
@@ -3181,7 +3335,7 @@ function clearPrivateSessionData(){
   window._donnesFichier=null;
   window._delMap={};
   try{ _visuCache={}; }catch(e){}
-  try{ donnes={}; pbnFile=null; }catch(e){}
+  try{ donnes={}; resetLocalPbn(); }catch(e){}
   try{ visuDeals=[]; visuIdx=0; }catch(e){}
 
   // Effacer aussi tout contenu privé déjà rendu dans le DOM. Ainsi, après retrait
@@ -3291,6 +3445,7 @@ let _visuCache = {};
 
 async function openVisu(boardNum) {
   const fname = window._donnesFichier;
+  const expectedPbnFname = fname ? fname.replace('.json', '.pbn') : '';
 
   goTo('s-visu');
 
@@ -3322,7 +3477,11 @@ async function openVisu(boardNum) {
     if(visuIdx < 0) visuIdx = 0;
     visuRender(visuIdx);
   } catch(e) {
-    document.getElementById('visu-content').innerHTML = `<div style="color:#f87171;text-align:center;padding:2rem;">Erreur : ${vEsc(e.message)}</div>`;
+    const missingPbn = expectedPbnFname && /GitHub\s*:\s*erreur\s*404/i.test(String(e.message||''));
+    const msg = missingPbn
+      ? `PBN correspondant absent sur GitHub (${expectedPbnFname}).`
+      : `Erreur : ${e.message}`;
+    document.getElementById('visu-content').innerHTML = `<div style="color:#f87171;text-align:center;padding:2rem;">${vEsc(msg)}</div>`;
   }
 }
 
