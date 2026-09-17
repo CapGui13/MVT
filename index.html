@@ -1952,8 +1952,8 @@ async function _initTournoiInner(){
       const ownerOk=await verifyGhOwner(_tok, user);
       if(!ownerOk){ markGhTokenBad(); return; }
     }
-    const commitRes=await fetch(`https://api.github.com/repos/${user}/${repo}/commits?per_page=1`,
-      {headers:{Accept:'application/vnd.github.v3+json',...(_tok?{Authorization:`token ${_tok}`}:{})}});
+    const commitRes=await fetch(`https://api.github.com/repos/${user}/${repo}/commits?per_page=1&t=${Date.now()}`,
+      {cache:'no-store',headers:{Accept:'application/vnd.github.v3+json',...(_tok?{Authorization:`token ${_tok}`}:{})}});
     if(!commitRes.ok){
       if(commitRes.status===401){ markGhTokenBad(); return; }
       if(commitRes.status===403) throw new Error('Limite API atteinte');
@@ -1974,8 +1974,8 @@ checkForUpdate();
     }
 
     // Cache invalide ou absent → charger la liste complète
-    const res=await fetch(`https://api.github.com/repos/${user}/${repo}/contents/`,
-      {headers:{Accept:'application/vnd.github.v3+json',...(_tok?{Authorization:`token ${_tok}`}:{})}});
+    const res=await fetch(`https://api.github.com/repos/${user}/${repo}/contents/?ref=main&t=${Date.now()}`,
+      {cache:'no-store',headers:{Accept:'application/vnd.github.v3+json',...(_tok?{Authorization:`token ${_tok}`}:{})}});
     if(!res.ok){
       if(res.status===401){ markGhTokenBad(); return; }
       if(res.status===403) throw new Error('Limite API atteinte');
