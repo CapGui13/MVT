@@ -2973,9 +2973,13 @@ async function ghUpload(fname, fileContent, isBinary=false){
   const token = getToken();
   if(!token || !hasValidGhToken()) return {ok:false, msg:'Accès arbitre requis'};
   const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${ghPath(fname)}`;
+  // Ne pas envoyer Cache-Control comme header manuel : depuis GitHub Pages,
+  // ce header peut faire échouer le preflight CORS avant même l'appel API.
+  // Le paramètre t= suffit à neutraliser un éventuel cache sur le GET de contrôle.
+  const checkUrl = `${apiUrl}?ref=${encodeURIComponent(GH_BRANCH)}&t=${Date.now()}`;
   let sha;
   try{
-    const check = await fetch(apiUrl,{headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'}});
+    const check = await fetch(checkUrl,{headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json'}});
     if(check.ok){ const data=await check.json(); sha=data.sha; }
     else if(check.status===401){ markGhTokenBad(); return {ok:false,msg:'Token GitHub invalide'}; }
   }catch(e){
@@ -3012,7 +3016,7 @@ async function ghVerifyFile(fname){
   if(!token || !hasValidGhToken()) return {ok:false,msg:'Accès arbitre requis'};
   const url=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${ghPath(fname)}?ref=${encodeURIComponent(GH_BRANCH)}&t=${Date.now()}`;
   try{
-    const res=await fetch(url,{headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json','Cache-Control':'no-cache'}});
+    const res=await fetch(url,{headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json'}});
     if(res.ok) return {ok:true};
     if(res.status===401){ markGhTokenBad(); return {ok:false,msg:'Token GitHub invalide'}; }
     if(res.status===404) return {ok:false,msg:`${fname} absent sur GitHub`};
