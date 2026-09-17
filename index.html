@@ -1919,6 +1919,11 @@ function modeLabel(m){
 // ============================================================
 
 let _initRunning=false;
+// Une vraie recharge de page (F5 / Ctrl+F5) doit toujours reconstruire
+// la liste des tournois depuis GitHub. Le cache reste utile pendant
+// la session SPA, mais ne doit jamais survivre à un reload du document.
+try{ localStorage.removeItem('bridge_tournoi_list'); }catch(e){}
+
 async function initTournoi(){
   applyTournoiTokenUI(); // masque tout ce qui dépend du token tant qu'il n'est pas vérifié
   if(!hasGhToken()||isGhTokenBad()) return; // pas de token, ou déjà su mauvais : rien à vérifier
