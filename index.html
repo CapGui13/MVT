@@ -2834,7 +2834,7 @@ function detectHandFeatures(hands) {
         if(!hasK || !hasJ) return;
         // Avec 9 cartes dans la couleur et As-Roi sans la Dame,
         // la position de la Dame n'est pas une information utile à afficher.
-        if(declCards.length === 9 && hasA && hasK && !hasQ) return;
+        if(declCards.length >= 9 && hasA && hasK && !hasQ) return;
       }
       shortEntries.push(e);
     }));
@@ -2893,7 +2893,7 @@ function detectHandFeatures(hands) {
 
       // Cas 3 : ARVX sans la Dame, répartis RX face à AV ou RV face à AX.
       // Petites cartes autorisées ; au moins une des deux mains doit être 3e ou plus dans la couleur.
-      if(hasA && hasK && hasJ && declCards.includes('T') && !hasQ && declCards.length !== 9) {
+      if(hasA && hasK && hasJ && declCards.includes('T') && !hasQ && declCards.length < 9) {
         const c1 = (hands[declDirs[0]] && hands[declDirs[0]][suit]) || '';
         const c2 = (hands[declDirs[1]] && hands[declDirs[1]][suit]) || '';
         const has = (cards, rank) => cards.includes(rank);
