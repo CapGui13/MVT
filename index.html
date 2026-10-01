@@ -2804,11 +2804,11 @@ function detectHandFeatures(hands) {
       const suitFr = HAND_FEAT_SUIT_FR[suit];
       if(cards.length === 1) {
         const c = cards[0];
-        if(c === 'A') baseByDir[dir].push({rank:'A', suit, text:`A${suitFr} sec en ${dirFr}`});
-        else if(c === 'K') baseByDir[dir].push({rank:'R', suit, text:`R${suitFr} sec en ${dirFr}`});
-        else if(c === 'Q') baseByDir[dir].push({rank:'D', suit, text:`D${suitFr} sec en ${dirFr}`});
+        if(c === 'A') baseByDir[dir].push({rank:'A', suit, len:1, text:`A${suitFr} sec en ${dirFr}`});
+        else if(c === 'K') baseByDir[dir].push({rank:'R', suit, len:1, text:`R${suitFr} sec en ${dirFr}`});
+        else if(c === 'Q') baseByDir[dir].push({rank:'D', suit, len:1, text:`D${suitFr} sec en ${dirFr}`});
       } else if(cards.length === 2 && cards.includes('Q') && !cards.includes('A') && !cards.includes('K')) {
-        baseByDir[dir].push({rank:'D', suit, text:`D${suitFr} 2nd en ${dirFr}`});
+        baseByDir[dir].push({rank:'D', suit, len:2, text:`D${suitFr} 2nd en ${dirFr}`});
       }
     });
   });
@@ -2828,13 +2828,21 @@ function detectHandFeatures(hands) {
         const hasK = declCards.includes('K');
         const hasQ = declCards.includes('Q');
         const hasJ = declCards.includes('J');
-        // Une Dame courte n'est utile à signaler que si le camp possède
-        // à la fois le Roi et le Valet de la couleur.
-        // L'As seul, le Roi seul, ou As-Roi sans le Valet ne suffisent pas.
-        if(!hasK || !hasJ) return;
-        // Avec 9 cartes dans la couleur et As-Roi sans la Dame,
-        // la position de la Dame n'est pas une information utile à afficher.
-        if(declCards.length >= 9 && hasA && hasK && !hasQ) return;
+
+        // Une Dame sèche/2nde n'est signalée que si sa chute peut réellement
+        // créer une levée : le camp doit avoir A-R-V, et le Valet doit survivre
+        // aux tours d'honneurs nécessaires pour faire tomber la Dame.
+        if(!hasA || !hasK || !hasJ) return;
+
+        // Avec 9 cartes ou plus et A-R sans la Dame, on tire en tête :
+        // inutile d'indiquer où se trouve la Dame.
+        if(declCards.length >= 9 && !hasQ) return;
+
+        // Si la Dame est sèche, le Valet doit être au moins second.
+        // Si la Dame est seconde, le Valet doit être au moins troisième.
+        const jDir = declDirs.find(d => ((hands[d] && hands[d][e.suit]) || '').includes('J'));
+        const jCards = jDir ? ((hands[jDir] && hands[jDir][e.suit]) || '') : '';
+        if(jCards.length <= (e.len || 0)) return;
       }
       shortEntries.push(e);
     }));
