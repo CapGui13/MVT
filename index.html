@@ -2804,11 +2804,11 @@ function detectHandFeatures(hands) {
       const suitFr = HAND_FEAT_SUIT_FR[suit];
       if(cards.length === 1) {
         const c = cards[0];
-        if(c === 'A') baseByDir[dir].push({rank:'A', text:`A${suitFr} sec en ${dirFr}`});
-        else if(c === 'K') baseByDir[dir].push({rank:'R', text:`R${suitFr} sec en ${dirFr}`});
-        else if(c === 'Q') baseByDir[dir].push({rank:'D', text:`D${suitFr} sec en ${dirFr}`});
+        if(c === 'A') baseByDir[dir].push({rank:'A', suit, text:`A${suitFr} sec en ${dirFr}`});
+        else if(c === 'K') baseByDir[dir].push({rank:'R', suit, text:`R${suitFr} sec en ${dirFr}`});
+        else if(c === 'Q') baseByDir[dir].push({rank:'D', suit, text:`D${suitFr} sec en ${dirFr}`});
       } else if(cards.length === 2 && cards.includes('Q') && !cards.includes('A') && !cards.includes('K')) {
-        baseByDir[dir].push({rank:'D', text:`D${suitFr} 2nd en ${dirFr}`});
+        baseByDir[dir].push({rank:'D', suit, text:`D${suitFr} 2nd en ${dirFr}`});
       }
     });
   });
@@ -2819,7 +2819,15 @@ function detectHandFeatures(hands) {
 
     // 1) Honneurs courts chez l'adversaire, triés As > Roi > Dame
     const shortEntries = [];
-    oppDirs.forEach(dir => baseByDir[dir].forEach(e => shortEntries.push(e)));
+    oppDirs.forEach(dir => baseByDir[dir].forEach(e => {
+      // Une Dame courte n'est utile à signaler que si le camp déclarant
+      // possède au moins l'As ou le Roi dans cette couleur.
+      if(e.rank === 'D') {
+        const declCards = declDirs.map(d => (hands[d] && hands[d][e.suit]) || '').join('');
+        if(!declCards.includes('A') && !declCards.includes('K')) return;
+      }
+      shortEntries.push(e);
+    }));
     shortEntries.sort((a,b) => HAND_FEAT_RANK_ORDER[a.rank]-HAND_FEAT_RANK_ORDER[b.rank]);
     const shortTexts = [];
     shortEntries.forEach(e => { if(!seen.has(e.text)){ seen.add(e.text); shortTexts.push(e.text); } });
