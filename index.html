@@ -2827,10 +2827,11 @@ function detectHandFeatures(hands) {
         const hasA = declCards.includes('A');
         const hasK = declCards.includes('K');
         const hasQ = declCards.includes('Q');
-        // Une Dame courte n'est utile à signaler que si le camp possède le Roi.
-        // Avoir seulement l'As ne suffit pas : la position de la Dame n'apporte
-        // alors rien d'exploitable au maniement de la couleur.
-        if(!hasK) return;
+        const hasJ = declCards.includes('J');
+        // Une Dame courte n'est utile à signaler que si le camp possède
+        // à la fois le Roi et le Valet de la couleur.
+        // L'As seul, le Roi seul, ou As-Roi sans le Valet ne suffisent pas.
+        if(!hasK || !hasJ) return;
         // Avec 9 cartes dans la couleur et As-Roi sans la Dame,
         // la position de la Dame n'est pas une information utile à afficher.
         if(declCards.length === 9 && hasA && hasK && !hasQ) return;
