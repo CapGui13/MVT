@@ -2852,8 +2852,9 @@ function detectHandFeatures(hands) {
       const hasA = declCards.includes('A'), hasK = declCards.includes('K');
       const hasQ = declCards.includes('Q'), hasJ = declCards.includes('J');
 
-      // Cas 1 : déclarant a AD ou ADV, sans le Roi → localiser le Roi chez l'adversaire (seulement si sec ou 2nd)
-      if(hasA && hasQ && !hasK) {
+      // Cas 1 : déclarant a ADV, sans le Roi → localiser le Roi chez l'adversaire (seulement si sec ou 2nd).
+      // Sans le Valet, la position courte du Roi n'apporte pas de maniement utile à signaler.
+      if(hasA && hasQ && hasJ && !hasK) {
         for(const dir of oppDirs) {
           const cards = (hands[dir] && hands[dir][suit]) || '';
           if(cards.includes('K')) {
