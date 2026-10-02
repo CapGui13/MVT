@@ -2820,14 +2820,24 @@ function detectHandFeatures(hands) {
     // 1) Honneurs courts chez l'adversaire, triés As > Roi > Dame
     const shortEntries = [];
     oppDirs.forEach(dir => baseByDir[dir].forEach(e => {
+      const declCards = declDirs.map(d => (hands[d] && hands[d][e.suit]) || '').join('');
+      const hasA = declCards.includes('A');
+      const hasK = declCards.includes('K');
+      const hasQ = declCards.includes('Q');
+      const hasJ = declCards.includes('J');
+
+      // Roi sec adverse : avec 11 cartes dans la ligne, le maniement est de
+      // tirer en tête ; la position du Roi sec n'apporte donc aucune information.
+      // Un Roi second reste en revanche potentiellement utile et est traité plus bas.
+      if(e.rank === 'R' && e.len === 1 && declCards.length >= 11) return;
+
+      // As sec adverse : avec 10 cartes ou plus et R-D dans la ligne, on joue en tête ;
+      // signaler l'As sec ne change pas le maniement.
+      if(e.rank === 'A' && e.len === 1 && declCards.length >= 10 && hasK && hasQ) return;
+
       // Une Dame courte n'est utile à signaler que si le camp déclarant
       // possède au moins l'As ou le Roi dans cette couleur.
       if(e.rank === 'D') {
-        const declCards = declDirs.map(d => (hands[d] && hands[d][e.suit]) || '').join('');
-        const hasA = declCards.includes('A');
-        const hasK = declCards.includes('K');
-        const hasQ = declCards.includes('Q');
-        const hasJ = declCards.includes('J');
 
         // Une Dame sèche/2nde n'est signalée que si sa chute peut réellement
         // créer une levée : le camp doit avoir A-R-V, et le Valet doit survivre
