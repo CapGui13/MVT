@@ -2863,6 +2863,7 @@ function detectHandFeatures(hands) {
     const missingKing = [];   // Cas 1 : AD/ADV sans le Roi
     const missingAQ = [];     // Cas 2 : RV/RVX sans As ni Dame
     const twoWayQueen = [];   // Cas 3 : ARVX, impasse à la Dame possible dans les 2 sens
+    const jackFinesse = [];    // Cas 4 : D face à R109, As-Valet groupés chez un adversaire
 
     SUIT_KEYS.forEach(suit => {
       const suitFr = HAND_FEAT_SUIT_FR[suit];
@@ -2909,6 +2910,26 @@ function detectHandFeatures(hands) {
         }
       }
 
+      // Cas 4 : D face à R109 (ou davantage), As et Valet manquants.
+      // Si A-V sont groupés dans une main longue, face à un singleton,
+      // la position du Valet permet l'impasse vers R-10-9 après l'As.
+      if(hasK && hasQ && !hasA && !hasJ && declCards.includes('T') && declCards.includes('9')) {
+        const c1=(hands[declDirs[0]] && hands[declDirs[0]][suit]) || '';
+        const c2=(hands[declDirs[1]] && hands[declDirs[1]][suit]) || '';
+        const pattern=(kSide,qSide)=>kSide.includes('K') && kSide.includes('T') && kSide.includes('9') &&
+          qSide.includes('Q') && !kSide.includes('Q') && !qSide.includes('K');
+        if(pattern(c1,c2) || pattern(c2,c1)) {
+          const holder=oppDirs.find(d=>{
+            const cards=(hands[d] && hands[d][suit]) || '';
+            return cards.includes('A') && cards.includes('J') && cards.length>=3;
+          });
+          if(holder && oppDirs.some(d=>d!==holder && ((hands[d] && hands[d][suit]) || '').length===1)) {
+            const txt=`V${suitFr} en ${HAND_FEAT_DIR_FR[holder]}`;
+            if(!seen.has(txt)){ seen.add(txt); jackFinesse.push(txt); }
+          }
+        }
+      }
+
       // Cas 3 : ARVX sans la Dame, répartis RX face à AV ou RV face à AX.
       // Petites cartes autorisées ; au moins une des deux mains doit être 3e ou plus dans la couleur.
       if(hasA && hasK && hasJ && declCards.includes('T') && !hasQ && declCards.length < 9) {
@@ -2936,7 +2957,7 @@ function detectHandFeatures(hands) {
       }
     });
 
-    return [...shortTexts, ...missingKing, ...missingAQ, ...twoWayQueen].join(' ; ');
+    return [...shortTexts, ...missingKing, ...missingAQ, ...twoWayQueen, ...jackFinesse].join(' ; ');
   }
 
   return {
