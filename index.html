@@ -2864,6 +2864,7 @@ function detectHandFeatures(hands) {
     const missingAQ = [];     // Cas 2 : RV/RVX sans As ni Dame
     const twoWayQueen = [];   // Cas 3 : ARVX, impasse à la Dame possible dans les 2 sens
     const jackFinesse = [];    // Cas 4 : D face à R109, As-Valet groupés chez un adversaire
+    const groupedQJ = [];     // Cas 5 : Dame-Valet groupés face à A-R-10-9
 
     SUIT_KEYS.forEach(suit => {
       const suitFr = HAND_FEAT_SUIT_FR[suit];
@@ -2907,6 +2908,20 @@ function detectHandFeatures(hands) {
             if(!seen.has(dText)) { seen.add(dText); parts.push(dText); }
             if(parts.length) missingAQ.push(parts.join(', '));
           }
+        }
+      }
+
+      // Cas 5 : le camp possède A-R-10-9 mais pas D-V.
+      // D et V adverses groupés rendent intéressante leur localisation :
+      // conserver une information courte, indépendamment de la couleur et du camp.
+      if(hasA && hasK && !hasQ && !hasJ && declCards.includes('T') && declCards.includes('9')) {
+        const holder=oppDirs.find(d=>{
+          const cards=(hands[d] && hands[d][suit]) || '';
+          return cards.includes('Q') && cards.includes('J');
+        });
+        if(holder) {
+          const txt=`DV${suitFr.toLowerCase()} en ${HAND_FEAT_DIR_FR[holder]}`;
+          if(!seen.has(txt)){ seen.add(txt); groupedQJ.push(txt); }
         }
       }
 
@@ -2957,7 +2972,7 @@ function detectHandFeatures(hands) {
       }
     });
 
-    return [...shortTexts, ...missingKing, ...missingAQ, ...twoWayQueen, ...jackFinesse].join(' ; ');
+    return [...shortTexts, ...missingKing, ...missingAQ, ...twoWayQueen, ...jackFinesse, ...groupedQJ].join(' ; ');
   }
 
   return {
