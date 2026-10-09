@@ -2865,6 +2865,7 @@ function detectHandFeatures(hands) {
     const twoWayQueen = [];   // Cas 3 : ARVX, impasse à la Dame possible dans les 2 sens
     const jackFinesse = [];    // Cas 4 : D face à R109, As-Valet groupés chez un adversaire
     const groupedQJ = [];     // Cas 5 : Dame-Valet groupés face à A-R-10-9
+    const missingQueen = [];   // Cas 6 : A-R-V-10-9 dans la ligne, Dame manquante
 
     SUIT_KEYS.forEach(suit => {
       const suitFr = HAND_FEAT_SUIT_FR[suit];
@@ -2908,6 +2909,16 @@ function detectHandFeatures(hands) {
             if(!seen.has(dText)) { seen.add(dText); parts.push(dText); }
             if(parts.length) missingAQ.push(parts.join(', '));
           }
+        }
+      }
+
+      // Cas 6 : A-R-V-10-9 face à une Dame adverse, avec 8 cartes au plus.
+      // Les intermédiaires permettent de choisir l'orientation d'une impasse.
+      if(hasA && hasK && hasJ && !hasQ && declCards.includes('T') && declCards.includes('9') && declCards.length<=8) {
+        const holder=oppDirs.find(d=>((hands[d] && hands[d][suit]) || '').includes('Q'));
+        if(holder){
+          const txt=`D${suitFr} en ${HAND_FEAT_DIR_FR[holder]}`;
+          if(!seen.has(txt)){seen.add(txt); missingQueen.push(txt);}
         }
       }
 
@@ -2972,7 +2983,7 @@ function detectHandFeatures(hands) {
       }
     });
 
-    return [...shortTexts, ...missingKing, ...missingAQ, ...twoWayQueen, ...jackFinesse, ...groupedQJ].join(' ; ');
+    return [...shortTexts, ...missingKing, ...missingAQ, ...twoWayQueen, ...jackFinesse, ...groupedQJ, ...missingQueen].join(' ; ');
   }
 
   return {
