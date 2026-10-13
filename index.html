@@ -2917,7 +2917,8 @@ function detectHandFeatures(hands) {
       if(hasA && hasK && hasJ && !hasQ && declCards.includes('T') && declCards.includes('9') && declCards.length<=8) {
         const holder=oppDirs.find(d=>((hands[d] && hands[d][suit]) || '').includes('Q'));
         if(holder){
-          const txt=`D${suitFr} en ${HAND_FEAT_DIR_FR[holder]}`;
+          const queenLength = ((hands[holder] && hands[holder][suit]) || '').length;
+          const txt=`D${suitFr}${queenLength >= 4 ? ' longue' : ''} en ${HAND_FEAT_DIR_FR[holder]}`;
           if(!seen.has(txt)){seen.add(txt); missingQueen.push(txt);}
         }
       }
