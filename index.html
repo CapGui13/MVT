@@ -2897,7 +2897,27 @@ function detectHandFeatures(hands) {
           if(cards.includes('Q')) { dDir=dir; dCards=cards; }
         }
         if(aDir && dDir) {
-          if(aDir === dDir) {
+          // Avec R-V groupés face à un doubleton, la disposition de A/D adverses
+          // dicte directement la carte à jouer après un petit vers R-V.
+          // Dame avant R-V, As derrière : jouer vers le Valet (donne 4 du 20/10).
+          // As avant R-V, Dame derrière : jouer vers le Roi.
+          const rvDir = declDirs.find(d => {
+            const cards=(hands[d] && hands[d][suit]) || '';
+            return cards.includes('K') && cards.includes('J');
+          });
+          const otherDir = rvDir ? declDirs.find(d => d !== rvDir) : null;
+          const otherCards = otherDir ? ((hands[otherDir] && hands[otherDir][suit]) || '') : '';
+          const compass = ['N','E','S','W'];
+          const i = rvDir ? compass.indexOf(rvDir) : -1;
+          const beforeDir = i < 0 ? null : compass[(i+3)%4];
+          const afterDir  = i < 0 ? null : compass[(i+1)%4];
+          if(rvDir && otherCards.length === 2 && aDir !== dDir &&
+             ((dDir === beforeDir && aDir === afterDir) ||
+              (aDir === beforeDir && dDir === afterDir))) {
+            const cardToPlay = dDir === beforeDir ? 'V' : 'R';
+            const text = `petit vers ${cardToPlay}${suitFr}`;
+            if(!seen.has(text)) {seen.add(text); missingAQ.push(text);}
+          } else if(aDir === dDir) {
             // Honneurs collés dans la même main → initiale de couleur en minuscule, sans indication de longueur
             const text = `AD${suitFr.toLowerCase()} en ${HAND_FEAT_DIR_FR[aDir]}`;
             if(!seen.has(text)) { seen.add(text); missingAQ.push(text); }
