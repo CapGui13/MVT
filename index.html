@@ -2912,9 +2912,16 @@ function detectHandFeatures(hands) {
         }
       }
 
-      // Cas 6 : A-R-V-10-9 face à une Dame adverse, avec 8 cartes au plus.
-      // Les intermédiaires permettent de choisir l'orientation d'une impasse.
-      if(hasA && hasK && hasJ && !hasQ && declCards.includes('T') && declCards.includes('9') && declCards.length<=8) {
+      // Cas 6 : A-R-V-10-9, ou A-V-10 face au Roi, sans la Dame et avec 8 cartes au plus.
+      // Dans les deux cas, localiser la Dame peut permettre de réaliser toutes les levées
+      // de la couleur en choisissant le bon sens de l'impasse (ex. donne 2 : AJT3 face à K742).
+      const sideCards1 = (hands[declDirs[0]] && hands[declDirs[0]][suit]) || '';
+      const sideCards2 = (hands[declDirs[1]] && hands[declDirs[1]][suit]) || '';
+      const ajtOppositeK =
+        (sideCards1.includes('A') && sideCards1.includes('J') && sideCards1.includes('T') && sideCards2.includes('K')) ||
+        (sideCards2.includes('A') && sideCards2.includes('J') && sideCards2.includes('T') && sideCards1.includes('K'));
+      if(hasA && hasK && hasJ && !hasQ && declCards.includes('T') &&
+         declCards.length<=8 && (declCards.includes('9') || ajtOppositeK)) {
         const holder=oppDirs.find(d=>((hands[d] && hands[d][suit]) || '').includes('Q'));
         if(holder){
           const queenLength = ((hands[holder] && hands[holder][suit]) || '').length;
