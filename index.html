@@ -2866,6 +2866,7 @@ function detectHandFeatures(hands) {
     const jackFinesse = [];    // Cas 4 : D face à R109, As-Valet groupés chez un adversaire
     const groupedQJ = [];     // Cas 5 : Dame-Valet groupés face à A-R-10-9
     const missingQueen = [];   // Cas 6 : A-R-V-10-9 dans la ligne, Dame manquante
+    const nineCardFinesse = []; // Cas 7 : impasse à la Dame troisième avec 9 cartes
 
     SUIT_KEYS.forEach(suit => {
       const suitFr = HAND_FEAT_SUIT_FR[suit];
@@ -2950,6 +2951,28 @@ function detectHandFeatures(hands) {
         }
       }
 
+      // Cas 7 : 9 cartes et A-R-V sans la Dame. Face à une répartition 3-1,
+      // tirer A-R ne capture pas D troisième. Si la Dame est placée avant
+      // le détenteur du Valet, une petite carte vers V (protégé par A ou R)
+      // fait toutes les levées dans la couleur.
+      if(declCards.length === 9 && hasA && hasK && hasJ && !hasQ) {
+        const jDir=declDirs.find(d=>((hands[d] && hands[d][suit])||'').includes('J'));
+        const jCards=jDir ? ((hands[jDir] && hands[jDir][suit]) || '') : '';
+        const otherDir=declDirs.find(d=>d!==jDir);
+        const otherCards=otherDir ? ((hands[otherDir] && hands[otherDir][suit]) || '') : '';
+        const directions=['N','E','S','W'];
+        const prevDir=jDir ? directions[(directions.indexOf(jDir)+3)%4] : null;
+        const qCards=prevDir ? ((hands[prevDir] && hands[prevDir][suit]) || '') : '';
+        const otherOpponent=oppDirs.find(d=>d!==prevDir);
+        const otherOppCards=otherOpponent ? ((hands[otherOpponent] && hands[otherOpponent][suit]) || '') : '';
+        if(jCards.length>=2 && (jCards.includes('A') || jCards.includes('K')) &&
+           otherCards.length>0 && qCards.length===3 && qCards.includes('Q') &&
+           otherOppCards.length===1) {
+          const txt=`impasse à ${suitFr} (D${suitFr} 3e en ${HAND_FEAT_DIR_FR[prevDir]})`;
+          if(!seen.has(txt)){ seen.add(txt); nineCardFinesse.push(txt); }
+        }
+      }
+
       // Cas 5 : D-V groupés chez l'adversaire, et A-R-10 dans notre camp.
       // D-V secs avec au moins 8 cartes dans la ligne (reste 3-2 chez l'adversaire) :
       // tirer A-R fait tomber D-V et libère le 10 -> toutes les levées de la couleur.
@@ -3017,7 +3040,7 @@ function detectHandFeatures(hands) {
       }
     });
 
-    return [...shortTexts, ...missingKing, ...missingAQ, ...twoWayQueen, ...jackFinesse, ...groupedQJ, ...missingQueen].join(' ; ');
+    return [...shortTexts, ...missingKing, ...missingAQ, ...twoWayQueen, ...jackFinesse, ...groupedQJ, ...missingQueen, ...nineCardFinesse].join(' ; ');
   }
 
   return {
