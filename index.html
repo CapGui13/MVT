@@ -2912,6 +2912,12 @@ function detectHandFeatures(hands) {
           const i = rvDir ? compass.indexOf(rvDir) : -1;
           const beforeDir = i < 0 ? null : compass[(i+3)%4];
           const afterDir  = i < 0 ? null : compass[(i+1)%4];
+          // As devant R-V et Dame derrière : si R-V sont groupés face à
+          // au moins trois cartes, ces positions ne donnent pas de maniement
+          // supplémentaire utile. Conserver l'exception du doubleton
+          // (petit vers le Roi) qui, elle, dicte un choix de carte.
+          const nonActionableAQ = rvDir && otherCards.length >= 3 &&
+                                  aDir === beforeDir && dDir === afterDir;
           if(rvDir && otherCards.length === 2 && aDir !== dDir &&
              ((dDir === beforeDir && aDir === afterDir) ||
               (aDir === beforeDir && dDir === afterDir))) {
@@ -2922,7 +2928,7 @@ function detectHandFeatures(hands) {
             // Honneurs collés dans la même main → initiale de couleur en minuscule, sans indication de longueur
             const text = `AD${suitFr.toLowerCase()} en ${HAND_FEAT_DIR_FR[aDir]}`;
             if(!seen.has(text)) { seen.add(text); missingAQ.push(text); }
-          } else {
+          } else if(!nonActionableAQ) {
             const aText = `A${suitFr} ${handFeatLenWord(aCards.length)} en ${HAND_FEAT_DIR_FR[aDir]}`;
             const dText = `D${suitFr} ${handFeatLenWord(dCards.length)} en ${HAND_FEAT_DIR_FR[dDir]}`;
             const parts = [];
