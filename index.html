@@ -2950,17 +2950,23 @@ function detectHandFeatures(hands) {
         }
       }
 
-      // Cas 5 : le camp possède A-R-10-9 mais pas D-V.
-      // D et V adverses groupés rendent intéressante leur localisation :
-      // conserver une information courte, indépendamment de la couleur et du camp.
-      if(hasA && hasK && !hasQ && !hasJ && declCards.includes('T') && declCards.includes('9')) {
+      // Cas 5 : D-V groupés chez l'adversaire, et A-R-10 dans notre camp.
+      // D-V secs avec au moins 8 cartes dans la ligne (reste 3-2 chez l'adversaire) :
+      // tirer A-R fait tomber D-V et libère le 10 -> toutes les levées de la couleur.
+      // Sinon conserver le repérage habituel si la ligne possède également le 9.
+      if(hasA && hasK && !hasQ && !hasJ && declCards.includes('T')) {
         const holder=oppDirs.find(d=>{
           const cards=(hands[d] && hands[d][suit]) || '';
           return cards.includes('Q') && cards.includes('J');
         });
         if(holder) {
-          const txt=`DV${suitFr.toLowerCase()} en ${HAND_FEAT_DIR_FR[holder]}`;
-          if(!seen.has(txt)){ seen.add(txt); groupedQJ.push(txt); }
+          const holderCards=(hands[holder] && hands[holder][suit]) || '';
+          const dvSecs = holderCards.length === 2 && declCards.length >= 8;
+          if(dvSecs || declCards.includes('9')) {
+            const txt=dvSecs ? `DV${suitFr.toLowerCase()} secs` :
+              `DV${suitFr.toLowerCase()} en ${HAND_FEAT_DIR_FR[holder]}`;
+            if(!seen.has(txt)){ seen.add(txt); groupedQJ.push(txt); }
+          }
         }
       }
 
