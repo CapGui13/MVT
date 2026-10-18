@@ -3004,10 +3004,10 @@ function detectHandFeatures(hands) {
           const dirs = ['N','E','S','W'];
           const beforeDir = dirs[(dirs.indexOf(aktDir)+3)%4];
           const beforeCards = (hands[beforeDir] && hands[beforeDir][suit]) || '';
-          // Il faut pouvoir attaquer deux fois depuis la main opposée :
-          // si D ou V couvre le 10, A/R prend, puis on recommence
-          // depuis l'autre main pour capturer le second honneur.
-          if(feederCards.length >= 2 && beforeCards.length >= 3 &&
+          // Une carte suffit pour jouer petit vers le 10 :
+          // si l'adversaire fournit petit, le 10 peut gagner.
+          // L'indication signale un maniement possible, non garanti.
+          if(feederCards.length >= 1 && beforeCards.length >= 3 &&
              beforeCards.includes('Q') && beforeCards.includes('J')) {
             const txt = `petit vers X${suitFr}`;
             if(!seen.has(txt)){seen.add(txt); tenFinesse.push(txt);}
