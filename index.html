@@ -2867,6 +2867,7 @@ function detectHandFeatures(hands) {
     const groupedQJ = [];     // Cas 5 : Dame-Valet groupés face à A-R-10-9
     const missingQueen = [];   // Cas 6 : A-R-V-10-9 dans la ligne, Dame manquante
     const nineCardFinesse = []; // Cas 7 : impasse à la Dame troisième avec 9 cartes
+    const tenFinesse = [];      // Cas 8 : jouer petit vers A-R-10, D-V longs devant
 
     SUIT_KEYS.forEach(suit => {
       const suitFr = HAND_FEAT_SUIT_FR[suit];
@@ -2979,6 +2980,29 @@ function detectHandFeatures(hands) {
         }
       }
 
+      // Cas 8 : A-R-10 groupés dans la même main, face à des petites
+      // cartes. Quand D-V au moins troisièmes sont chez l'adversaire
+      // situé avant A-R-10, le bon jeu est petit vers le 10 :
+      // tirer A-R en tête laisse un honneur adverse maître.
+      if(hasA && hasK && !hasQ && !hasJ && declCards.includes('T')) {
+        const aktDir = declDirs.find(d => {
+          const cards = (hands[d] && hands[d][suit]) || '';
+          return cards.includes('A') && cards.includes('K') && cards.includes('T');
+        });
+        if(aktDir) {
+          const feederDir = declDirs.find(d => d !== aktDir);
+          const feederCards = feederDir ? ((hands[feederDir] && hands[feederDir][suit]) || '') : '';
+          const dirs = ['N','E','S','W'];
+          const beforeDir = dirs[(dirs.indexOf(aktDir)+3)%4];
+          const beforeCards = (hands[beforeDir] && hands[beforeDir][suit]) || '';
+          if(feederCards.length >= 1 && beforeCards.length >= 3 &&
+             beforeCards.includes('Q') && beforeCards.includes('J')) {
+            const txt = `petit vers X${suitFr}`;
+            if(!seen.has(txt)){seen.add(txt); tenFinesse.push(txt);}
+          }
+        }
+      }
+
       // Cas 5 : D-V groupés chez l'adversaire, et A-R-10 dans notre camp.
       // D-V secs avec au moins 8 cartes dans la ligne (reste 3-2 chez l'adversaire) :
       // tirer A-R fait tomber D-V et libère le 10 -> toutes les levées de la couleur.
@@ -3046,7 +3070,7 @@ function detectHandFeatures(hands) {
       }
     });
 
-    return [...shortTexts, ...missingKing, ...missingAQ, ...twoWayQueen, ...jackFinesse, ...groupedQJ, ...missingQueen, ...nineCardFinesse].join(' ; ');
+    return [...shortTexts, ...missingKing, ...missingAQ, ...twoWayQueen, ...jackFinesse, ...groupedQJ, ...missingQueen, ...nineCardFinesse, ...tenFinesse].join(' ; ');
   }
 
   return {
