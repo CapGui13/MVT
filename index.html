@@ -2825,6 +2825,15 @@ function detectHandFeatures(hands) {
       const hasK = declCards.includes('K');
       const hasQ = declCards.includes('Q');
       const hasJ = declCards.includes('J');
+      const hasT = declCards.includes('T');
+
+      // Un Roi sec ne crée pas de levée lorsque le camp n'a ni Dame ni 10
+      // et que la Dame au moins troisième reste protégée chez l'adversaire.
+      if(e.rank === 'R' && e.len === 1 && hasA && !hasQ && !hasT &&
+         oppDirs.some(d => {
+           const cards=(hands[d] && hands[d][e.suit]) || '';
+           return cards.includes('Q') && cards.length >= 3;
+         })) return;
 
       // Roi sec adverse : avec 11 cartes dans la ligne, le maniement est de
       // tirer en tête ; la position du Roi sec n'apporte donc aucune information.
@@ -2995,7 +3004,10 @@ function detectHandFeatures(hands) {
           const dirs = ['N','E','S','W'];
           const beforeDir = dirs[(dirs.indexOf(aktDir)+3)%4];
           const beforeCards = (hands[beforeDir] && hands[beforeDir][suit]) || '';
-          if(feederCards.length >= 1 && beforeCards.length >= 3 &&
+          // Il faut pouvoir attaquer deux fois depuis la main opposée :
+          // si D ou V couvre le 10, A/R prend, puis on recommence
+          // depuis l'autre main pour capturer le second honneur.
+          if(feederCards.length >= 2 && beforeCards.length >= 3 &&
              beforeCards.includes('Q') && beforeCards.includes('J')) {
             const txt = `petit vers X${suitFr}`;
             if(!seen.has(txt)){seen.add(txt); tenFinesse.push(txt);}
@@ -3070,7 +3082,31 @@ function detectHandFeatures(hands) {
       }
     });
 
-    return [...shortTexts, ...missingKing, ...missingAQ, ...twoWayQueen, ...jackFinesse, ...groupedQJ, ...missingQueen, ...nineCardFinesse, ...tenFinesse].join(' ; ');
+    // Grouper les détails concurrents du même honneur dans la même main :
+    // "DP 4e en S" est plus précis que "DP longue en S" ou "DP en S".
+    // Laisser intactes les consignes de maniement ("petit vers...", etc.).
+    const allNotes=[...shortTexts, ...missingKing, ...missingAQ, ...twoWayQueen,
+                    ...jackFinesse, ...groupedQJ, ...missingQueen,
+                    ...nineCardFinesse, ...tenFinesse];
+    const detail=(note)=>{
+      const match=note.match(/^([ARDV])([PCKT])(?: (sec|2nd|\d+e|longue))? en ([NESO])$/);
+      if(!match)return null;
+      const specificity=match[3] ? (match[3]==='longue'?1:2) : 0;
+      return {key:match[1]+match[2]+match[4],specificity};
+    };
+    const maxPrecision=new Map();
+    for(const note of allNotes){
+      const meta=detail(note);
+      if(meta)maxPrecision.set(meta.key,Math.max(maxPrecision.get(meta.key)||0,meta.specificity));
+    }
+    const kept=[];
+    const unique=new Set();
+    for(const note of allNotes){
+      const meta=detail(note);
+      if(meta && meta.specificity < maxPrecision.get(meta.key))continue;
+      if(!unique.has(note)){unique.add(note);kept.push(note);}
+    }
+    return kept.join(' ; ');
   }
 
   return {
