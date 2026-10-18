@@ -2926,9 +2926,16 @@ function detectHandFeatures(hands) {
           // au moins trois cartes, ces positions ne donnent pas de maniement
           // supplémentaire utile. Conserver l'exception du doubleton
           // (petit vers le Roi) qui, elle, dicte un choix de carte.
+          const kingFirstAQ = rvDir && otherCards.length >= 1 &&
+                              declCards.length === 9 && declCards.includes('T') &&
+                              aDir === beforeDir && dDir === afterDir &&
+                              aCards.length === 2 && dCards.length === 2;
           const nonActionableAQ = rvDir && otherCards.length >= 3 &&
                                   aDir === beforeDir && dDir === afterDir;
-          if(rvDir && otherCards.length === 2 && aDir !== dDir &&
+          if(kingFirstAQ) {
+            const text = `petit vers R${suitFr}`;
+            if(!seen.has(text)) {seen.add(text); missingAQ.push(text);}
+          } else if(rvDir && otherCards.length === 2 && aDir !== dDir &&
              ((dDir === beforeDir && aDir === afterDir) ||
               (aDir === beforeDir && dDir === afterDir))) {
             const cardToPlay = dDir === beforeDir ? 'V' : 'R';
