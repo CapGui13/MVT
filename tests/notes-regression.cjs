@@ -37,6 +37,13 @@ assert.equal(northSouth(holding('64','QJ','AKT632','987', 'C')),
 
 assert.equal(eastWest(holding('QT9753','J2','K','A864')),
   '', 'Singleton king does not promote an extra winner behind long queen');
+assert.equal(northSouth(holding('852','A9','KJT743','Q6')),
+  'petit vers RC', 'Board 7: play toward king to lose only the ace');
+assert.ok(!northSouth(holding('852','Q6','KJT743','A9')).includes('petit vers RC'),
+  'Reverse A/Q locations do not call for the same maneuver');
+assert.equal(eastWest(holding('2','K9863','Q75','AJT4')),
+  'impasse à C (DC 3e en S)', 'Board 14: finesse queen third');
+
 assert.equal(eastWest(holding('QT92','KJ4','A873','65')),
   'petit vers VC', 'KJ versus small doubleton against separated A/Q');
 
@@ -73,4 +80,4 @@ for (let shift = 1; shift <= 3; shift++) {
   assert.equal(actual.noteEo, rotateText(source.noteEo, shift),
     'Rotated east-west notes: ' + shift);
 }
-console.log('MVT PAR notes: 22 regression assertions passed.');
+console.log('MVT PAR notes: 25 regression assertions passed.');
