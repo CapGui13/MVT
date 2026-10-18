@@ -23,7 +23,9 @@ const northSouth = hands => detect(hands).noteNs;
 assert.equal(northSouth(holding('64','QJ87','AKT32','95')),
   'petit vers XC', 'QJ long before AKT, two feeder cards');
 assert.equal(northSouth(holding('6','QJ87','AKT32','954')),
-  '', 'A single feeder cannot repeat the finesse');
+  'petit vers XC', 'One card suffices to try the ten finesse');
+assert.equal(eastWest(holding('98653','4','QJ2','AKT7', 'C')),
+  'petit vers XT', 'Board 28: singleton leads toward AKT');
 assert.equal(northSouth(holding('64','95','AKT32','QJ87')),
   '', 'QJ behind AKT is not the same finesse');
 assert.equal(northSouth(holding('K4','QJ87','AT632','95')),
@@ -71,4 +73,4 @@ for (let shift = 1; shift <= 3; shift++) {
   assert.equal(actual.noteEo, rotateText(source.noteEo, shift),
     'Rotated east-west notes: ' + shift);
 }
-console.log('MVT PAR notes: 21 regression assertions passed.');
+console.log('MVT PAR notes: 22 regression assertions passed.');
