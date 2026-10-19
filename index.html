@@ -1147,10 +1147,12 @@ async function verifyGhOwner(token, expectedOwner){
   if(!token) return false;
   try{
     const res=await fetch('https://api.github.com/user',{headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json'}});
-    if(!res.ok) return false;
+    // Une erreur réseau, 403 (limite API) ou 5xx ne signifie pas que le token est invalide.
+    if(res.status===401) return false;
+    if(!res.ok) return null;
     const data=await res.json();
     return !!(data && data.login && String(data.login).toLowerCase()===String(expectedOwner).toLowerCase());
-  }catch(e){ return false; }
+  }catch(e){ return null; }
 }
 
 // Point unique de validation du token, utilisé par Paramètres et le Générateur.
@@ -1161,7 +1163,8 @@ async function validateStoredGhToken(){
   if(!token) return false;
   const {owner,repo}=getGhContext();
   const ownerOk=await verifyGhOwner(token, owner);
-  if(!ownerOk){ markGhTokenBad(); return false; }
+  if(ownerOk===false){ markGhTokenBad(); return false; }
+  if(ownerOk!==true) return false; // GitHub momentanément inaccessible : réessai au prochain chargement
   try{
     const res=await fetch(`https://api.github.com/repos/${owner}/${repo}`,{
       headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json'}
@@ -1955,7 +1958,8 @@ async function _initTournoiInner(){
     const _tok=localStorage.getItem('gh_token')||'';
     if(_tok){
       const ownerOk=await verifyGhOwner(_tok, user);
-      if(!ownerOk){ markGhTokenBad(); return; }
+      if(ownerOk===false){ markGhTokenBad(); return; }
+      if(ownerOk!==true){ sub.textContent='Vérification GitHub momentanément indisponible.'; return; }
     }
     const commitRes=await fetch(`https://api.github.com/repos/${user}/${repo}/commits?per_page=1&t=${Date.now()}`,
       {cache:'no-store',headers:{Accept:'application/vnd.github.v3+json',...(_tok?{Authorization:`token ${_tok}`}:{})}});
@@ -2167,8 +2171,18 @@ function showUpdateBanner(){
 
 setSens('NS');
 updatePublicOptions();
+// Revérifier à chaque démarrage même si un ancien essai avait mis la diode au rouge.
+// Ne jamais afficher le mode arbitre tant que l'accès privé n'a pas été confirmé.
+if(hasGhToken()){
+  clearGhTokenBadFlag();
+  updateTokenIndicator();
+}
 syncHomeToAccess();
-if(hasGhToken() && !isGhTokenBad()) initTournoi();
+if(hasGhToken()){
+  validateStoredGhToken().then(ok=>{
+    if(ok) initTournoi();
+  });
+}
 (function(){ const b=document.getElementById('btn-charger-donnes'); if(b) b.style.display=hasValidGhToken()?'':'none'; })();
 
 // touchend sur les boutons nav pour éviter le délai 300ms iOS
