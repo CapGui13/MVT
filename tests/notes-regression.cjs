@@ -54,6 +54,32 @@ assert.equal(northSouth(holding('AJ9','543','KT87','Q62','S')),
 assert.equal(northSouth(holding('AJ9','5432','KT87','Q6','S')),
   'DP 2nd en O', 'Keep precise second queen location');
 
+// Règles généralisées A, C, D et E
+assert.equal(northSouth(holding('97653','AT','KJ82','Q4','D')),
+  'petit vers RK', 'A: R-V sans le 10');
+assert.equal(northSouth(holding('852','A9','KJT743','Q6','H')),
+  'petit vers RC', 'A: donne 7 préservée');
+assert.equal(eastWest(holding('Q43','AKJT7','986','52','D')),
+  'impasse répétée à K (DK 3e en N)', 'C: répétition');
+assert.ok(!eastWest(holding('986','AKJT7','Q43','52','D')).includes('impasse répétée'),
+  'C: mauvaise orientation');
+assert.ok(!eastWest(holding('Q4','AKJT7','9862','53','D')).includes('impasse répétée'),
+  'C: Dame seconde');
+assert.ok(!eastWest(holding('Q43','AKJT76','985','2','D')).includes('impasse répétée'),
+  'C: singleton de départ');
+assert.equal(northSouth(holding('AKJ6','T975','43','Q82','S')),
+  'petit vers VP', 'D: jouer vers le Valet');
+assert.ok(!northSouth(holding('AKJ6','Q82','43','T975','S')).includes('petit vers VP'),
+  'D: Valet dans le mauvais sens');
+assert.ok(!northSouth(holding('AKJ6','T9875','43','Q2','S')).includes('petit vers VP'),
+  'D: Dame seconde');
+assert.equal(northSouth(holding('643','QJT8','AK972','5','S')),
+  'petit vers 9P', 'D: jouer vers le 9');
+assert.ok(!northSouth(holding('643','5','AK972','QJT8','S')).includes('petit vers 9P'),
+  'D: 9 dans le mauvais sens');
+assert.ok(!northSouth(holding('63','QJ87','AK942','T5','S')).includes('petit vers 9P'),
+  'D: 10 chez un autre défenseur');
+
 const base = holding('64','QJ87','AKT32','95');
 for (const [suit, label] of [['S','P'], ['H','C'], ['D','K'], ['C','T']]) {
   const testHands = Object.fromEntries(Object.entries(base).map(([dir, suits]) =>
@@ -80,4 +106,4 @@ for (let shift = 1; shift <= 3; shift++) {
   assert.equal(actual.noteEo, rotateText(source.noteEo, shift),
     'Rotated east-west notes: ' + shift);
 }
-console.log('MVT PAR notes: 25 regression assertions passed.');
+console.log('MVT PAR notes: 37 regression assertions passed.');

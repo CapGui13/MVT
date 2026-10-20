@@ -2854,6 +2854,9 @@ function detectHandFeatures(hands) {
       // Un Roi second reste en revanche potentiellement utile et est traité plus bas.
       if(e.rank === 'R' && e.len === 1 && declCards.length >= 11) return;
 
+      // As sec sans influence sur le maniement avec R-D-V dans la ligne.
+      if(e.rank === 'A' && e.len === 1 && hasK && hasQ && hasJ)return;
+
       // As sec adverse : avec 10 cartes ou plus et R-D dans la ligne, on joue en tête ;
       // signaler l'As sec ne change pas le maniement.
       if(e.rank === 'A' && e.len === 1 && declCards.length >= 10 && hasK && hasQ) return;
@@ -2891,6 +2894,8 @@ function detectHandFeatures(hands) {
     const missingQueen = [];   // Cas 6 : A-R-V-10-9 dans la ligne, Dame manquante
     const nineCardFinesse = []; // Cas 7 : impasse à la Dame troisième avec 9 cartes
     const tenFinesse = [];      // Cas 8 : jouer petit vers A-R-10, D-V longs devant
+    const repeatedFinesse = []; // Cas 9 : impasses repetees
+    const smallToIntermediate = []; // Cas 10 : promotion du Valet ou du 9
 
     SUIT_KEYS.forEach(suit => {
       const suitFr = HAND_FEAT_SUIT_FR[suit];
@@ -2941,7 +2946,7 @@ function detectHandFeatures(hands) {
           // supplémentaire utile. Conserver l'exception du doubleton
           // (petit vers le Roi) qui, elle, dicte un choix de carte.
           const kingFirstAQ = rvDir && otherCards.length >= 1 &&
-                              declCards.length === 9 && declCards.includes('T') &&
+                              declCards.length === 9 &&
                               aDir === beforeDir && dDir === afterDir &&
                               aCards.length === 2 && dCards.length === 2;
           const nonActionableAQ = rvDir && otherCards.length >= 3 &&
@@ -3036,6 +3041,50 @@ function detectHandFeatures(hands) {
         }
       }
 
+
+      // Cas 9 : impasse répétée contre la Dame troisième ou plus.
+      // ARVX dans une main et au moins deux cartes en face ;
+      // les rentrées extérieures sont supposées illimitées.
+      if(hasA && hasK && hasJ && declCards.includes('T') && !hasQ) {
+        const owner=declDirs.find(d=>{
+          const c=(hands[d] && hands[d][suit])||'';
+          return ['A','K','J','T'].every(r=>c.includes(r));
+        });
+        if(owner){
+          const feeder=declDirs.find(d=>d!==owner);
+          const fc=(hands[feeder] && hands[feeder][suit])||'';
+          const dirs=['N','E','S','W'];
+          const prev=dirs[(dirs.indexOf(owner)+3)%4];
+          const qc=(hands[prev] && hands[prev][suit])||'';
+          if(fc.length>=2 && qc.length>=3 && qc.includes('Q')){
+            const txt=`impasse répétée à ${suitFr} (D${suitFr} ${handFeatLenWord(qc.length)} en ${HAND_FEAT_DIR_FR[prev]})`;
+            if(!seen.has(txt)){seen.add(txt);repeatedFinesse.push(txt);}
+          }
+        }
+      }
+
+      // Cas 10 : étendre les impasses aux intermédiaires V et 9
+      // avec As-Roi dans leur main et honneurs manquants devant.
+      for(const [rank,missing,label] of [
+        ['J',['Q'],'V'],['9',['Q','J','T'],'9']
+      ]){
+        if(!hasA || !hasK || missing.some(r=>declCards.includes(r)))continue;
+        const owner=declDirs.find(d=>{
+          const c=(hands[d] && hands[d][suit])||'';
+          return c.includes('A') && c.includes('K') && c.includes(rank);
+        });
+        if(!owner)continue;
+        const other=declDirs.find(d=>d!==owner);
+        const fc=(hands[other] && hands[other][suit])||'';
+        const dirs=['N','E','S','W'];
+        const prev=dirs[(dirs.indexOf(owner)+3)%4];
+        const hc=(hands[prev] && hands[prev][suit])||'';
+        if(fc.length>=1 && hc.length>=3 && missing.every(r=>hc.includes(r))){
+          const txt=`petit vers ${label}${suitFr}`;
+          if(!seen.has(txt)){seen.add(txt);smallToIntermediate.push(txt);}
+        }
+      }
+
       // Cas 5 : D-V groupés chez l'adversaire, et A-R-10 dans notre camp.
       // D-V secs avec au moins 8 cartes dans la ligne (reste 3-2 chez l'adversaire) :
       // tirer A-R fait tomber D-V et libère le 10 -> toutes les levées de la couleur.
@@ -3108,7 +3157,8 @@ function detectHandFeatures(hands) {
     // Laisser intactes les consignes de maniement ("petit vers...", etc.).
     const allNotes=[...shortTexts, ...missingKing, ...missingAQ, ...twoWayQueen,
                     ...jackFinesse, ...groupedQJ, ...missingQueen,
-                    ...nineCardFinesse, ...tenFinesse];
+                    ...nineCardFinesse, ...tenFinesse,
+                    ...repeatedFinesse, ...smallToIntermediate];
     const detail=(note)=>{
       const match=note.match(/^([ARDV])([PCKT])(?: (sec|2nd|\d+e|longue))? en ([NESO])$/);
       if(!match)return null;
@@ -3120,11 +3170,21 @@ function detectHandFeatures(hands) {
       const meta=detail(note);
       if(meta)maxPrecision.set(meta.key,Math.max(maxPrecision.get(meta.key)||0,meta.specificity));
     }
+    // Ne pas répéter les mêmes manœuvres et positions de Dame.
+    const preferred=new Set(), coveredQueens=new Set();
+    for(const note of allNotes){
+      const action=note.match(/^impasse (?:répétée )?à ([PCKT])/);
+      if(action)preferred.add(action[1]);
+      const q=note.match(/^impasse (?:répétée )?à [PCKT] \(D([PCKT]) (?:sec|2nd|\d+e|longue) en ([NESO])\)$/);
+      if(q)coveredQueens.add(q[1]+q[2]);
+    }
     const kept=[];
     const unique=new Set();
     for(const note of allNotes){
       const meta=detail(note);
       if(meta && meta.specificity < maxPrecision.get(meta.key))continue;
+      if(/^petit vers V([PCKT])$/.test(note) && preferred.has(note.slice(-1)))continue;
+      if(meta && meta.key.startsWith('D') && coveredQueens.has(meta.key.slice(1)))continue;
       if(!unique.has(note)){unique.add(note);kept.push(note);}
     }
     return kept.join(' ; ');
