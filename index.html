@@ -2841,6 +2841,9 @@ function detectHandFeatures(hands) {
       const hasJ = declCards.includes('J');
       const hasT = declCards.includes('T');
 
+      // Sans As dans la ligne, la seule position du Roi sec ne dicte aucun maniement fiable.
+      if(e.rank === 'R' && e.len === 1 && !hasA) return;
+
       // Un Roi sec ne crée pas de levée lorsque le camp n'a ni Dame ni 10
       // et que la Dame au moins troisième reste protégée chez l'adversaire.
       if(e.rank === 'R' && e.len === 1 && hasA && !hasQ && !hasT &&
@@ -2902,6 +2905,26 @@ function detectHandFeatures(hands) {
       const declCards = declDirs.map(d => (hands[d] && hands[d][suit]) || '').join('');
       const hasA = declCards.includes('A'), hasK = declCards.includes('K');
       const hasQ = declCards.includes('Q'), hasJ = declCards.includes('J');
+
+      // A-D-10 réunis : si le Roi adverse est immédiatement avant la main
+      // A-D-10 et qu'une petite carte peut venir d'en face, jouer vers la Dame.
+      if(hasA && hasQ && declCards.includes('T') && !hasK) {
+        const target=declDirs.find(d=>{
+          const c=(hands[d] && hands[d][suit]) || '';
+          return c.includes('A') && c.includes('Q') && c.includes('T');
+        });
+        if(target) {
+          const feederDir=declDirs.find(d=>d!==target);
+          const feeder=(hands[feederDir] && hands[feederDir][suit]) || '';
+          const compass=['N','E','S','W'];
+          const previous=compass[(compass.indexOf(target)+3)%4];
+          const before=(hands[previous] && hands[previous][suit]) || '';
+          if(feeder.length && before.includes('K')) {
+            const note=`petit vers D${suitFr}`;
+            if(!seen.has(note)){seen.add(note);missingKing.push(note);}
+          }
+        }
+      }
 
       // Cas 1 : déclarant a ADV, sans le Roi → localiser le Roi chez l'adversaire (seulement si sec ou 2nd).
       // Sans le Valet, la position courte du Roi n'apporte pas de maniement utile à signaler.
