@@ -80,6 +80,11 @@ assert.ok(!northSouth(holding('643','5','AK972','QJT8','S')).includes('petit ver
 assert.ok(!northSouth(holding('63','QJ87','AK942','T5','S')).includes('petit vers 9P'),
   'D: 10 chez un autre défenseur');
 
+assert.equal(northSouth(holding('64','K932','AQT7','J85','D')),'petit vers DK','Board 4');
+assert.ok(!northSouth(holding('64','J85','AQT7','K932','D')).includes('petit vers DK'),'Reverse king orientation');
+assert.ok(!northSouth(holding('64','K932','AQ87','JT5','D')).includes('petit vers DK'),'Without ten');
+assert.ok(!eastWest(holding('K','QJT8','A765','9432','H')).includes('RC sec en N'),'Board 13');
+
 const base = holding('64','QJ87','AKT32','95');
 for (const [suit, label] of [['S','P'], ['H','C'], ['D','K'], ['C','T']]) {
   const testHands = Object.fromEntries(Object.entries(base).map(([dir, suits]) =>
